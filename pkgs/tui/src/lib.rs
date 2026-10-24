@@ -3,6 +3,7 @@
 //! Each screen keeps its state apart from the terminal: a state type that keys change, a `render`
 //! that draws it into any [`ratatui::Frame`], and a thin loop that only [`term`] connects to stdout.
 
+mod bench;
 mod fmt;
 mod hex;
 mod term;
@@ -33,8 +34,7 @@ pub fn hex(dirs: &Dirs, id: &str) -> Result<()> {
 
 /// Draws a bench report written by `mandrake_proxy::bench`.
 pub fn bench_view(report: &Path) -> Result<()> {
-    let _ = report;
-    anyhow::bail!("bench view: not built yet (plan U3)")
+    bench::run(report)
 }
 
 /// Walks the catalog item by item and returns the profile to apply, or None when the user quits.
