@@ -1,30 +1,28 @@
 ---
 name: Sub-issue
-about: Uma mudança concreta, parte de uma épica
-title: ""
-labels: []
+about: One concrete change, part of an epic
 ---
 
-Parte de #<épica>.
+Part of #<epic>.
 
-## Estado atual
+## Current state
 
-<!-- O que acontece hoje, com o comando e a saída. -->
+<!-- What happens today, with the command and its output. -->
 
-## Causa
+## Cause
 
-<!-- Onde está no código (arquivo e função) e por quê. Apague se ainda não se sabe. -->
+<!-- Where it is in the code (file and function) and why. Remove if not known yet. -->
 
-## Mudança
-
-- [ ]
-
-[POCS] <!-- O comando que mostra a mudança funcionando. -->
-
-## Testes, depois que rodar e for aprovado
+## Change
 
 - [ ]
 
-## Documentação, depois da revisão
+[POCS] <!-- The command that shows the change working. -->
+
+## Tests, once it runs and is approved
+
+- [ ]
+
+## Docs, after review
 
 - [ ]
