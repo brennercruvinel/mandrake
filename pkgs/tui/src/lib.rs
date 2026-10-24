@@ -1,6 +1,7 @@
 //! Mandrake's screens. Owner: agent B (plan items U1 to U6).
 
 mod fmt;
+mod hex;
 mod term;
 #[cfg(test)]
 mod testutil;
@@ -24,8 +25,7 @@ pub fn watch(dirs: &Dirs, opts: WatchOpts) -> Result<()> {
 
 /// Side-by-side hex of `audit/<id>.before.json` and `.after.json`.
 pub fn hex(dirs: &Dirs, id: &str) -> Result<()> {
-    let _ = (dirs, id);
-    bail!("hex: not built yet (plan U2)")
+    hex::run(dirs, id)
 }
 
 /// Draws a bench report written by `mandrake_proxy::bench`.
