@@ -6,6 +6,19 @@ _mandrake_env="${XDG_DATA_HOME:-$HOME/.local/share}/mandrake/shell/env.sh"
 [ -n "${MANDRAKE_HOME:-}" ] && _mandrake_env="$MANDRAKE_HOME/data/shell/env.sh"
 [ -f "$_mandrake_env" ] && . "$_mandrake_env"
 
+# The proxy is used per session, and only when it answers: a proxy that is down sends the session
+# straight to the API instead of breaking it. MANDRAKE_PORT comes from env.sh; MANDRAKE_PROXY=0 skips it.
+_mandrake_route() {
+  [ -n "${ANTHROPIC_BASE_URL:-}" ] && return 0
+  [ "${MANDRAKE_PROXY:-1}" = 0 ] && return 0
+  local port="${MANDRAKE_PORT:-8787}"
+  if (exec 3<>"/dev/tcp/127.0.0.1/$port") 2>/dev/null || nc -z -w 1 127.0.0.1 "$port" 2>/dev/null; then
+    export ANTHROPIC_BASE_URL="http://127.0.0.1:$port"
+  else
+    echo "mandrake: proxy fora do ar em 127.0.0.1:$port, esta sessão vai direto para a API (mandrake doctor)" >&2
+  fi
+}
+
 claude() {
   local a name="" want=0 rest=()
   for a in "$@"; do
@@ -20,8 +33,8 @@ claude() {
   done
   case "$want" in
     1) echo "claude invoke: which soul? ($(_mandrake_souls))" >&2; return 1 ;;
-    2) _mandrake_summon "$name" "${rest[@]}" ;;
-    *) command claude "$@" ;;
+    2) ( _mandrake_route; _mandrake_summon "$name" "${rest[@]}" ) ;;
+    *) ( _mandrake_route; command claude "$@" ) ;;
   esac
 }
 

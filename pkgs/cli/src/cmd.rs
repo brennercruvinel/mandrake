@@ -296,6 +296,18 @@ pub fn doctor(dirs: &Dirs) -> Result<()> {
         let have = doc["env"][k].as_str().unwrap_or("unset");
         check(have == v, format!("settings env.{k} = {have}"));
     }
+    let base = doc["env"][settings::BASE_URL].as_str().unwrap_or("");
+    check(
+        !base.starts_with("http://127.0.0.1") && !base.starts_with("http://localhost"),
+        format!(
+            "settings sem ANTHROPIC_BASE_URL local (com ele, proxy fora derruba todas as sessões){}",
+            if base.is_empty() {
+                String::new()
+            } else {
+                format!(": {base}")
+            }
+        ),
+    );
     check(
         install::prompt_trim(&dirs.data.join("src"))
             .join("hooks/register.js")

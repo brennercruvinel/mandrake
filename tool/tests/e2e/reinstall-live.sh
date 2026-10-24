@@ -27,6 +27,9 @@ else
   trash="${XDG_DATA_HOME:-$HOME/.local/share}/Trash/files/mandrake-reinstall-$stamp"; svc="$HOME/.config/systemd/user/mandrake-proxy.service"
 fi
 errors=()
+# Every step has a ceiling: a stuck command is killed and reported, never left running for minutes.
+bounded() { local secs="$1"; shift; "$@" & local p=$!; ( sleep "$secs"; kill -9 $p 2>/dev/null ) & local w=$!
+  wait $p; local rc=$?; kill $w 2>/dev/null; wait $w 2>/dev/null; [ $rc = 137 ] && echo "  ERRO passou de ${secs}s: $*"; return $rc; }
 err() { errors+=("$1"); echo "  ERRO $1"; }
 links_of() { (cd "$claude_dir" && find . -maxdepth 2 -type l ! -path './debug/*' -exec sh -c 'echo "${1#./} -> $(readlink "$1")"' _ {} \; | sort); }
 settings="$(cd "$claude_dir" && readlink settings.json || echo "$claude_dir/settings.json")"
@@ -38,7 +41,7 @@ b="$backup_dir/$stamp"; mkdir -p "$b/claude" "$b/files"; chmod 700 "$backup_dir"
   mkdir -p "$b/claude/$(dirname "$f")"; cp -P "$f" "$b/claude/$f"; done)
 before="$(links_of)"; printf '%s\n' "$before" > "$b/links.txt"
 for f in "$HOME/.claude.json" "$settings" "$rc" "$svc" "$bin" "$profile"; do [ -f "$f" ] && cp "$f" "$b/files/"; done
-for d in "$cfg" "$data" "$state"; do [ -d "$d" ] && tar -C "$(dirname "$d")" --exclude 'mandrake/src/target' --exclude 'mandrake/audit' -czf "$b/files/$(basename "$(dirname "$d")")-mandrake.tgz" mandrake; done
+for d in "$cfg" "$data" "$state"; do [ -d "$d" ] && { bounded 60 tar -C "$(dirname "$d")" --exclude 'mandrake/src/target' --exclude 'mandrake/audit' -czf "$b/files/$(basename "$(dirname "$d")" | tr -d .)-mandrake.tgz" mandrake || err "backup de $d"; }; done
 (cd "$backup_dir" && zip -qry "$stamp.zip" "$stamp" && chmod 600 "$stamp.zip" && rm -rf "$stamp")
 echo "  ok   $backup_dir/$stamp.zip ($(unzip -l "$backup_dir/$stamp.zip" | tail -1 | awk '{print $2}') arquivos, $(grep -c . <<<"$before") links)"
 
@@ -46,39 +49,18 @@ echo "== 2. para a Lixeira: $trash"
 mkdir -p "$trash/claude" "$trash/mandrake"
 while read -r l _; do [ -n "$l" ] || continue; mkdir -p "$trash/claude/$(dirname "$l")"; mv "$claude_dir/$l" "$trash/claude/$l"; done <<<"$before"
 echo "  ok   $(grep -c . <<<"$before") links de $claude_dir"
-if [ "$(uname -s)" = Darwin ]; then launchctl bootout "gui/$(id -u)/dev.mandrake.proxy" 2>/dev/null; else systemctl --user disable --now mandrake-proxy 2>/dev/null; fi
-for f in "$svc" "$bin"; do [ -e "$f" ] && mv "$f" "$trash/mandrake/" && echo "  ok   $f"; done
+# The running proxy and its binary stay until the new ones replace them (install.sh overwrites the
+# binary, setup reloads the service in about a second): stopping it here would cut every open session.
+[ -e "$svc" ] && cp "$svc" "$trash/mandrake/" && echo "  ok   cópia de $svc (o serviço segue no ar até o novo entrar)"
 for d in "$cfg" "$data" "$state"; do [ -d "$d" ] && mv "$d" "$trash/mandrake/$(basename "$(dirname "$d")")-mandrake" && echo "  ok   $d"; done
 cp "$rc" "$trash/rc"; awk '/^# >>> mandrake >>>$/{skip=1} !skip{print} /^# <<< mandrake <<<$/{skip=0}' "$trash/rc" > "$rc"; echo "  ok   bloco do Mandrake tirado de $rc"
 cp "$settings" "$trash/settings.json"; jq 'del(.env.ANTHROPIC_BASE_URL, .env.CLAUDE_CODE_PLUGIN_DIRS)' "$trash/settings.json" > "$settings"
 echo "  ok   ANTHROPIC_BASE_URL e CLAUDE_CODE_PLUGIN_DIRS tirados de $settings"
-echo "  sobrou: $(links_of | grep -c .) links, mandrake no PATH: $(command -v mandrake || echo nenhum)"
+echo "  sobrou: $(links_of | grep -c .) links"
 
 echo "== 3. ./install.sh --cli --from <perfil salvo>, respondido por um terminal"
-python3 - "$src" "$profile" "${ANSWERS:-}" <<'PY'
-import os, pty, sys, re, select
-src, prof, answers = sys.argv[1], sys.argv[2], sys.argv[3]
-special = [tuple(p.split("=", 1)) for p in answers.split(";") if "=" in p]
-pid, fd = pty.fork()
-if pid == 0:
-    os.chdir(src); os.execvp("bash", ["bash", "./install.sh", "--cli", "--from", prof])
-buf = b""; out = sys.stdout.buffer
-while True:
-    r, _, _ = select.select([fd], [], [], 300)
-    if not r: print("\n  ERRO install.sh sem saída por 300 s"); break
-    try: chunk = os.read(fd, 4096)
-    except OSError: break
-    if not chunk: break
-    out.write(chunk); out.flush(); buf += chunk
-    tail = buf.decode("utf8", "replace").rsplit("\n", 1)[-1]
-    m = re.search(r"\[([^\]]*)\]: $", tail)
-    if m:
-        # Type the bracketed default (or the given answer), so the log shows every answer.
-        reply = next((a for q, a in special if q in tail), m.group(1))
-        os.write(fd, (reply + "\r").encode()); buf = b""
-_, st = os.waitpid(pid, 0)
-sys.exit(os.waitstatus_to_exitcode(st))
-PY
+drive="$(dirname "$0")/pty-answer.py"
+bounded 900 python3 "$drive" "$src" "$profile" "${ANSWERS:-}"
 [ $? = 0 ] || err "install.sh terminou com erro"
 
 echo "== 4. checagens"
@@ -88,7 +70,8 @@ after="$(links_of)"
 [ "$after" = "$before" ] && echo "  ok   os mesmos $(grep -c . <<<"$after") links de antes" || { err "links diferentes do backup"; diff <(echo "$before") <(echo "$after") | sed 's/^/       /'; }
 while read -r line; do case "$line" in FAIL*) err "doctor: ${line#FAIL }" ;; *) echo "  $line" ;; esac; done < <("$HOME/.local/bin/mandrake" doctor 2>&1)
 n0="$(cat "$state/events.jsonl" 2>/dev/null | grep -c .)"
-reply="$(cd /tmp && claude -p -- "Responda só: ok-reinstall" 2>&1 | tail -1)"
+port="$(sed -n 's/^port = \([0-9]*\)$/\1/p' "$profile" | head -1)"
+reply="$(cd /tmp && ANTHROPIC_BASE_URL="http://127.0.0.1:${port:-8787}" bounded 120 claude -p -- "Responda só: ok-reinstall" 2>&1 | tail -1)"
 sleep 4
 n1="$(cat "$state/events.jsonl" 2>/dev/null | grep -c .)"
 [ "$reply" = ok-reinstall ] && echo "  ok   claude -p respondeu: $reply" || err "claude -p respondeu: $reply"

@@ -35,7 +35,8 @@ check "setup exits 0" "$?" 0
 after="$(cd "$t/home/.claude" && find . -type l -exec sh -c 'echo "$1 -> $(readlink "$1")"' _ {} \; | sort)"
 check "same links after setup" "$after" "$before"
 check "settings keeps its keys" "$(jq -r .env.KEEP "$t/dev/devops/settings.json")" 1
-check "settings gets the base url" "$(jq -r .env.ANTHROPIC_BASE_URL "$t/dev/devops/settings.json")" "http://127.0.0.1:8787"
+check "settings never gets the base url" "$(jq -r .env.ANTHROPIC_BASE_URL "$t/dev/devops/settings.json")" "null"
+check "env.sh carries the proxy port" "$(grep -c "MANDRAKE_PORT='8787'" "$t/mh/data/shell/env.sh")" 1
 check "settings gets prompt-trim" "$(jq -r .env.CLAUDE_CODE_PLUGIN_DIRS "$t/dev/devops/settings.json")" "$t/mh/data/src/data/plugins/prompt-trim"
 check "prompt-trim copied" "$([ -f "$t/mh/data/src/data/plugins/prompt-trim/hooks/register.js" ] && echo y)" y
 check "fancy skipped, already on" "$(grep -c 'plugin fancy: already on as fancy@other' "$t/setup.log")" 1
@@ -54,9 +55,13 @@ mkdir -p "$t/bin"; cat > "$t/bin/claude" <<'STUB'
 prev=""; for a in "$@"; do printf '%s\n' "$a"; [ "$prev" = --system-prompt-file ] && head -1 "$a"; prev="$a"; done
 STUB
 chmod +x "$t/bin/claude"
-call="$(env HOME="$t/home" MANDRAKE_HOME="$t/mh" PATH="$t/bin:$PATH" bash -c ". '$t/mh/data/shell/mandrake.sh'; claude --x invoke NOVA" | tr '\n' ' ')"
+call="$(env -u ANTHROPIC_BASE_URL HOME="$t/home" MANDRAKE_HOME="$t/mh" MANDRAKE_PROXY=0 PATH="$t/bin:$PATH" bash -c ". '$t/mh/data/shell/mandrake.sh'; claude --x invoke NOVA" | tr '\n' ' ')"
 check "launcher opens the soul" "$(grep -c -- "--settings $t/dev/souls/nova/settings.json --system-prompt-file" <<<"$call")" 1
 check "launcher names it and passes the flags" "$(grep -c -- '--name Nova --x' <<<"$call")" 1
 check "the core goes before the soul" "$(grep -c -- '# Core' <<<"$call")" 1
+# Proxy down: the launcher must still start claude, without a base url, and say why.
+down="$(env -u ANTHROPIC_BASE_URL HOME="$t/home" MANDRAKE_HOME="$t/mh" MANDRAKE_PORT=1 PATH="$t/bin:$PATH" bash -c ". '$t/mh/data/shell/mandrake.sh'; claude --y; env | grep -c ANTHROPIC_BASE_URL" 2>&1)"
+check "proxy down: claude still starts" "$(grep -c -- '--y' <<<"$down")" 1
+check "proxy down: the session goes direct, and says so" "$(grep -c 'vai direto para a API' <<<"$down")" 1
 if [ "$fails" -gt 0 ]; then echo "--- setup.log"; cat "$t/setup.log"; echo "--- doctor.log"; cat "$t/doctor.log"; fi
 exit "$fails"

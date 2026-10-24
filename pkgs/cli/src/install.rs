@@ -126,6 +126,7 @@ pub fn shell(dirs: &Dirs, profile: &Profile, root: &Path) -> Result<Vec<String>>
                 "0".into()
             },
         ),
+        ("MANDRAKE_PORT", profile.proxy.port.to_string()),
         (
             "MANDRAKE_CORE",
             core_file(dirs, profile, root)
