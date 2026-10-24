@@ -1,5 +1,11 @@
 //! Mandrake's screens. Owner: agent B (plan items U1 to U6).
 
+mod fmt;
+mod term;
+#[cfg(test)]
+mod testutil;
+mod theme;
+
 use anyhow::{Result, bail};
 use mandrake_home::{Dirs, Profile};
 use mandrake_layout::Catalog;
