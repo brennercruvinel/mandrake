@@ -126,6 +126,11 @@ pub struct ProxyCfg {
     pub audit_keep_days: u32,
     /// Ask `count_tokens` for the body before and after, off the response path.
     pub count_tokens: bool,
+    /// Drop the CLI identity block from `system`. Off by default: measured on a subscription login,
+    /// a long session without it cost more (269,338 -> 291,637 input tokens), not less.
+    pub cut_identity: bool,
+    /// Remove the `<system-reminder>` tags around message text.
+    pub unwrap_reminders: bool,
 }
 
 impl Default for ProxyCfg {
@@ -137,6 +142,8 @@ impl Default for ProxyCfg {
             audit: false,
             audit_keep_days: 7,
             count_tokens: true,
+            cut_identity: false,
+            unwrap_reminders: true,
         }
     }
 }

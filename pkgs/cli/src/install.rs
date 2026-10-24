@@ -85,6 +85,28 @@ pub fn core_file(dirs: &Dirs, profile: &Profile, root: &Path) -> Option<PathBuf>
     }
 }
 
+/// The core text into the installed prompt-trim (`hooks/core.js`), for sessions without a soul.
+pub fn core(dirs: &Dirs, profile: &Profile, root: &Path) -> Result<Vec<String>> {
+    let text = match core_file(dirs, profile, root) {
+        Some(f) => std::fs::read_to_string(&f)
+            .with_context(|| format!("reading the core {}", f.display()))?,
+        None => String::new(),
+    };
+    let js = format!(
+        "// Written by `mandrake setup` from the profile's core; edit that file and run setup again.\nexport const CORE = {}\n",
+        serde_json::to_string(&text)?
+    );
+    std::fs::write(prompt_trim(root).join("hooks/core.js"), js)?;
+    Ok(vec![if text.is_empty() {
+        "nenhum core: sessões sem soul seguem sem system prompt".into()
+    } else {
+        format!(
+            "{} caracteres no prompt-trim e antes de cada soul",
+            text.len()
+        )
+    }])
+}
+
 /// `shell/env.sh`, the shell file, and the block in the rc.
 pub fn shell(dirs: &Dirs, profile: &Profile, root: &Path) -> Result<Vec<String>> {
     let sh = dirs.data.join("shell");

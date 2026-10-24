@@ -31,50 +31,114 @@ fn starting_point(dirs: &Dirs, from: Option<&PathBuf>) -> Result<Profile> {
     Ok(Profile::default())
 }
 
-pub fn setup(dirs: &Dirs, from: Option<PathBuf>, yes: bool) -> Result<()> {
+/// How `setup` gets its answers.
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum Asking {
+    /// The full-screen wizard.
+    Tui,
+    /// One question per line on stdin.
+    Cli,
+    /// None: the starting profile as it is.
+    No,
+}
+
+pub fn setup(dirs: &Dirs, from: Option<PathBuf>, asking: Asking) -> Result<()> {
     let catalog = Catalog::builtin()?;
     let start = starting_point(dirs, from.as_ref())?;
-    let profile = if yes {
-        start
-    } else {
-        match mandrake_tui::setup_wizard(dirs, &catalog, &start)? {
-            Some(p) => p,
-            None => {
-                println!("setup: nothing changed");
-                return Ok(());
+    let chosen = match asking {
+        Asking::No => Some(start),
+        Asking::Tui => mandrake_tui::setup_wizard(dirs, &catalog, &start)?,
+        Asking::Cli => crate::ask::run(dirs, &catalog, &start, std::io::stdin().lock())?,
+    };
+    let Some(profile) = chosen else {
+        println!("setup: nada mudou");
+        return Ok(());
+    };
+    println!("\nInstalando");
+    let mut errors: Vec<String> = vec![];
+    let mut step = |name: &str, r: Result<Vec<String>>| match r {
+        Ok(lines) if lines.is_empty() => println!("  ok   {name}: sem mudança"),
+        Ok(lines) => {
+            for l in lines {
+                println!("  ok   {name}: {l}");
             }
         }
+        Err(e) => {
+            println!("  ERRO {name}: {e:#}");
+            errors.push(format!("{name}: {e:#}"));
+        }
     };
-    profile.save(&dirs.profile())?;
-    println!("profile: {}", dirs.profile().display());
-
-    let src = install::source(dirs)?;
-    let root = install::data(dirs, &src)?;
-    println!("data: {}", root.display());
-
-    std::fs::create_dir_all(&dirs.claude)?;
-    let steps = links::plan(dirs, &catalog, &profile)?;
-    print_steps(&steps);
-    if let Some(j) = links::apply(dirs, &catalog, &steps, &mandrake_home::stamp())? {
-        println!("links: applied, journal {}", j.display());
-    }
-    let mut notes = install::settings_keys(dirs, &profile, &root)?;
-    notes.extend(install::shell(dirs, &profile, &root)?);
-    notes.extend(install::plugins(dirs, &profile, &root)?);
-    notes.extend(install::skill(dirs, &profile, &root)?);
-    for n in notes {
-        println!("{n}");
-    }
+    step(
+        "perfil",
+        profile
+            .save(&dirs.profile())
+            .map(|_| vec![dirs.profile().display().to_string()]),
+    );
+    let root = match install::source(dirs).and_then(|src| install::data(dirs, &src)) {
+        Ok(root) => {
+            step("dados", Ok(vec![root.display().to_string()]));
+            root
+        }
+        Err(e) => {
+            step("dados", Err(e));
+            report(&errors);
+            bail!("sem os dados do Mandrake não há o que instalar");
+        }
+    };
+    step("core", install::core(dirs, &profile, &root));
+    step("links", links_step(dirs, &catalog, &profile));
+    step("settings", install::settings_keys(dirs, &profile, &root));
+    step("shell", install::shell(dirs, &profile, &root));
+    step("plugins", install::plugins(dirs, &profile, &root));
+    step("skill", install::skill(dirs, &profile, &root));
     let exe = std::env::current_exe()?;
-    match mandrake_proxy::install_service(dirs, &profile, &exe) {
-        Ok(()) => println!(
-            "proxy: service installed on 127.0.0.1:{}",
-            profile.proxy.port
-        ),
-        Err(e) => println!("proxy: service not installed: {e:#}"),
+    step(
+        "proxy",
+        mandrake_proxy::install_service(dirs, &profile, &exe)
+            .map(|_| vec![format!("serviço no 127.0.0.1:{}", profile.proxy.port)]),
+    );
+    report(&errors);
+    if !errors.is_empty() {
+        bail!("{} erro(s) na instalação", errors.len());
     }
-    println!("next: open a new shell, then `mandrake doctor`");
+    println!("próximo passo: abra um shell novo e rode `mandrake doctor`");
     Ok(())
+}
+
+fn links_step(dirs: &Dirs, catalog: &Catalog, profile: &Profile) -> Result<Vec<String>> {
+    std::fs::create_dir_all(&dirs.claude)?;
+    let steps = links::plan(dirs, catalog, profile)?;
+    let mut out: Vec<String> = steps
+        .iter()
+        .filter(|s| s.op.changes())
+        .map(|s| {
+            let to = s
+                .target
+                .as_ref()
+                .map(|t| t.display().to_string())
+                .unwrap_or_default();
+            format!(
+                "{:<11} {} -> {to}",
+                format!("{:?}", s.op).to_lowercase(),
+                s.path
+            )
+        })
+        .collect();
+    if let Some(j) = links::apply(dirs, catalog, &steps, &mandrake_home::stamp())? {
+        out.push(format!("journal {}", j.display()));
+    }
+    Ok(out)
+}
+
+fn report(errors: &[String]) {
+    if errors.is_empty() {
+        println!("\nErros: nenhum");
+    } else {
+        println!("\nErros ({}):", errors.len());
+        for e in errors {
+            println!("  - {e}");
+        }
+    }
 }
 
 pub fn capture(dirs: &Dirs, out: Option<PathBuf>) -> Result<()> {

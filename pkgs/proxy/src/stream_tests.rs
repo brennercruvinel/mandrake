@@ -132,6 +132,8 @@ async fn start_proxy(upstream: &str, mode: Mode, tmp: &Path) -> (String, Dirs) {
     let mut profile = Profile::default();
     profile.proxy.upstream = upstream.to_string();
     profile.proxy.audit = true;
+    // The stream test exercises every cut, the identity one included.
+    profile.proxy.cut_identity = true;
     let state = Arc::new(State::new(Config::new(&dirs, &profile, mode)).unwrap());
     let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
     let addr: SocketAddr = listener.local_addr().unwrap();

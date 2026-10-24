@@ -1,5 +1,6 @@
 //! `mandrake`: one binary, one subcommand per job.
 
+mod ask;
 mod cmd;
 mod install;
 
@@ -26,6 +27,9 @@ enum Cmd {
         /// Apply without asking
         #[arg(long)]
         yes: bool,
+        /// Ask one question per line instead of the full-screen wizard
+        #[arg(long)]
+        cli: bool,
     },
     /// Write the current Claude Code folder as a profile
     Capture {
@@ -112,7 +116,16 @@ fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
     let dirs = mandrake_home::Dirs::from_env()?;
     match cli.cmd {
-        Cmd::Setup { profile, yes } => cmd::setup(&dirs, profile, yes),
+        Cmd::Setup { profile, yes, cli } => {
+            let asking = if yes {
+                cmd::Asking::No
+            } else if cli {
+                cmd::Asking::Cli
+            } else {
+                cmd::Asking::Tui
+            };
+            cmd::setup(&dirs, profile, asking)
+        }
         Cmd::Capture { out } => cmd::capture(&dirs, out),
         Cmd::Link { op: LinkOp::Plan } => cmd::link_plan(&dirs),
         Cmd::Link { op: LinkOp::Apply } => cmd::link_apply(&dirs),

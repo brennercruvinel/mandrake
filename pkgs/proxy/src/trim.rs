@@ -22,6 +22,18 @@ pub fn rules() -> &'static Rules {
     RULES.get_or_init(|| toml::from_str(TRIM_TOML).expect("cfgs/proxy/trim.toml is valid"))
 }
 
+/// The built-in rules with parts switched off by the profile.
+pub fn rules_for(cut_identity: bool, unwrap_reminders: bool) -> Rules {
+    let mut r = rules().clone();
+    if !cut_identity {
+        r.identities.clear();
+    }
+    if !unwrap_reminders {
+        r.unwrap_tag.clear();
+    }
+    r
+}
+
 /// Whether a request is one the trim may touch: `POST /v1/messages*`.
 pub fn is_messages(method: &str, path: &str) -> bool {
     method == "POST" && path.starts_with("/v1/messages")
@@ -92,6 +104,9 @@ fn drop_identities(root: &mut Map<String, Value>, rules: &Rules) -> u32 {
 /// Unwraps text in a message's `content`: a string, text blocks, and the text inside `tool_result`
 /// blocks, where Claude Code also injects reminders.
 fn unwrap_content(content: &mut Value, tag: &str) -> u32 {
+    if tag.is_empty() {
+        return 0;
+    }
     match content {
         Value::String(s) => unwrap_string(s, tag),
         Value::Array(blocks) => blocks.iter_mut().map(|b| unwrap_block(b, tag)).sum(),
@@ -303,5 +318,20 @@ mod tests {
             &strip,
         );
         assert_eq!((cuts.system_blocks, cuts.fields.len()), (1, 1));
+    }
+}
+
+#[cfg(test)]
+mod switch_tests {
+    use super::*;
+
+    #[test]
+    fn switches_turn_parts_of_the_cut_off() {
+        let body = br#"{"system":[{"type":"text","text":"You are Claude Code, Anthropic's official CLI for Claude."}],"messages":[{"role":"user","content":"<system-reminder>\nx\n</system-reminder>"}]}"#;
+        let (_, all) = trim(body, &rules_for(true, true), &[]);
+        assert_eq!((all.system_blocks, all.reminders), (1, 1));
+        let (out, none) = trim(body, &rules_for(false, false), &[]);
+        assert_eq!((none.system_blocks, none.reminders), (0, 0));
+        assert_eq!(out, body.to_vec(), "nothing matched, byte for byte");
     }
 }

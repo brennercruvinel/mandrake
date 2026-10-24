@@ -1,4 +1,4 @@
-// Cuts what Claude Code adds around the system prompt file.
+// Cuts what Claude Code adds around the system prompt, and puts Mandrake's core prompt in its place.
 // Each name below is one piece; delete a name to let that piece through again.
 
 // Messages Claude Code attaches to the conversation on its own.
@@ -161,6 +161,11 @@ const OFFER_AGENTS = false
 // Tool descriptions: removed.
 const TOOL_DESCRIPTIONS = false
 
+// The core prompt, written by `mandrake setup` into ./core.js from the profile (souls.core).
+// Without it the default prompt is cut and nothing replaces it, so a plain `claude` would run with an
+// empty system prompt. A soul session already carries the core in its --system-prompt-file.
+import { CORE } from './core.js'
+
 export function register(on) {
   on('prompt.attachment', async ($, e, next) => {
     if (ATTACHMENTS.has(e.type)) return { text: null }
@@ -171,7 +176,9 @@ export function register(on) {
     SECTIONS.has(String(e.name).split(':')[0]) ? { text: null } : next(e))
   on('prompt.compose', async ($, e, next) => {
     const r = await next(e)
-    return { ...r, sections: r.sections.filter(s => !COMPOSED.has(s.id)) }
+    const kept = r.sections.filter(s => !COMPOSED.has(s.id))
+    if (!CORE || globalThis.process?.env?.MANDRAKE_SOUL) return { ...r, sections: kept }
+    return { ...r, sections: [...kept, { id: 'prompt-trim:core', text: CORE, scope: 'session' }] }
   })
   on('agent.offer', async ($, e, next) =>
     OFFER_AGENTS ? next(e) : { isOffered: false })

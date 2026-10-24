@@ -42,9 +42,11 @@ check "fancy skipped, already on" "$(grep -c 'plugin fancy: already on as fancy@
 check "rc keeps its line and gets one block" "$(grep -c KEEP "$t/home/.zshrc")$(grep -c '>>> mandrake >>>' "$t/home/.zshrc")" 11
 check "env.sh points at the souls" "$(grep -c "MANDRAKE_SOULS='$t/dev/souls'" "$t/mh/data/shell/env.sh")" 1
 m setup --profile "$t/p.toml" --yes > "$t/setup2.log" 2>&1
-check "second setup changes no link" "$(grep -c 'links: nothing to change' "$t/setup2.log")" 1
+check "second setup changes no link" "$(grep -c 'ok   links: sem mudança' "$t/setup2.log")" 1
 check "second setup leaves one block" "$(grep -c '>>> mandrake >>>' "$t/home/.zshrc")" 1
 m doctor > "$t/doctor.log" 2>&1
+check "the core goes into prompt-trim" "$(grep -c '# Core' "$t/mh/data/src/data/plugins/prompt-trim/hooks/core.js")" 1
+check "setup reports no errors" "$(grep -c 'Erros: nenhum' "$t/setup.log")" 1
 check "doctor fails only on the proxy" "$(grep FAIL "$t/doctor.log" | grep -vc 'proxy')" 0
 # The launcher finds the soul and builds the claude call (claude stubbed).
 mkdir -p "$t/bin"; cat > "$t/bin/claude" <<'STUB'

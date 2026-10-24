@@ -54,6 +54,7 @@ pub struct Config {
     pub upstream: String,
     pub mode: Mode,
     pub strip: Vec<String>,
+    pub rules: trim::Rules,
     pub audit: bool,
     pub count_tokens: bool,
     pub events: PathBuf,
@@ -68,6 +69,7 @@ impl Config {
             upstream: p.upstream.trim_end_matches('/').to_string(),
             mode,
             strip: p.strip_fields.clone(),
+            rules: trim::rules_for(p.cut_identity, p.unwrap_reminders),
             audit: p.audit,
             count_tokens: p.count_tokens,
             events: dirs.events(),
@@ -186,7 +188,7 @@ async fn handle(
         method.as_str(),
         &path,
         &before,
-        trim::rules(),
+        &cfg.rules,
         &cfg.strip,
     );
     let after = Bytes::from(after);
