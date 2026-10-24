@@ -1,12 +1,17 @@
 //! `mandrake`: one binary, one subcommand per job.
 
 mod cmd;
+mod install;
 
 use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 
 #[derive(Parser)]
-#[command(name = "mandrake", version, about = "Claude Code's harness: trimmed, measured, reproducible")]
+#[command(
+    name = "mandrake",
+    version,
+    about = "Claude Code's harness: trimmed, measured, reproducible"
+)]
 struct Cli {
     #[command(subcommand)]
     cmd: Cmd,
@@ -92,22 +97,37 @@ fn main() -> anyhow::Result<()> {
         Cmd::Capture { out } => cmd::capture(&dirs, out),
         Cmd::Link { op: LinkOp::Plan } => cmd::link_plan(&dirs),
         Cmd::Link { op: LinkOp::Apply } => cmd::link_apply(&dirs),
-        Cmd::Link { op: LinkOp::Rollback } => cmd::link_rollback(&dirs),
+        Cmd::Link {
+            op: LinkOp::Rollback,
+        } => cmd::link_rollback(&dirs),
         Cmd::Proxy { op } => {
             let p = cmd::profile(&dirs)?;
             match op {
                 ProxyOp::Run { pass, port } => {
-                    let mode = if pass { mandrake_meter::Mode::Pass } else { mandrake_meter::Mode::Trim };
+                    let mode = if pass {
+                        mandrake_meter::Mode::Pass
+                    } else {
+                        mandrake_meter::Mode::Trim
+                    };
                     mandrake_proxy::serve(&dirs, &p, mode, port)
                 }
-                ProxyOp::Install => mandrake_proxy::install_service(&dirs, &p, &std::env::current_exe()?),
+                ProxyOp::Install => {
+                    mandrake_proxy::install_service(&dirs, &p, &std::env::current_exe()?)
+                }
                 ProxyOp::Uninstall => mandrake_proxy::uninstall_service(&dirs),
-                ProxyOp::Status => Ok(println!("{}", mandrake_proxy::status(&dirs, &p)?)),
+                ProxyOp::Status => {
+                    println!("{}", mandrake_proxy::status(&dirs, &p)?);
+                    Ok(())
+                }
             }
         }
         Cmd::Watch { embed } => mandrake_tui::watch(&dirs, mandrake_tui::WatchOpts { embed }),
         Cmd::Hex { id } => mandrake_tui::hex(&dirs, &id),
-        Cmd::Bench { fixtures, out, view } => {
+        Cmd::Bench {
+            fixtures,
+            out,
+            view,
+        } => {
             let out = out.unwrap_or_else(|| dirs.state.join("bench/latest"));
             if view {
                 mandrake_tui::bench_view(&out.with_extension("json"))

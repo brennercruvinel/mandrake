@@ -1,0 +1,164 @@
+{
+  "name": "fancy",
+  "displayName": "Fancy",
+  "version": "0.1.0",
+  "description": "One render pipeline for Claude's replies: themed markdown, inline color tags, status badges and color swatches; plus a responsive status bar (who, model, context, plan limits, git) and terminal tab colors by session state",
+  "author": {
+    "name": "Brenner Cruvinel",
+    "url": "https://github.com/brennercruvinel"
+  },
+  "license": "MIT",
+  "keywords": [
+    "mod",
+    "markdown",
+    "theme",
+    "color",
+    "badges",
+    "status-line",
+    "git",
+    "terminal",
+    "context",
+    "usage"
+  ],
+  "types": "./types/index.d.ts",
+  "userConfig": {
+    "markdown": {
+      "type": "boolean",
+      "title": "Styled markdown",
+      "description": "Draw replies with fancy's markdown engine. Off hands the markdown to the plugins beneath and the engine; badges and color swatches still draw. /fancy on|off overrides it.",
+      "default": true
+    },
+    "theme": {
+      "type": "string",
+      "title": "Markdown theme",
+      "description": "The palette and layout replies draw in. native keeps fences and tables in the engine's own renderer. /fancy <theme> overrides it.",
+      "options": [
+        "vivid",
+        "synthwave",
+        "pastel",
+        "ocean",
+        "forest",
+        "mono",
+        "native"
+      ],
+      "default": "vivid"
+    },
+    "teachMarkup": {
+      "type": "boolean",
+      "title": "Teach the model color tags",
+      "description": "Adds a system prompt section that teaches the model the inline <t> tags. Off removes it, saving its prompt tokens every session, whatever /fancy teach says.",
+      "default": true
+    },
+    "tags": {
+      "type": "string",
+      "title": "Tags and colors",
+      "description": "Comma-separated TAG:color pairs. A color is a hex, a theme key or a color name; hex stops joined by > paint a gradient. Empty uses the defaults.",
+      "default": "DONE:#13651A,FAIL:#A10E01,NEXT:#0D3CD9,WAIT:#FF782D,GOAL:#D0F4DE,DRFT:#F2F2F2,WARN:#FFC18F,HYPO:#7BDFF2,IDEA:#FFF170,POCS:#80FFDB,REFS:#3A0CA3,AUTO:#4130DF>#9B1FE8>#C2185B,LEAD:#FF2BFF"
+    },
+    "style": {
+      "type": "string",
+      "title": "Style",
+      "description": "badge draws the tag on a colored background; text draws it as colored bold text",
+      "options": [
+        "badge",
+        "text"
+      ],
+      "default": "badge"
+    },
+    "text_color": {
+      "type": "string",
+      "title": "Badge text color",
+      "description": "auto picks white or black per badge, whichever has the higher WCAG contrast with a hex background; theme keys keep the theme's inverse text",
+      "options": [
+        "auto",
+        "white",
+        "black"
+      ],
+      "default": "auto"
+    },
+    "showIdentity": {
+      "type": "boolean",
+      "title": "Show identity",
+      "description": "Who runs the session, from the TIAMATI_AGENT environment variable, drawn first in the status bar. Unset draws nothing.",
+      "default": true
+    },
+    "identityColors": {
+      "type": "string",
+      "title": "Identity colors",
+      "description": "Comma-separated name:color pairs for the identity, a hex or a color name. Empty uses the defaults; a name without a color draws in the accent color.",
+      "default": "quimera:#39C5BB,tiamati:#8C7BFF,toth:#5B8DEF"
+    },
+    "showModel": {
+      "type": "boolean",
+      "title": "Show model",
+      "description": "The model in use, as /model names it.",
+      "default": true
+    },
+    "showContext": {
+      "type": "boolean",
+      "title": "Show context",
+      "description": "How full the context is, measured against where the session compacts (CLAUDE_AUTOCOMPACT_PCT_OVERRIDE), not the whole window.",
+      "default": true
+    },
+    "showBranch": {
+      "type": "boolean",
+      "title": "Show branch",
+      "description": "The current branch, or the short SHA on a detached HEAD.",
+      "default": true
+    },
+    "showDiff": {
+      "type": "boolean",
+      "title": "Show diff",
+      "description": "Lines added and removed against the merge base with the default branch, uncommitted work included.",
+      "default": true
+    },
+    "showPullRequest": {
+      "type": "boolean",
+      "title": "Show pull request",
+      "description": "The number and state (Merged, Closed, Draft or Open) of the branch's pull request, linked to it. Needs the GitHub CLI.",
+      "default": true
+    },
+    "showChecks": {
+      "type": "boolean",
+      "title": "Show CI checks",
+      "description": "Passed checks out of the total for the branch's pull request. Needs the GitHub CLI.",
+      "default": true
+    },
+    "showUsage": {
+      "type": "boolean",
+      "title": "Show plan limits",
+      "description": "The plan's 5-hour and weekly limits with the time to their reset; amber when the pace so far would run out before the reset, red past 90%.",
+      "default": true
+    },
+    "iconBranch": {
+      "type": "string",
+      "title": "Branch icon",
+      "description": "Drawn before the branch name. Empty draws none; a Nerd Font glyph goes here. Spaces count."
+    },
+    "iconDiff": {
+      "type": "string",
+      "title": "Diff icon",
+      "description": "Drawn before the added and removed lines. Leave it empty for no icon. Spaces count."
+    },
+    "iconPullRequest": {
+      "type": "string",
+      "title": "Pull request icon",
+      "description": "Drawn before the pull request number. Empty draws none; a Nerd Font glyph goes here. Spaces count."
+    },
+    "iconChecksPassed": {
+      "type": "string",
+      "title": "CI passed icon",
+      "description": "Drawn before the checks when every one passed. Empty draws ✓, none draws no icon."
+    },
+    "iconChecksFailed": {
+      "type": "string",
+      "title": "CI failed icon",
+      "description": "Drawn before the checks when any failed. Empty draws ✗, none draws no icon."
+    },
+    "iconChecksPending": {
+      "type": "string",
+      "title": "CI running icon",
+      "description": "Drawn before the checks while some still run. Empty draws ◌, none draws no icon."
+    }
+  }
+}

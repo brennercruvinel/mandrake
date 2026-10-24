@@ -180,7 +180,11 @@ mod tests {
             tokens_before: Some(before),
             tokens_after: Some(after),
             usage: None,
-            cuts: Cuts { system_blocks: 1, reminders: 2, fields: vec!["metadata".into()] },
+            cuts: Cuts {
+                system_blocks: 1,
+                reminders: 2,
+                fields: vec!["metadata".into()],
+            },
             audited: false,
             error: None,
         }
@@ -192,7 +196,12 @@ mod tests {
         let f = dir.path().join("s/events.jsonl");
         append(&f, &ev("a", 100, 80)).unwrap();
         append(&f, &ev("b", 100, 60)).unwrap();
-        std::fs::OpenOptions::new().append(true).open(&f).unwrap().write_all(b"{torn").unwrap();
+        std::fs::OpenOptions::new()
+            .append(true)
+            .open(&f)
+            .unwrap()
+            .write_all(b"{torn")
+            .unwrap();
         let all = read(&f).unwrap();
         assert_eq!(all.len(), 2);
         assert_eq!(all[1].saved_tokens(), Some(40));
@@ -203,6 +212,10 @@ mod tests {
 
     #[test]
     fn missing_file_reads_empty() {
-        assert!(read(Path::new("/nonexistent/events.jsonl")).unwrap().is_empty());
+        assert!(
+            read(Path::new("/nonexistent/events.jsonl"))
+                .unwrap()
+                .is_empty()
+        );
     }
 }

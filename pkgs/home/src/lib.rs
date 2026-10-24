@@ -27,7 +27,11 @@ pub struct Dirs {
 impl Dirs {
     /// Resolves from the process environment.
     pub fn from_env() -> Result<Self> {
-        Self::resolve(|k| std::env::var_os(k).filter(|v| !v.is_empty()).map(PathBuf::from))
+        Self::resolve(|k| {
+            std::env::var_os(k)
+                .filter(|v| !v.is_empty())
+                .map(PathBuf::from)
+        })
     }
 
     /// Resolves from any lookup, so tests never read the real environment.
@@ -184,7 +188,8 @@ pub struct Profile {
 
 impl Profile {
     pub fn load(path: &Path) -> Result<Self> {
-        let text = std::fs::read_to_string(path).with_context(|| format!("reading {}", path.display()))?;
+        let text =
+            std::fs::read_to_string(path).with_context(|| format!("reading {}", path.display()))?;
         toml::from_str(&text).with_context(|| format!("parsing {}", path.display()))
     }
 
@@ -192,7 +197,8 @@ impl Profile {
         if let Some(dir) = path.parent() {
             std::fs::create_dir_all(dir)?;
         }
-        std::fs::write(path, toml::to_string_pretty(self)?).with_context(|| format!("writing {}", path.display()))
+        std::fs::write(path, toml::to_string_pretty(self)?)
+            .with_context(|| format!("writing {}", path.display()))
     }
 
     pub fn dev_root(&self, dirs: &Dirs) -> Option<PathBuf> {
@@ -207,12 +213,63 @@ impl Profile {
     }
 }
 
+/// UTC now as `YYYYMMDD-HHMMSS`, for backup and journal names.
+pub fn stamp() -> String {
+    let (y, mo, d, h, mi, s) = utc_now();
+    format!("{y:04}{mo:02}{d:02}-{h:02}{mi:02}{s:02}")
+}
+
+/// UTC now as RFC 3339 with seconds.
+pub fn rfc3339() -> String {
+    let (y, mo, d, h, mi, s) = utc_now();
+    format!("{y:04}-{mo:02}-{d:02}T{h:02}:{mi:02}:{s:02}Z")
+}
+
+fn utc_now() -> (i64, u32, u32, u32, u32, u32) {
+    let secs = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_secs() as i64)
+        .unwrap_or(0);
+    let (days, rem) = (secs.div_euclid(86_400), secs.rem_euclid(86_400));
+    // Howard Hinnant's civil_from_days.
+    let z = days + 719_468;
+    let era = z.div_euclid(146_097);
+    let doe = z - era * 146_097;
+    let yoe = (doe - doe / 1460 + doe / 36_524 - doe / 146_096) / 365;
+    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
+    let mp = (5 * doy + 2) / 153;
+    let d = (doy - (153 * mp + 2) / 5 + 1) as u32;
+    let m = if mp < 10 { mp + 3 } else { mp - 9 } as u32;
+    let y = yoe + era * 400 + i64::from(m <= 2);
+    (
+        y,
+        m,
+        d,
+        (rem / 3600) as u32,
+        (rem % 3600 / 60) as u32,
+        (rem % 60) as u32,
+    )
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     fn env<'a>(pairs: &'a [(&'a str, &'a str)]) -> impl Fn(&str) -> Option<PathBuf> + 'a {
-        move |k| pairs.iter().find(|(n, _)| *n == k).map(|(_, v)| PathBuf::from(v))
+        move |k| {
+            pairs
+                .iter()
+                .find(|(n, _)| *n == k)
+                .map(|(_, v)| PathBuf::from(v))
+        }
+    }
+
+    #[test]
+    fn stamps_look_right() {
+        let s = stamp();
+        assert_eq!(s.len(), 15);
+        assert!(s.starts_with("20"));
+        assert!(rfc3339().ends_with('Z'));
     }
 
     #[test]
@@ -227,23 +284,46 @@ mod tests {
 
     #[test]
     fn mandrake_home_isolates_everything_but_claude() {
-        let d = Dirs::resolve(env(&[("HOME", "/h"), ("MANDRAKE_HOME", "/t"), ("CLAUDE_CONFIG_DIR", "/t/claude")])).unwrap();
+        let d = Dirs::resolve(env(&[
+            ("HOME", "/h"),
+            ("MANDRAKE_HOME", "/t"),
+            ("CLAUDE_CONFIG_DIR", "/t/claude"),
+        ]))
+        .unwrap();
         assert_eq!(d.config, PathBuf::from("/t/config"));
         assert_eq!(d.claude, PathBuf::from("/t/claude"));
     }
 
     #[test]
     fn profile_round_trips_and_resolves_targets() {
-        let mut p = Profile { dev_root: Some("~/dev".into()), ..Default::default() };
-        p.links.insert("skills".into(), LinkSpec { action: Action::Link, target: Some("agent/skills".into()) });
-        p.links.insert("rules".into(), LinkSpec { action: Action::Link, target: Some("/abs/rules".into()) });
+        let mut p = Profile {
+            dev_root: Some("~/dev".into()),
+            ..Default::default()
+        };
+        p.links.insert(
+            "skills".into(),
+            LinkSpec {
+                action: Action::Link,
+                target: Some("agent/skills".into()),
+            },
+        );
+        p.links.insert(
+            "rules".into(),
+            LinkSpec {
+                action: Action::Link,
+                target: Some("/abs/rules".into()),
+            },
+        );
         let dir = tempfile::tempdir().unwrap();
         let f = dir.path().join("m.toml");
         p.save(&f).unwrap();
         let q = Profile::load(&f).unwrap();
         assert_eq!(p, q);
         let d = Dirs::resolve(env(&[("HOME", "/h")])).unwrap();
-        assert_eq!(q.target(&d, "skills"), Some(PathBuf::from("/h/dev/agent/skills")));
+        assert_eq!(
+            q.target(&d, "skills"),
+            Some(PathBuf::from("/h/dev/agent/skills"))
+        );
         assert_eq!(q.target(&d, "rules"), Some(PathBuf::from("/abs/rules")));
         assert_eq!(q.proxy.strip_fields, vec!["metadata".to_string()]);
     }

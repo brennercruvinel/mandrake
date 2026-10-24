@@ -1,0 +1,5 @@
+{
+  "name": "prompt-trim",
+  "version": "0.1.0",
+  "description": "Cuts the sections, attachments and wrappers Claude Code adds around the system prompt file"
+}
