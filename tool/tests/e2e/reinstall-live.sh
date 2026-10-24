@@ -60,7 +60,7 @@ echo "  sobrou: $(links_of | grep -c .) links"
 
 echo "== 3. ./install.sh --cli --from <perfil salvo>, respondido por um terminal"
 drive="$(dirname "$0")/pty-answer.py"
-bounded 900 python3 "$drive" "$src" "$profile" "${ANSWERS:-}"
+bounded 420 python3 "$drive" "$src" "$profile" "${ANSWERS:-}"
 [ $? = 0 ] || err "install.sh terminou com erro"
 
 echo "== 4. checagens"

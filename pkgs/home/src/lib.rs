@@ -167,6 +167,8 @@ pub struct Souls {
     /// `data/prompt/cores/coding.md`.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub core: Option<String>,
+    /// The core only in sessions without a soul, for souls whose prompt is written to stand alone.
+    pub core_only_plain: bool,
     /// Extra names per soul folder, for `claude invoke <name>`.
     #[serde(skip_serializing_if = "BTreeMap::is_empty")]
     pub aliases: BTreeMap<String, Vec<String>>,

@@ -16,7 +16,7 @@ printf '[proxy]\naudit = true\nstrip_fields = ["metadata"]\n' > "$t/config/mandr
 trap 'kill $p1 $p2 2>/dev/null' EXIT
 for _ in $(seq 1 30); do nc -z 127.0.0.1 8798 2>/dev/null && nc -z 127.0.0.1 8799 2>/dev/null && break; sleep 0.2; done
 kill -0 $p1 2>/dev/null && kill -0 $p2 2>/dev/null || { echo "a proxy did not start:"; cat "$t/pass.log" "$t/trim.log"; exit 1; }
-trim_dir="$src/data/plugins/prompt-trim"
+trim_dir="${MANDRAKE_TRIM_DIR:-$src/data/plugins/prompt-trim}"
 # --settings wins over the user's settings.json, which may already point at another proxy.
 (cd "$t" && claude -p --settings '{"env":{"ANTHROPIC_BASE_URL":"http://127.0.0.1:8798","CLAUDE_CODE_PLUGIN_DIRS":""}}' "$prompt" >/dev/null)
 (cd "$t" && claude -p --settings "{\"env\":{\"ANTHROPIC_BASE_URL\":\"http://127.0.0.1:8799\",\"CLAUDE_CODE_PLUGIN_DIRS\":\"$trim_dir\"}}" "$prompt" >/dev/null)

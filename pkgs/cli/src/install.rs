@@ -128,6 +128,14 @@ pub fn shell(dirs: &Dirs, profile: &Profile, root: &Path) -> Result<Vec<String>>
         ),
         ("MANDRAKE_PORT", profile.proxy.port.to_string()),
         (
+            "MANDRAKE_CORE_SOULS",
+            if profile.souls.core_only_plain {
+                "0".into()
+            } else {
+                "1".into()
+            },
+        ),
+        (
             "MANDRAKE_CORE",
             core_file(dirs, profile, root)
                 .map(|p| p.to_string_lossy().into_owned())

@@ -14,7 +14,7 @@ command -v jq >/dev/null || echo "install.sh: jq not found; soul aliases in agen
 case "$(uname -s)" in Darwin|Linux) ;; *) echo "install.sh: only macOS and Linux" >&2; exit 1 ;; esac
 
 export CARGO_TARGET_DIR="${CARGO_TARGET_DIR:-$src/target}"
-cargo install --quiet --locked --path "$src/pkgs/cli" --root "${MANDRAKE_PREFIX:-$HOME/.local}"
+cargo install --quiet --locked --force --path "$src/pkgs/cli" --root "${MANDRAKE_PREFIX:-$HOME/.local}"
 bin="${MANDRAKE_PREFIX:-$HOME/.local}/bin/mandrake"
 echo "installed $bin"
 case ":$PATH:" in *":$(dirname "$bin"):"*) ;; *) echo "note: add $(dirname "$bin") to PATH" ;; esac

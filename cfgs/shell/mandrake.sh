@@ -75,7 +75,7 @@ _mandrake_summon() (
   prompt="${TMPDIR:-/tmp}/mandrake-soul-$name-$$.md"
   # The front matter (between the first two --- lines) is for agent definitions, not for the prompt.
   # The core goes first when the profile has one; the soul follows.
-  { if [ -f "${MANDRAKE_CORE:-}" ]; then cat "$MANDRAKE_CORE"; printf '\n'; fi
+  { if [ -f "${MANDRAKE_CORE:-}" ] && [ "${MANDRAKE_CORE_SOULS:-1}" = 1 ]; then cat "$MANDRAKE_CORE"; printf '\n'; fi
     awk 'NR == 1 && /^---$/ { fm = 1; next } fm && /^---$/ { fm = 0; next } !fm' "$(_mandrake_prompt "$dir")"; } > "$prompt"
   export MANDRAKE_SOUL="$name"
   [ -d "${XDG_CONFIG_HOME:-$HOME/.config}/gh-$name" ] && export GH_CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/gh-$name"
