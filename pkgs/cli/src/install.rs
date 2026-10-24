@@ -101,8 +101,13 @@ pub fn core(dirs: &Dirs, profile: &Profile, root: &Path) -> Result<Vec<String>> 
         "nenhum core: sessões sem soul seguem sem system prompt".into()
     } else {
         format!(
-            "{} caracteres no prompt-trim e antes de cada soul",
-            text.len()
+            "{} caracteres nas sessões sem soul{}",
+            text.len(),
+            if profile.souls.core_only_plain {
+                ""
+            } else {
+                " e antes de cada soul"
+            }
         )
     }])
 }

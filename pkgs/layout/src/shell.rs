@@ -70,9 +70,15 @@ pub fn env_file(vars: &[(&str, String)]) -> String {
     let mut s =
         String::from("# Written by mandrake setup; edit the profile and run it again instead.\n");
     for (k, v) in vars {
-        s.push_str(&format!("export {k}='{}'\n", v.replace('\'', "'\\''")));
+        // The environment wins: `MANDRAKE_PORT=8788 claude` must reach the launcher unchanged.
+        s.push_str(&format!("[ -n \"${{{k}+x}}\" ] || export {k}={}\n", sh_quote(v)));
     }
     s
+}
+
+/// Single-quoted for sh.
+fn sh_quote(v: &str) -> String {
+    format!("'{}'", v.replace('\'', "'\\''"))
 }
 
 #[cfg(test)]
@@ -105,7 +111,7 @@ mod tests {
     fn env_file_quotes() {
         assert_eq!(
             env_file(&[("X", "it's".into())]).lines().nth(1),
-            Some("export X='it'\\''s'")
+            Some("[ -n \"${X+x}\" ] || export X='it'\\''s'")
         );
     }
 }
