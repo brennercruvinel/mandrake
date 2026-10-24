@@ -140,6 +140,28 @@ impl Totals {
     }
 }
 
+/// One fixture in a bench run.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct BenchRow {
+    /// Fixture file stem.
+    pub name: String,
+    pub bytes_before: u64,
+    pub bytes_after: u64,
+    pub tokens_before: Option<u64>,
+    pub tokens_after: Option<u64>,
+    pub cuts: Cuts,
+}
+
+/// What `mandrake bench` writes as `<out>.json` and `bench --view` draws.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct BenchReport {
+    /// RFC 3339, UTC.
+    pub ts: String,
+    /// False when no credential was available and only bytes were measured.
+    pub counted: bool,
+    pub rows: Vec<BenchRow>,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
