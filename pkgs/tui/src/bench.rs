@@ -95,7 +95,19 @@ pub fn render(f: &mut Frame, s: &BenchState) {
         Constraint::Length(1),
     ])
     .areas(f.area());
-    let subtitle = format!("{} fixtures · relatório de {}", r.rows.len(), r.ts);
+    let subtitle = if r.kind == "ab" {
+        format!(
+            "{} prompts reais, cada um sem e com Mandrake · {}",
+            r.rows.len(),
+            r.ts
+        )
+    } else {
+        format!(
+            "{} corpos fixos, só o corte do proxy · {}",
+            r.rows.len(),
+            r.ts
+        )
+    };
     f.render_widget(theme::title("bench", &subtitle), title);
     if !r.counted {
         f.render_widget(
@@ -153,15 +165,27 @@ fn cells(row: &BenchRow, counted: bool) -> Vec<Cell<'static>> {
 
 fn rows_table(f: &mut Frame, area: ratatui::layout::Rect, s: &BenchState) {
     let counted = s.report.counted;
-    let header = [
-        "fixture",
-        "bytes antes",
-        "bytes depois",
-        "economia",
-        "tokens antes",
-        "tokens depois",
-        "economia",
-    ];
+    let header = if s.report.kind == "ab" {
+        [
+            "prompt",
+            "bytes sem",
+            "bytes com",
+            "economia",
+            "tokens sem",
+            "tokens com",
+            "economia",
+        ]
+    } else {
+        [
+            "fixture",
+            "bytes antes",
+            "bytes depois",
+            "economia",
+            "tokens antes",
+            "tokens depois",
+            "economia",
+        ]
+    };
     let mut rows: Vec<Row> = s
         .report
         .rows
@@ -194,7 +218,14 @@ fn rows_table(f: &mut Frame, area: ratatui::layout::Rect, s: &BenchState) {
     .block(
         Block::bordered()
             .border_style(theme::frame())
-            .title(Span::styled(" Por fixture ", theme::accent())),
+            .title(Span::styled(
+                if s.report.kind == "ab" {
+                    " Por prompt: sem e com Mandrake "
+                } else {
+                    " Por fixture "
+                },
+                theme::accent(),
+            )),
     )
     .row_highlight_style(theme::selected());
     let mut state = TableState::default().with_selected(Some(s.selected));
@@ -247,9 +278,9 @@ fn bars(f: &mut Frame, area: ratatui::layout::Rect, s: &BenchState) {
         })
         .collect();
     let title = match (tokens_rows, mixed) {
-        (0, _) => " Economia por fixture, em bytes ",
-        (_, true) => " Economia por fixture, em tokens (bytes onde não houve contagem) ",
-        _ => " Economia por fixture, em tokens ",
+        (0, _) => " Economia por linha, em bytes ",
+        (_, true) => " Economia por linha, em tokens (bytes onde não houve contagem) ",
+        _ => " Economia por linha, em tokens ",
     };
     f.render_widget(
         BarChart::default()
@@ -308,6 +339,7 @@ mod tests {
                 row("first-turn", (40_000, 30_000), t(10_000, 7_500)),
                 row("long-session", (200_000, 180_000), t(50_000, 45_000)),
             ],
+            kind: String::new(),
         }
     }
 

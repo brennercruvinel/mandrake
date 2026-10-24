@@ -1,63 +1,86 @@
-# How it works
+# Como funciona
 
-Mandrake sits on the path a prompt takes from your terminal to the API, and cuts in two places.
+Toda vez que você manda uma mensagem, o Claude Code envia para a API muito mais do que ela: um
+system prompt próprio de alguns milhares de tokens, a descrição longa de cada tool, lembretes
+automáticos, data, pasta, plataforma. Você paga esse pacote em toda requisição. O Mandrake corta
+esse pacote em duas camadas e põe no lugar um core curto que devolve só as regras de trabalho.
 
 ```mermaid
 flowchart LR
-  Z["shell: claude invoke soul"] -->|core + soul as system prompt| C[Claude Code]
-  C <-->|in-process hooks| T[prompt-trim plugin]
-  C -->|ANTHROPIC_BASE_URL| P["mandrake proxy :8787"]
-  P -->|HTTPS| A[api.anthropic.com]
-  P -->|one line per request| E[(events.jsonl)]
-  P -.->|audit on| B[(audit/id.before/after.json)]
+  S["shell: claude / claude invoke soul"] --> C[Claude Code]
+  C <-->|hooks| T["1. prompt-trim"]
+  C -->|se o proxy responde| P["2. proxy 127.0.0.1:8787"]
+  C -.->|se não responde| A
+  P --> A[api.anthropic.com]
+  P --> E[(events.jsonl)]
 ```
 
-| Layer | Runs | Cuts |
-| - | - | - |
-| `data/plugins/prompt-trim` | inside Claude Code, through its plugin module API, loaded by `CLAUDE_CODE_PLUGIN_DIRS` | default system prompt sections, about 75 kinds of attachments (date, environment, reminders…), tool descriptions, the subagent listing; rewrites the wrappers it keeps (`Contents of X:` becomes `# X`) |
-| `pkgs/proxy` | a local process, as a user service (launchd or systemd) | what the plugin cannot reach: the CLI identity block in `system`, the `<system-reminder>` tags, top-level fields listed in the profile (`metadata` by default) |
+## 1. prompt-trim, dentro do Claude Code
 
-The plugin acts before the request exists, so the proxy never sees what it removed. The proxy sees
-both sides of its own cut, which is how `watch` and `bench` measure without running a session twice.
+Um plugin carregado por `CLAUDE_CODE_PLUGIN_DIRS`. Age antes de a requisição existir:
 
-## What reaches the model
-
-In a session opened with `claude invoke <soul>`:
-
-| Part | Content |
+| Tira | Põe no lugar |
 | - | - |
-| `system` | the core prompt (`data/prompt/cores/coding.md`, unless the profile says otherwise) followed by the soul's own prompt |
-| `tools` | names and parameter schemas, no descriptions |
-| first user message | `CLAUDE.md` as `# <path>`, the skill list, deferred tools, hook context, and `/invoke` expanded when that skill is on |
-| gone | date, working directory, platform, model, language, output style, todo and plan reminders, the default Claude Code prompt, `metadata` |
+| as seções do prompt padrão do Claude Code (`intro`, `doing_tasks`, `tools`, `tone`…) | o core, `data/prompt/cores/coding.md`, nas sessões sem soul |
+| cerca de 75 tipos de lembretes e anexos (data, ambiente, todo, plano, modelo, idioma…) | nada; o core diz ao modelo que pergunte à máquina (`date`, `pwd`) |
+| a descrição de cada tool (~16 mil caracteres) | o core resume os contratos que importam (Read antes de Edit, cuidados do Bash) |
+| a lista de tipos de subagente | nada |
 
-The core exists because of that last row: it gives back, in one page, the working rules the default
-prompt carried (read before editing, care with irreversible actions, git hygiene, verify by running)
-and tells the model the environment block is gone, so it asks the machine instead of guessing.
+Reescreve os textos fixos dos anexos que ficam: `Contents of X (…):` vira `# X`, o cabeçalho da lista
+de skills vira `Skills:`.
 
-## Measurement
+## 2. proxy local, entre o Claude Code e a API
 
-Each `/v1/messages` request through the proxy writes one `mandrake_meter::Event`: bytes before and
-after the cut, tokens before and after (two `count_tokens` calls off the response path, with the
-request's own credential), the `usage` the API reported (input, output, cache read and create),
-what was cut, status and time. A second proxy in `pass` mode writes the same events without cutting,
-for an A/B.
+Alcança o que o plugin não alcança, no corpo JSON da requisição:
 
-## The Claude Code folder
+- tira as tags `<system-reminder>` em volta dos textos, mantendo o conteúdo;
+- tira os campos do topo listados em `[proxy] strip_fields` (padrão: `metadata`);
+- mede: conta os tokens antes e depois (`count_tokens`, com a credencial da própria requisição),
+  e guarda o `usage` que a API cobrou. Uma linha por requisição em `~/.local/state/mandrake/events.jsonl`.
 
-`~/.claude` (or `CLAUDE_CONFIG_DIR`) is arranged by a profile: each entry stays, becomes a link to
-your development folder, or gets a copy. Nothing is deleted: what is in the way moves to
-`~/.local/state/mandrake/backups/<stamp>/`, every step goes to a journal, and `mandrake link rollback`
-undoes the last apply. `mandrake capture` writes the current arrangement as a profile, so a machine
-can be rebuilt from one file.
+O corte da identidade do CLI no `system` existe (`cut_identity`), mas vem desligado: medido numa
+sessão longa com login por assinatura, ele fez a requisição custar mais (269.338 → 291.637 tokens).
 
-## Where things live
+O proxy é opcional para funcionar. O `settings.json` não aponta para ele: o launcher do shell
+define `ANTHROPIC_BASE_URL` por sessão, só quando o proxy responde. Proxy fora do ar = sessão
+direto na API, com um aviso. Sessões abertas fora desse shell (IDE, app) não passam pelo proxy,
+mas continuam com o prompt-trim.
 
-| | Default | Override |
+## Quanto economiza, medido
+
+`mandrake bench` roda os mesmos prompts pelo `claude -p`, com o seu login, sem Mandrake (sem
+prompt-trim, proxy só medindo) e com ele. Em 2026-10-24, nesta máquina:
+
+| prompt | tokens sem | tokens com | economia |
+| - | -: | -: | -: |
+| resposta-curta | 20.784 | 14.152 | 31,9% |
+| pergunta | 20.791 | 14.159 | 31,9% |
+| codigo | 20.801 | 14.169 | 31,9% |
+
+Onde estão os tokens que sobram, na requisição com Mandrake: o `CLAUDE.md` do usuário (~18,8 mil
+caracteres, o maior pedaço), o core (~4,4 mil), os schemas das tools sem descrição. O Mandrake não
+corta o `CLAUDE.md`: ele é seu. O proxy sozinho corta pouco (17 tokens); quase toda a economia é do
+prompt-trim.
+
+## Souls
+
+`claude invoke <soul>` abre uma sessão com o prompt da soul como system prompt inteiro, o
+`settings.json` dela e o gh dela (`~/.config/gh-<soul>`). O core vai antes da soul, a menos que o
+perfil diga `core_only_plain = true` (souls que já se sustentam sozinhas). `Rhizo` é o exemplo
+que vem com o Mandrake.
+
+## A pasta ~/.claude
+
+Um perfil diz, para cada entrada de `~/.claude`, se ela fica, vira link para uma pasta sua ou
+recebe uma cópia. Nada é apagado: o que está no caminho vai para
+`~/.local/state/mandrake/backups/<data>/`, cada passo vai para um journal, `mandrake link rollback`
+desfaz. `mandrake capture` escreve a pasta atual como perfil, para refazer outra máquina.
+
+## Onde fica cada coisa
+
+| | Padrão | Muda com |
 | - | - | - |
-| profile | `~/.config/mandrake/mandrake.toml` | `XDG_CONFIG_HOME` |
-| installed copy of `data/` and `cfgs/` | `~/.local/share/mandrake/src` | `XDG_DATA_HOME` |
-| events, audit, journal, backups, logs | `~/.local/state/mandrake` | `XDG_STATE_HOME` |
-| everything above, for tests | | `MANDRAKE_HOME` |
-
-The same paths on macOS and Linux; only the service differs (launchd, systemd --user).
+| perfil | `~/.config/mandrake/mandrake.toml` | `XDG_CONFIG_HOME` |
+| cópia instalada (`data/`, `cfgs/`) | `~/.local/share/mandrake/src` | `XDG_DATA_HOME` |
+| eventos, bench, journal, backups, logs | `~/.local/state/mandrake` | `XDG_STATE_HOME` |
+| tudo acima, para teste | | `MANDRAKE_HOME` |

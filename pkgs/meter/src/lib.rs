@@ -160,6 +160,10 @@ pub struct BenchReport {
     /// False when no credential was available and only bytes were measured.
     pub counted: bool,
     pub rows: Vec<BenchRow>,
+    /// `ab`: each row is a real `claude -p` run without Mandrake ("before") and with it ("after").
+    /// Empty: request bodies run through the proxy's cut only, the plugin's cut not included.
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub kind: String,
 }
 
 #[cfg(test)]

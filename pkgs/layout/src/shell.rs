@@ -71,7 +71,10 @@ pub fn env_file(vars: &[(&str, String)]) -> String {
         String::from("# Written by mandrake setup; edit the profile and run it again instead.\n");
     for (k, v) in vars {
         // The environment wins: `MANDRAKE_PORT=8788 claude` must reach the launcher unchanged.
-        s.push_str(&format!("[ -n \"${{{k}+x}}\" ] || export {k}={}\n", sh_quote(v)));
+        s.push_str(&format!(
+            "[ -n \"${{{k}+x}}\" ] || export {k}={}\n",
+            sh_quote(v)
+        ));
     }
     s
 }

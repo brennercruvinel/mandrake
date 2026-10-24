@@ -31,10 +31,18 @@ in the body. `mandrake audit` lists the audited ids.
 
 ## Bench: `mandrake bench`
 
-Runs the request bodies in `tool/tests/fixtures/*.json` through the cut and asks `count_tokens` for each
-side, with `ANTHROPIC_API_KEY` (or the header in `MANDRAKE_BENCH_AUTH`). It writes
-`~/.local/state/mandrake/bench/latest.json` and `.md`; `mandrake bench --view` draws it. Without a
-credential it measures bytes only and says so.
+O A/B real. Três prompts curtos, cada um pelo `claude -p` duas vezes, com o seu login:
+
+- **sem Mandrake:** sem prompt-trim, por um proxy em modo `pass` que só mede;
+- **com Mandrake:** com o prompt-trim instalado, por um proxy que corta.
+
+Os tokens são o que o `count_tokens` da API conta para cada requisição como ela foi enviada.
+Custa 6 requisições curtas. Escreve `~/.local/state/mandrake/bench/latest.json` e `.md`, e guarda
+as 6 requisições em `bench/run-<data>/` para o `mandrake hex`. `mandrake bench --view` desenha o
+último relatório.
+
+`mandrake bench --fixtures <pasta>` mede só o corte do proxy sobre corpos de requisição salvos,
+sem rodar o Claude Code; os de `tool/tests/fixtures` são sintéticos, feitos para os testes.
 
 ## Audit
 

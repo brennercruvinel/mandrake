@@ -94,8 +94,25 @@ pub fn setup(dirs: &Dirs, from: Option<PathBuf>, asking: Asking) -> Result<()> {
     let exe = std::env::current_exe()?;
     step(
         "proxy",
-        mandrake_proxy::install_service(dirs, &profile, &exe)
-            .map(|_| vec![format!("serviço no 127.0.0.1:{}", profile.proxy.port)]),
+        mandrake_proxy::install_service(dirs, &profile, &exe).and_then(|_| {
+            let port = profile.proxy.port;
+            if std::env::var_os("MANDRAKE_HOME").is_some() {
+                return Ok(vec![format!(
+                    "serviço escrito para 127.0.0.1:{port} (MANDRAKE_HOME: não carregado)"
+                )]);
+            }
+            // Report the proxy up only once it answers, not when the service was merely loaded.
+            for _ in 0..50 {
+                if std::net::TcpStream::connect(("127.0.0.1", port)).is_ok() {
+                    return Ok(vec![format!("no ar em 127.0.0.1:{port}")]);
+                }
+                std::thread::sleep(std::time::Duration::from_millis(200));
+            }
+            anyhow::bail!(
+                "serviço carregado, mas 127.0.0.1:{port} não respondeu em 10 s (veja {})",
+                dirs.logs().display()
+            )
+        }),
     );
     report(&errors);
     if !errors.is_empty() {
@@ -226,7 +243,16 @@ pub fn audit(dirs: &Dirs, last: usize) -> Result<()> {
     events.reverse();
     if events.is_empty() {
         println!(
-            "no audited requests: set [proxy] audit = true in {}",
+            "Nenhuma requisição guardada. A auditoria guarda o corpo inteiro (conversa e código),"
+        );
+        println!(
+            "por isso vem desligada. Para ver antes e depois de um corte real, rode `mandrake bench`:"
+        );
+        println!(
+            "ele guarda as requisições da medição e diz o MANDRAKE_HOME para o `mandrake hex`."
+        );
+        println!(
+            "Para guardar tudo: [proxy] audit = true em {}",
             dirs.profile().display()
         );
     }
@@ -337,11 +363,8 @@ pub fn doctor(dirs: &Dirs) -> Result<()> {
     let souls = install::souls_dir(dirs, &p, &root);
     check(souls.is_dir(), format!("souls {}", souls.display()));
     match mandrake_proxy::status(dirs, &p) {
-        Ok(s) => check(
-            !s.contains("down") && !s.contains("not "),
-            format!("proxy: {s}"),
-        ),
-        Err(e) => check(false, format!("proxy: {e:#}")),
+        Ok(s) => check(!s.contains("down") && !s.contains("not "), s.to_string()),
+        Err(e) => check(false, format!("{e:#}")),
     }
     let v = std::process::Command::new("claude")
         .arg("--version")
@@ -357,5 +380,83 @@ pub fn doctor(dirs: &Dirs) -> Result<()> {
     if bad > 0 {
         std::process::exit(1);
     }
+    Ok(())
+}
+
+/// `mandrake` with no arguments: what it does and what is on, in plain words.
+pub fn status(dirs: &Dirs) -> Result<()> {
+    println!(
+        "Mandrake: corta o que o Claude Code coloca em volta do seu prompt e mede a economia.\n"
+    );
+    let Ok(p) = Profile::load(&dirs.profile()) else {
+        println!("Ainda não instalado nesta máquina. Rode: mandrake setup");
+        return Ok(());
+    };
+    let trim = install::prompt_trim(&dirs.data.join("src"));
+    let doc = settings::read(&dirs.claude.join("settings.json")).unwrap_or_default();
+    let plugin_on =
+        doc["env"][settings::PLUGIN_DIRS].as_str() == Some(trim.to_string_lossy().as_ref());
+    let proxy_up = std::net::TcpStream::connect(("127.0.0.1", p.proxy.port)).is_ok();
+    let mark = |b: bool| if b { "ligado" } else { "DESLIGADO" };
+    println!("Como funciona, em duas camadas:");
+    println!(
+        "  1. prompt-trim (dentro do Claude Code) ........ {}",
+        mark(plugin_on)
+    );
+    println!(
+        "     tira o prompt padrão, os lembretes, data, pasta e as descrições longas das tools,"
+    );
+    println!("     e põe no lugar o core (data/prompt/cores/coding.md) nas sessões sem soul");
+    println!(
+        "  2. proxy local 127.0.0.1:{} (entre o Claude Code e a API) ... {}",
+        p.proxy.port,
+        mark(proxy_up)
+    );
+    println!(
+        "     tira as tags <system-reminder> e os campos {}; mede tokens antes e depois",
+        p.proxy.strip_fields.join(", ")
+    );
+    println!("     sessões abertas por um shell com o Mandrake usam o proxy quando ele responde;");
+    println!("     se ele estiver fora, vão direto para a API, sem quebrar\n");
+    let events = mandrake_meter::read(&dirs.events()).unwrap_or_default();
+    let last = events.iter().rev().find(|e| e.tokens_after.is_some());
+    println!(
+        "Pelo proxy passaram {} requisições.{}",
+        events.len(),
+        last.map(|e| format!(" Última: {} tokens enviados.", e.tokens_after.unwrap_or(0)))
+            .unwrap_or_default()
+    );
+    let bench = dirs.state.join("bench/latest.json");
+    match std::fs::read(&bench)
+        .ok()
+        .and_then(|b| serde_json::from_slice::<mandrake_meter::BenchReport>(&b).ok())
+    {
+        Some(r) if r.kind == "ab" => {
+            let (b, a): (u64, u64) = r.rows.iter().fold((0, 0), |(b, a), x| {
+                (
+                    b + x.tokens_before.unwrap_or(0),
+                    a + x.tokens_after.unwrap_or(0),
+                )
+            });
+            let pct = if b > 0 {
+                100.0 * (b - a.min(b)) as f64 / b as f64
+            } else {
+                0.0
+            };
+            println!(
+                "Último bench ({}): {} tokens sem Mandrake, {} com, {:.1}% a menos.",
+                &r.ts[..10.min(r.ts.len())],
+                b,
+                a,
+                pct
+            );
+        }
+        _ => println!(
+            "Ainda não mediu: rode `mandrake bench` (2 requisições curtas por prompt, pela sua sessão)."
+        ),
+    }
+    println!(
+        "\nComandos: setup · doctor · bench · watch · audit · capture · link · proxy   (mandrake <comando> --help)"
+    );
     Ok(())
 }

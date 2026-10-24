@@ -105,6 +105,7 @@ pub async fn measure(
         ts: clock::now(),
         counted: auth.is_some(),
         rows,
+        kind: String::new(),
     })
 }
 
@@ -122,7 +123,9 @@ pub fn markdown(report: &BenchReport) -> String {
         report.ts,
         report.rows.len()
     );
-    if report.counted {
+    if report.kind == "ab" {
+        md.push_str("Each row: the same prompt through `claude -p`, before = without Mandrake (no prompt-trim, proxy in pass mode), after = with Mandrake. Tokens counted by the API for the request as sent.\n\n");
+    } else if report.counted {
         md.push_str("Tokens from `count_tokens`; `-` is a count that failed.\n\n");
     } else {
         md.push_str(

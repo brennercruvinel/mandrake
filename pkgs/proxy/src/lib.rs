@@ -19,6 +19,8 @@ use anyhow::Result;
 use mandrake_home::{Dirs, Profile};
 use std::path::Path;
 
+/// Writes a bench report as `<out>.json` and `<out>.md`.
+pub use bench::write as write_bench;
 /// `trim` cuts per `cfgs/proxy/trim.toml` and the profile; `pass` forwards untouched and still measures.
 pub use mandrake_meter::Mode;
 

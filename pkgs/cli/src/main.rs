@@ -1,5 +1,6 @@
 //! `mandrake`: one binary, one subcommand per job.
 
+mod ab;
 mod ask;
 mod cmd;
 mod install;
@@ -7,103 +8,113 @@ mod install;
 use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 
+const ABOUT: &str = "Mandrake corta o que o Claude Code coloca em volta do seu prompt, mede quanto isso economiza
+e refaz a sua pasta ~/.claude em qualquer máquina a partir de um perfil.
+
+Sem argumentos, mostra o estado desta máquina. Comece por `mandrake setup` e confira com `mandrake doctor`.";
+
 #[derive(Parser)]
-#[command(
-    name = "mandrake",
-    version,
-    about = "Claude Code's harness: trimmed, measured, reproducible"
-)]
+#[command(name = "mandrake", version, about = "Corta, mede e reproduz o harness do Claude Code", long_about = ABOUT)]
 struct Cli {
     #[command(subcommand)]
-    cmd: Cmd,
+    cmd: Option<Cmd>,
 }
 
 #[derive(Subcommand)]
 enum Cmd {
-    /// Interactive setup, or `--profile <file> --yes` to apply a saved one
+    /// Instala ou ajusta: pergunta item por item e aplica (--cli em linhas, --profile f --yes sem perguntar)
     Setup {
+        /// Começa deste perfil em vez do salvo
         #[arg(long)]
         profile: Option<PathBuf>,
-        /// Apply without asking
+        /// Aplica sem perguntar
         #[arg(long)]
         yes: bool,
-        /// Ask one question per line instead of the full-screen wizard
+        /// Perguntas uma por linha, em vez da tela cheia
         #[arg(long)]
         cli: bool,
     },
-    /// Write the current Claude Code folder as a profile
-    Capture {
+    /// Confere tudo: links, settings, plugins, shell, proxy e Claude Code
+    Doctor,
+    /// Mede de verdade: os mesmos prompts pelo claude -p sem e com Mandrake (gasta 2 requisições curtas por prompt)
+    Bench {
+        /// Mede só o corte do proxy sobre corpos de requisição desta pasta (sem rodar o Claude Code)
         #[arg(long)]
+        fixtures: Option<PathBuf>,
+        #[arg(long, hide = true)]
         out: Option<PathBuf>,
-    },
-    /// Links of the Claude Code folder: plan, apply, rollback
-    Link {
-        #[command(subcommand)]
-        op: LinkOp,
-    },
-    /// The local proxy
-    Proxy {
-        #[command(subcommand)]
-        op: ProxyOp,
-    },
-    /// Live split view: untrimmed on the left, trimmed on the right
-    Watch {
+        /// Mostra o último relatório em vez de medir
         #[arg(long)]
-        embed: bool,
-        /// Print one frame as text, WIDTHxHEIGHT, instead of opening the screen
+        view: bool,
+        /// Com --view: imprime a tela como texto, LARGURAxALTURA
         #[arg(long)]
         snapshot: Option<String>,
     },
-    /// Side-by-side hex of one request before and after the trim
+    /// Tela ao vivo das requisições: sem Mandrake à esquerda, com Mandrake à direita
+    Watch {
+        /// Para rodar dentro de um painel do tui-embed
+        #[arg(long)]
+        embed: bool,
+        /// Imprime a tela como texto, LARGURAxALTURA
+        #[arg(long)]
+        snapshot: Option<String>,
+    },
+    /// Uma requisição antes e depois do corte, lado a lado em hex (precisa de auditoria ligada)
     Hex {
+        /// O id, de `mandrake audit`
         id: String,
         #[arg(long)]
         snapshot: Option<String>,
-        /// With --snapshot: scroll to this changed stretch first
         #[arg(long, default_value_t = 0)]
         hunk: usize,
     },
-    /// Token savings over fixed requests
-    Bench {
-        /// Request bodies to measure; default: the fixtures shipped with Mandrake
-        #[arg(long)]
-        fixtures: Option<PathBuf>,
-        #[arg(long)]
-        out: Option<PathBuf>,
-        /// Draw the report instead of running
-        #[arg(long)]
-        view: bool,
-        /// With --view: print one frame as text, WIDTHxHEIGHT
-        #[arg(long)]
-        snapshot: Option<String>,
-    },
-    /// Requests with audit bodies kept, newest first
+    /// Lista as requisições cujo corpo foi guardado (com [proxy] audit = true no perfil)
     Audit {
         #[arg(long, default_value_t = 20)]
         last: usize,
     },
-    /// Checks links, settings, plugins and the proxy
-    Doctor,
+    /// Escreve a pasta ~/.claude atual como perfil, para levar a outra máquina
+    Capture {
+        #[arg(long)]
+        out: Option<PathBuf>,
+    },
+    /// Links da pasta ~/.claude: plan mostra, apply aplica, rollback desfaz
+    Link {
+        #[command(subcommand)]
+        op: LinkOp,
+    },
+    /// O proxy local: run, install, uninstall, status
+    Proxy {
+        #[command(subcommand)]
+        op: ProxyOp,
+    },
 }
 
 #[derive(Subcommand)]
 enum LinkOp {
+    /// Mostra o que mudaria, sem tocar em nada
     Plan,
+    /// Aplica; o que estiver no caminho vai para o backup
     Apply,
+    /// Desfaz o último apply
     Rollback,
 }
 
 #[derive(Subcommand)]
 enum ProxyOp {
-    /// Serve in the foreground
+    /// Roda em primeiro plano
     Run {
+        /// Só mede, não corta
         #[arg(long)]
         pass: bool,
         #[arg(long)]
         port: Option<u16>,
     },
+    /// Instala como serviço do usuário (launchd ou systemd)
     Install,
+    /// Remove o serviço
     Uninstall,
+    /// Diz se está no ar
     Status,
 }
 
@@ -115,7 +126,10 @@ fn print(text: anyhow::Result<String>) -> anyhow::Result<()> {
 fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
     let dirs = mandrake_home::Dirs::from_env()?;
-    match cli.cmd {
+    let Some(command) = cli.cmd else {
+        return cmd::status(&dirs);
+    };
+    match command {
         Cmd::Setup { profile, yes, cli } => {
             let asking = if yes {
                 cmd::Asking::No
@@ -170,6 +184,11 @@ fn main() -> anyhow::Result<()> {
             snapshot,
         } => {
             let out = out.unwrap_or_else(|| dirs.state.join("bench/latest"));
+            if !view && fixtures.is_none() {
+                let p = cmd::profile(&dirs)?;
+                let trim = install::prompt_trim(&dirs.data.join("src"));
+                return ab::run(&dirs, &p, &trim, &out).map(|_| ());
+            }
             if let (true, Some(s)) = (view, &snapshot) {
                 print(mandrake_tui::bench_snapshot(&out.with_extension("json"), s))
             } else if view {
