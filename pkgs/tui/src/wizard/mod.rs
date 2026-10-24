@@ -20,10 +20,7 @@ use std::time::Duration;
 pub fn run(dirs: &Dirs, catalog: &Catalog, current: &Profile) -> Result<Option<Profile>> {
     let mut wizard = Wizard::new(dirs, catalog, current);
     // No mouse capture: the wizard is all keys, and the terminal keeps text selection.
-    let mut session = Session::enter(Opts {
-        alt_screen: true,
-        mouse: false,
-    })?;
+    let mut session = Session::enter(Opts::KEYS)?;
     loop {
         session.term().draw(|f| render(f, &wizard))?;
         let Some(ev) = term::next_event(Duration::from_millis(250))? else {

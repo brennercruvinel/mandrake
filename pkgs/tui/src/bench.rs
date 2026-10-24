@@ -270,7 +270,7 @@ fn bars(f: &mut Frame, area: ratatui::layout::Rect, s: &BenchState) {
 
 pub fn run(report: &Path) -> Result<()> {
     let mut state = BenchState::load(report)?;
-    let mut session = Session::enter(Opts::FULL)?;
+    let mut session = Session::enter(Opts::KEYS)?;
     loop {
         session.term().draw(|f| render(f, &state))?;
         if let Some(ev) = term::next_event(Duration::from_millis(250))?

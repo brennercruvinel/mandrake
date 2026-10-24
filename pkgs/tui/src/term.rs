@@ -1,7 +1,7 @@
 //! Entering and leaving the real terminal. Every screen draws into a [`Frame`] from its own state;
 //! only this module touches stdout, so tests render the same screens on a `TestBackend`.
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use crossterm::event::{self, DisableMouseCapture, EnableMouseCapture, Event};
 use crossterm::execute;
 use crossterm::terminal::{
@@ -31,6 +31,11 @@ impl Opts {
         alt_screen: true,
         mouse: true,
     };
+    /// A screen of its own, all keys: the terminal keeps text selection.
+    pub const KEYS: Opts = Opts {
+        alt_screen: true,
+        mouse: false,
+    };
     /// Inside a tui-embed pane: the pane is the screen, and the host keeps the mouse.
     pub const EMBED: Opts = Opts {
         alt_screen: false,
@@ -54,23 +59,32 @@ pub struct Session {
 impl Session {
     pub fn enter(opts: Opts) -> Result<Self> {
         install_panic_hook();
+        // A failure halfway (no tty, a closed pipe) must not leave raw mode or the alternate screen on.
+        Self::setup(opts)
+            .inspect_err(|_| restore())
+            .context("não foi possível abrir o terminal: esta tela precisa de um tty")
+    }
+
+    fn setup(opts: Opts) -> Result<Self> {
         enable_raw_mode()?;
+        // Flags go up before each step, so a step that fails halfway is still undone.
         let mut flags = ACTIVE;
         STATE.store(flags, Ordering::SeqCst);
         let mut out = stdout();
         if opts.alt_screen {
-            execute!(out, EnterAlternateScreen)?;
             flags |= ALT;
-        } else {
-            execute!(out, Clear(ClearType::All))?;
+            STATE.store(flags, Ordering::SeqCst);
+            execute!(out, EnterAlternateScreen)?;
         }
         if opts.mouse {
-            execute!(out, EnableMouseCapture)?;
             flags |= MOUSE;
+            STATE.store(flags, Ordering::SeqCst);
+            execute!(out, EnableMouseCapture)?;
         }
-        STATE.store(flags, Ordering::SeqCst);
-        let mut term = Terminal::new(CrosstermBackend::new(out))?;
-        term.clear()?;
+        // Not `Terminal::clear`: it asks the terminal where the cursor is, and an embed pane may
+        // never answer.
+        execute!(out, Clear(ClearType::All))?;
+        let term = Terminal::new(CrosstermBackend::new(out))?;
         Ok(Self { term })
     }
 
