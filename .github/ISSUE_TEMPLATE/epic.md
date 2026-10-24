@@ -1,22 +1,20 @@
 ---
-name: Épica
-about: Um objetivo grande, dividido em sub-issues
-title: ""
-labels: []
+name: Epic
+about: A larger goal, split into sub-issues
 ---
 
-## Estado atual
+## Current state
 
-<!-- O que existe hoje e o que falta, com números quando houver. -->
+<!-- What exists today and what is missing, with numbers when there are any. -->
 
-## O que foi medido
+## Measured
 
-<!-- Medições que sustentam a épica: comando, máquina, resultado. Apague se ainda não houver. -->
+<!-- Measurements behind the epic: command, machine, result. Remove if there are none yet. -->
 
 ## Sub-issues
 
 - [ ] #
 
-## Pronto quando
+## Done when
 
-<!-- O comportamento que, funcionando, encerra a épica. -->
+<!-- The behavior that, working, closes the epic. -->
