@@ -1,5 +1,5 @@
 # Mandrake's shell file, sourced from the rc by the block `mandrake setup` writes (bash and zsh).
-# `claude [flags] invoke <soul>` opens a soul: its prompt as the whole system prompt, its settings,
+# `claude [flags] invoke <soul>` opens a soul: the core prompt and its own as the whole system prompt, its settings,
 # its own gh login when ~/.config/gh-<soul> exists, and /invoke first when that skill is installed.
 # Any other call is plain Claude Code.
 _mandrake_env="${XDG_DATA_HOME:-$HOME/.local/share}/mandrake/shell/env.sh"
@@ -61,7 +61,9 @@ _mandrake_summon() (
   dir="$MANDRAKE_SOULS/$name"
   prompt="${TMPDIR:-/tmp}/mandrake-soul-$name-$$.md"
   # The front matter (between the first two --- lines) is for agent definitions, not for the prompt.
-  awk 'NR == 1 && /^---$/ { fm = 1; next } fm && /^---$/ { fm = 0; next } !fm' "$(_mandrake_prompt "$dir")" > "$prompt"
+  # The core goes first when the profile has one; the soul follows.
+  { if [ -f "${MANDRAKE_CORE:-}" ]; then cat "$MANDRAKE_CORE"; printf '\n'; fi
+    awk 'NR == 1 && /^---$/ { fm = 1; next } fm && /^---$/ { fm = 0; next } !fm' "$(_mandrake_prompt "$dir")"; } > "$prompt"
   export MANDRAKE_SOUL="$name"
   [ -d "${XDG_CONFIG_HOME:-$HOME/.config}/gh-$name" ] && export GH_CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/gh-$name"
   extra=(--system-prompt-file "$prompt" --name "$(printf '%s' "${name:0:1}" | tr '[:lower:]' '[:upper:]')${name:1}")

@@ -47,9 +47,14 @@ check "second setup leaves one block" "$(grep -c '>>> mandrake >>>' "$t/home/.zs
 m doctor > "$t/doctor.log" 2>&1
 check "doctor fails only on the proxy" "$(grep FAIL "$t/doctor.log" | grep -vc 'proxy')" 0
 # The launcher finds the soul and builds the claude call (claude stubbed).
-mkdir -p "$t/bin"; printf '#!/bin/sh\nprintf "%%s\\n" "$@"\n' > "$t/bin/claude"; chmod +x "$t/bin/claude"
+mkdir -p "$t/bin"; cat > "$t/bin/claude" <<'STUB'
+#!/bin/sh
+prev=""; for a in "$@"; do printf '%s\n' "$a"; [ "$prev" = --system-prompt-file ] && head -1 "$a"; prev="$a"; done
+STUB
+chmod +x "$t/bin/claude"
 call="$(env HOME="$t/home" MANDRAKE_HOME="$t/mh" PATH="$t/bin:$PATH" bash -c ". '$t/mh/data/shell/mandrake.sh'; claude --x invoke NOVA" | tr '\n' ' ')"
 check "launcher opens the soul" "$(grep -c -- "--settings $t/dev/souls/nova/settings.json --system-prompt-file" <<<"$call")" 1
 check "launcher names it and passes the flags" "$(grep -c -- '--name Nova --x' <<<"$call")" 1
+check "the core goes before the soul" "$(grep -c -- '# Core' <<<"$call")" 1
 if [ "$fails" -gt 0 ]; then echo "--- setup.log"; cat "$t/setup.log"; echo "--- doctor.log"; cat "$t/doctor.log"; fi
 exit "$fails"

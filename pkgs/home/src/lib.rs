@@ -156,6 +156,10 @@ pub struct Souls {
     /// Unset means the souls shipped with Mandrake.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub dir: Option<String>,
+    /// The core prompt put before every soul: a path, `"none"`, or unset for the shipped
+    /// `data/prompt/cores/coding.md`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub core: Option<String>,
     /// Extra names per soul folder, for `claude invoke <name>`.
     #[serde(skip_serializing_if = "BTreeMap::is_empty")]
     pub aliases: BTreeMap<String, Vec<String>>,

@@ -76,6 +76,15 @@ pub fn souls_dir(dirs: &Dirs, profile: &Profile, root: &Path) -> PathBuf {
     }
 }
 
+/// The core prompt the launcher puts before a soul, if any.
+pub fn core_file(dirs: &Dirs, profile: &Profile, root: &Path) -> Option<PathBuf> {
+    match profile.souls.core.as_deref() {
+        Some("none") => None,
+        Some(c) => Some(dirs.expand(c, profile.dev_root(dirs).as_deref())),
+        None => Some(root.join("data/prompt/cores/coding.md")),
+    }
+}
+
 /// `shell/env.sh`, the shell file, and the block in the rc.
 pub fn shell(dirs: &Dirs, profile: &Profile, root: &Path) -> Result<Vec<String>> {
     let sh = dirs.data.join("shell");
@@ -94,6 +103,12 @@ pub fn shell(dirs: &Dirs, profile: &Profile, root: &Path) -> Result<Vec<String>>
             } else {
                 "0".into()
             },
+        ),
+        (
+            "MANDRAKE_CORE",
+            core_file(dirs, profile, root)
+                .map(|p| p.to_string_lossy().into_owned())
+                .unwrap_or_default(),
         ),
     ];
     if let Some(m) = &profile.skills.memory_cmd {
