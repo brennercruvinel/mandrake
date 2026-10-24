@@ -1,5 +1,5 @@
 /target
 .DS_Store
 *.zip
-/tests/fixtures/*.raw.json
+/tool/tests/fixtures/*.raw.json
 /.backup/

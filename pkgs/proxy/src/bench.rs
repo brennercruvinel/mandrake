@@ -201,7 +201,7 @@ mod tests {
     use super::*;
 
     fn repo_fixtures() -> PathBuf {
-        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../tests/fixtures")
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../tool/tests/fixtures")
     }
 
     #[test]

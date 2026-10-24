@@ -7,11 +7,11 @@
 #   2. `mandrake setup --profile <file> --yes`;
 #   3. checks: the same links as before, the proxy answering on its port, doctor.
 # If the proxy does not answer, everything is put back and the old service restarted.
-#   tests/e2e/rebuild-live.sh <profile.toml> [old-launchd-label] [old-rc-line-pattern]
+#   tool/tests/e2e/rebuild-live.sh <profile.toml> [old-launchd-label] [old-rc-line-pattern]
 set -uo pipefail
 profile="${1:?usage: rebuild-live.sh <profile.toml> [old-launchd-label] [old-rc-pattern]}"
 old_label="${2:-}"; old_rc="${3:-}"
-src="$(cd "$(dirname "$0")/../.." && pwd)"
+src="$(cd "$(dirname "$0")/../../.." && pwd)"
 bin="${MANDRAKE_BIN:-$HOME/.local/bin/mandrake}"
 claude_dir="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
 rc="$HOME/.zshrc"; case "${SHELL:-}" in */bash) rc="$HOME/.bashrc"; [ "$(uname -s)" = Darwin ] && rc="$HOME/.bash_profile" ;; esac

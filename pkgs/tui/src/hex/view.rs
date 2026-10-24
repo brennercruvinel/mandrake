@@ -155,7 +155,7 @@ fn header(f: &mut Frame, area: Rect, v: &HexView) {
     let mut cuts = vec![k("cortes"), Span::raw(cuts_summary(v))];
     if v.diff.method == Method::Lines {
         cuts.push(Span::styled(
-            "  diff por linhas, refinado por bytes: o diff direto passou de 2 s",
+            "  diff aproximado por linhas: passou de 2 s",
             theme::warn(),
         ));
     }

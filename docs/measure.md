@@ -31,7 +31,7 @@ in the body. `mandrake audit` lists the audited ids.
 
 ## Bench: `mandrake bench`
 
-Runs the request bodies in `tests/fixtures/*.json` through the cut and asks `count_tokens` for each
+Runs the request bodies in `tool/tests/fixtures/*.json` through the cut and asks `count_tokens` for each
 side, with `ANTHROPIC_API_KEY` (or the header in `MANDRAKE_BENCH_AUTH`). It writes
 `~/.local/state/mandrake/bench/latest.json` and `.md`; `mandrake bench --view` draws it. Without a
 credential it measures bytes only and says so.

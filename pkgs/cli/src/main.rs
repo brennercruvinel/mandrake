@@ -51,8 +51,9 @@ enum Cmd {
     Hex { id: String },
     /// Token savings over fixed requests
     Bench {
-        #[arg(long, default_value = "tests/fixtures")]
-        fixtures: PathBuf,
+        /// Request bodies to measure; default: the fixtures shipped with Mandrake
+        #[arg(long)]
+        fixtures: Option<PathBuf>,
         #[arg(long)]
         out: Option<PathBuf>,
         /// Draw the report instead of running
@@ -132,6 +133,10 @@ fn main() -> anyhow::Result<()> {
             if view {
                 mandrake_tui::bench_view(&out.with_extension("json"))
             } else {
+                let fixtures = match fixtures {
+                    Some(f) => f,
+                    None => install::source(&dirs)?.join("tool/tests/fixtures"),
+                };
                 mandrake_proxy::bench(&dirs, &cmd::profile(&dirs)?, &fixtures, &out)
             }
         }

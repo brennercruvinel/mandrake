@@ -2,9 +2,9 @@
 # End to end on a throwaway machine: a fake ~/.claude with links into a dev folder is captured,
 # its links are removed, and `mandrake setup --profile --yes` must bring the same links back,
 # with doctor passing on everything but the proxy (not started here). Never touches the real home.
-#   tests/e2e/setup.sh [path/to/mandrake]
+#   tool/tests/e2e/setup.sh [path/to/mandrake]
 set -uo pipefail
-bin="${1:-$(cd "$(dirname "$0")/../.." && pwd)/target/debug/mandrake}"
+bin="${1:-$(cd "$(dirname "$0")/../../.." && pwd)/target/debug/mandrake}"
 t="$(mktemp -d)"; trap 'rm -rf "$t"' EXIT
 fails=0
 check() { if [ "$2" = "$3" ]; then echo "ok    $1"; else echo "FAIL  $1: got '$2', want '$3'"; fails=$((fails + 1)); fi; }

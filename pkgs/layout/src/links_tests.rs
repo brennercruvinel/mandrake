@@ -105,7 +105,11 @@ fn capture_round_trips_through_apply() {
     apply(&t.dirs, &cat, &plan(&t.dirs, &cat, &p).unwrap(), "s1").unwrap();
     // The CLI's own links inside its folder stay out of the profile.
     std::fs::create_dir_all(t.dirs.claude.join("debug")).unwrap();
-    symlink(&t.dirs.claude.join("debug/x.txt"), &t.dirs.claude.join("debug/latest")).unwrap();
+    symlink(
+        &t.dirs.claude.join("debug/x.txt"),
+        &t.dirs.claude.join("debug/latest"),
+    )
+    .unwrap();
     symlink(Path::new("x.txt"), &t.dirs.claude.join("debug/rel")).unwrap();
     let c = capture(&t.dirs).unwrap();
     assert_eq!(

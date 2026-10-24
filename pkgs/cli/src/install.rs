@@ -29,13 +29,13 @@ pub fn source(dirs: &Dirs) -> Result<PathBuf> {
     bail!("no Mandrake source found: run from the checkout, or set MANDRAKE_SRC")
 }
 
-/// Copies `data/` and `cfgs/` into the data folder, replacing the previous copy; returns the root.
+/// Copies `data/`, `cfgs/` and the bench fixtures into the data folder, replacing the previous copy; returns the root.
 pub fn data(dirs: &Dirs, src: &Path) -> Result<PathBuf> {
     let root = dirs.data.join("src");
     if root == src {
         return Ok(root);
     }
-    for part in ["data", "cfgs"] {
+    for part in ["data", "cfgs", "tool/tests/fixtures"] {
         let to = root.join(part);
         if to.exists() {
             std::fs::remove_dir_all(&to).with_context(|| format!("clearing {}", to.display()))?;
