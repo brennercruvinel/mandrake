@@ -1,0 +1,18 @@
+[package]
+name = "mandrake-proxy"
+description = "Local proxy between Claude Code and the API: trims the request, measures before and after"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+mandrake-home.workspace = true
+mandrake-meter.workspace = true
+anyhow.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+toml.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true

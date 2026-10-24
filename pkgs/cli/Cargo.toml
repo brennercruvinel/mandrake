@@ -1,0 +1,21 @@
+[package]
+name = "mandrake"
+description = "A middle guy to cut the bullshit: Claude Code's harness, trimmed, measured and reproducible"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "mandrake"
+path = "src/main.rs"
+
+[dependencies]
+mandrake-home.workspace = true
+mandrake-layout.workspace = true
+mandrake-meter.workspace = true
+mandrake-proxy.workspace = true
+mandrake-tui.workspace = true
+anyhow.workspace = true
+clap.workspace = true
+serde_json.workspace = true

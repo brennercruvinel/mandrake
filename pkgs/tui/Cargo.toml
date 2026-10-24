@@ -1,0 +1,17 @@
+[package]
+name = "mandrake-tui"
+description = "Mandrake's screens: live split watch, side-by-side hex, bench view, setup wizard"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+mandrake-home.workspace = true
+mandrake-meter.workspace = true
+mandrake-layout.workspace = true
+anyhow.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+ratatui = "0.30"
+tui-slider = "0.4"

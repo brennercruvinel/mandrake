@@ -1,0 +1,23 @@
+[workspace]
+resolver = "3"
+members = ["pkgs/*"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.88"
+license = "MIT"
+repository = "https://github.com/brennercruvinel/mandrake"
+
+[workspace.dependencies]
+mandrake-home = { path = "pkgs/home" }
+mandrake-layout = { path = "pkgs/layout" }
+mandrake-meter = { path = "pkgs/meter" }
+mandrake-proxy = { path = "pkgs/proxy" }
+mandrake-tui = { path = "pkgs/tui" }
+anyhow = "1"
+clap = { version = "4", features = ["derive"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+toml = "0.9"
+tempfile = "3"
