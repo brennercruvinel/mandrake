@@ -2,7 +2,7 @@
 //!
 //! Myers over bytes gives the exact picture; when it cannot finish within the budget, the bodies are
 //! cut into JSON lines (after every newline or comma, since request bodies usually arrive minified)
-//! and diffed by line, which is coarser but always fast.
+//! and diffed by line, then each changed line is diffed by bytes again, which is cheap at that size.
 
 use similar::{Algorithm, DiffOp, DiffTag, capture_diff_slices_deadline};
 use std::ops::Range;
@@ -66,18 +66,35 @@ pub fn diff(before: &[u8], after: &[u8], budget: Duration) -> Diff {
     let deadline = Instant::now() + budget;
     let ops = capture_diff_slices_deadline(Algorithm::Myers, before, after, Some(deadline));
     if Instant::now() < deadline {
-        let ops = ops
-            .iter()
-            .map(|op| as_bytes(op, &[0], &[0], true))
-            .collect();
+        let ops = ops.iter().map(|op| shifted(op, 0, 0)).collect();
         return Diff::from_ops(Method::Bytes, ops, before.len(), after.len());
     }
+    // A second budget: if even this runs out, similar still returns a valid, coarser diff.
+    let deadline = Instant::now() + budget;
     let (lb, la) = (lines(before), lines(after));
     let (sb, sa) = (slices(before, &lb), slices(after, &la));
-    // A second budget: if even lines run out, similar still returns a valid, coarser diff.
-    let ops =
-        capture_diff_slices_deadline(Algorithm::Myers, &sb, &sa, Some(Instant::now() + budget));
-    let ops = ops.iter().map(|op| as_bytes(op, &lb, &la, false)).collect();
+    let mut ops = vec![];
+    for op in capture_diff_slices_deadline(Algorithm::Myers, &sb, &sa, Some(deadline)) {
+        let (tag, b, a) = op.as_tag_tuple();
+        let (b, a) = (lb[b.start]..lb[b.end], la[a.start]..la[a.end]);
+        if tag != DiffTag::Replace {
+            ops.push(Op {
+                tag,
+                before: b,
+                after: a,
+            });
+            continue;
+        }
+        // Lines that changed are small next to the body, so bytes inside them are cheap again:
+        // this keeps a reminder cut out of a message from painting the whole message.
+        let inner = capture_diff_slices_deadline(
+            Algorithm::Myers,
+            &before[b.clone()],
+            &after[a.clone()],
+            Some(deadline),
+        );
+        ops.extend(inner.iter().map(|op| shifted(op, b.start, a.start)));
+    }
     Diff::from_ops(Method::Lines, ops, before.len(), after.len())
 }
 
@@ -100,20 +117,13 @@ fn slices<'a>(body: &'a [u8], starts: &[usize]) -> Vec<&'a [u8]> {
     starts.windows(2).map(|w| &body[w[0]..w[1]]).collect()
 }
 
-/// Turns an op over units (bytes, or lines whose starts are given) into byte ranges.
-fn as_bytes(op: &DiffOp, lb: &[usize], la: &[usize], units_are_bytes: bool) -> Op {
+/// A byte op of a sub-slice, moved to where that slice starts in each body.
+fn shifted(op: &DiffOp, before_at: usize, after_at: usize) -> Op {
     let (tag, b, a) = op.as_tag_tuple();
-    let conv = |r: Range<usize>, starts: &[usize]| {
-        if units_are_bytes {
-            r
-        } else {
-            starts[r.start]..starts[r.end]
-        }
-    };
     Op {
         tag,
-        before: conv(b, lb),
-        after: conv(a, la),
+        before: b.start + before_at..b.end + before_at,
+        after: a.start + after_at..a.end + after_at,
     }
 }
 
@@ -220,6 +230,17 @@ mod tests {
     }
 
     #[test]
+    fn line_fallback_refines_changed_lines_by_bytes() {
+        let before = br#"{"a":"hello <r>x</r> world","b":1}"#;
+        let after = br#"{"a":"hello  world","b":1}"#;
+        let d = diff(before, after, Duration::ZERO);
+        assert_eq!(d.method, Method::Lines);
+        assert_eq!(d.hunks.len(), 1);
+        assert_eq!(&before[d.hunks[0].before.clone()], b"<r>x</r>");
+        assert_eq!(d.inserted_bytes(), 0);
+    }
+
+    #[test]
     fn insertions_and_empty_bodies() {
         let d = diff(b"", b"new", BUDGET);
         assert_eq!(d.inserted_bytes(), 3);
@@ -227,5 +248,62 @@ mod tests {
         let d = diff(b"same", b"same", BUDGET);
         assert!(d.hunks.is_empty());
         assert_eq!(d.map(2, Body::After), 2);
+    }
+}
+
+#[cfg(test)]
+mod perf {
+    use super::*;
+
+    #[test]
+    #[ignore = "timing probe"]
+    fn large_bodies() {
+        let msg =
+            r#"{"role":"user","content":[{"type":"text","text":"some text here that repeats"}]},"#;
+        let head = format!(r#"{{"model":"m","messages":[{}"#, msg.repeat(4000));
+        let sys = format!(
+            r#"],"system":[{{"type":"text","text":"{}"}}],"#,
+            "y".repeat(50_000)
+        );
+        let before = format!(
+            "{head}<system-reminder>{}</system-reminder>{sys}\"x\":1}}",
+            "r".repeat(3000)
+        )
+        .into_bytes();
+        let after = format!("{head}],\"x\":1}}").into_bytes();
+        let t = Instant::now();
+        let d = diff(&before, &after, BUDGET);
+        println!(
+            "{} -> {} bytes: {:?} in {:?}, {} hunks, -{} +{}",
+            before.len(),
+            after.len(),
+            d.method,
+            t.elapsed(),
+            d.hunks.len(),
+            d.removed_bytes(),
+            d.inserted_bytes()
+        );
+        let reminder = format!("<system-reminder>{}</system-reminder>", "note ".repeat(40));
+        let (mut b, mut a) = (String::new(), String::new());
+        for i in 0..2000 {
+            let m = format!(r#"{{"role":"user","content":"message {i} with some words"}},"#);
+            b.push_str(&m);
+            a.push_str(&m);
+            if i % 10 == 0 {
+                b.push_str(&reminder);
+            }
+        }
+        let t = Instant::now();
+        let d = diff(b.as_bytes(), a.as_bytes(), BUDGET);
+        println!(
+            "{} -> {} bytes: {:?} in {:?}, {} hunks, -{} +{}",
+            b.len(),
+            a.len(),
+            d.method,
+            t.elapsed(),
+            d.hunks.len(),
+            d.removed_bytes(),
+            d.inserted_bytes()
+        );
     }
 }
