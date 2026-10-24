@@ -1,0 +1,12 @@
+# Written by `mandrake proxy install`; `mandrake proxy uninstall` removes it.
+[Unit]
+Description=Mandrake local proxy for Claude Code
+After=network-online.target
+
+[Service]
+ExecStart={{exe}} proxy run
+{{env}}Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=default.target
