@@ -178,14 +178,30 @@ fn savings(f: &mut Frame, area: Rect, s: &WatchState) {
     let [gauge, diff] =
         Layout::vertical([Constraint::Length(1), Constraint::Length(1)]).areas(inner);
     let (saved, ratio) = s.saved();
-    let label = if s.trim.counted == 0 {
-        "sem tokens contados no lado com Mandrake ainda".to_string()
-    } else {
-        format!(
-            "economia acumulada: {} tokens ({})",
-            fmt::signed(saved),
-            fmt::pct(s.trim.totals.saved_ratio())
-        )
+    // With both sides counted, the headline is the A/B: everything Mandrake removes, the plugin's
+    // cut included, which happens before the request and the proxy alone cannot see.
+    let ab = s.difference().filter(|(pass, _, _)| *pass > 0.0);
+    let (label, ratio) = match ab {
+        Some((pass, _, delta)) => (
+            format!(
+                "com Mandrake: {} tokens por requisição ({})",
+                fmt::signed(-(delta.round() as i64)),
+                fmt::pct(delta / pass)
+            ),
+            (delta / pass).clamp(0.0, 1.0),
+        ),
+        None if s.trim.counted == 0 => (
+            "sem tokens contados no lado com Mandrake ainda".to_string(),
+            ratio,
+        ),
+        None => (
+            format!(
+                "corte do proxy: {} tokens ({})",
+                fmt::signed(saved),
+                fmt::pct(s.trim.totals.saved_ratio())
+            ),
+            ratio,
+        ),
     };
     f.render_widget(
         Gauge::default()
@@ -195,8 +211,8 @@ fn savings(f: &mut Frame, area: Rect, s: &WatchState) {
             .use_unicode(true),
         gauge,
     );
-    let line = match s.difference() {
-        Some((pass, trim, delta)) => {
+    let line = match ab {
+        Some((pass, trim, _)) => {
             let mut spans = vec![
                 Span::styled(" por requisição ", theme::label()),
                 Span::styled(
@@ -208,11 +224,7 @@ fn savings(f: &mut Frame, area: Rect, s: &WatchState) {
                     format!("com {}", fmt::num(trim.round() as u64)),
                     Style::new().fg(theme::TRIM),
                 ),
-                Span::raw(format!(
-                    " tokens → diferença {} ({})",
-                    fmt::signed(-(delta.round() as i64)),
-                    fmt::pct(if pass > 0.0 { delta / pass } else { 0.0 })
-                )),
+                Span::raw(" tokens"),
             ];
             if let (Some(up), Some(ut)) = (s.pass.usage_per_request(), s.trim.usage_per_request()) {
                 spans.push(Span::styled("  usage ", theme::label()));
@@ -222,6 +234,12 @@ fn savings(f: &mut Frame, area: Rect, s: &WatchState) {
                     fmt::num(ut.round() as u64)
                 )));
             }
+            spans.push(Span::styled("  corte do proxy ", theme::label()));
+            spans.push(Span::raw(format!(
+                "{} ({}); o resto sai no prompt-trim",
+                fmt::signed(saved),
+                fmt::pct(s.trim.totals.saved_ratio())
+            )));
             Line::from(spans)
         }
         None => Line::from(Span::styled(

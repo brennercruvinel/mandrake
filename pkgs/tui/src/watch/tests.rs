@@ -123,8 +123,9 @@ fn renders_both_sides_and_the_savings() {
         "cache",
         "sonnet-4-5",
         "1.000→600",
-        "economia acumulada: +600 tokens (30,0%)",
-        "por requisição sem 1.100 · com 700 tokens → diferença -400 (36,4%)",
+        "com Mandrake: -400 tokens por requisição (36,4%)",
+        "por requisição sem 1.100 · com 700 tokens",
+        "corte do proxy +600 (30,0%); o resto sai no prompt-trim",
         "Enter hex",
     ] {
         assert!(screen.contains(needle), "missing {needle:?} in\n{screen}");

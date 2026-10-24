@@ -46,9 +46,19 @@ enum Cmd {
     Watch {
         #[arg(long)]
         embed: bool,
+        /// Print one frame as text, WIDTHxHEIGHT, instead of opening the screen
+        #[arg(long)]
+        snapshot: Option<String>,
     },
     /// Side-by-side hex of one request before and after the trim
-    Hex { id: String },
+    Hex {
+        id: String,
+        #[arg(long)]
+        snapshot: Option<String>,
+        /// With --snapshot: scroll to this changed stretch first
+        #[arg(long, default_value_t = 0)]
+        hunk: usize,
+    },
     /// Token savings over fixed requests
     Bench {
         /// Request bodies to measure; default: the fixtures shipped with Mandrake
@@ -59,6 +69,9 @@ enum Cmd {
         /// Draw the report instead of running
         #[arg(long)]
         view: bool,
+        /// With --view: print one frame as text, WIDTHxHEIGHT
+        #[arg(long)]
+        snapshot: Option<String>,
     },
     /// Requests with audit bodies kept, newest first
     Audit {
@@ -88,6 +101,11 @@ enum ProxyOp {
     Install,
     Uninstall,
     Status,
+}
+
+fn print(text: anyhow::Result<String>) -> anyhow::Result<()> {
+    println!("{}", text?);
+    Ok(())
 }
 
 fn main() -> anyhow::Result<()> {
@@ -122,15 +140,26 @@ fn main() -> anyhow::Result<()> {
                 }
             }
         }
-        Cmd::Watch { embed } => mandrake_tui::watch(&dirs, mandrake_tui::WatchOpts { embed }),
-        Cmd::Hex { id } => mandrake_tui::hex(&dirs, &id),
+        Cmd::Watch {
+            snapshot: Some(s), ..
+        } => print(mandrake_tui::watch_snapshot(&dirs, &s)),
+        Cmd::Watch { embed, .. } => mandrake_tui::watch(&dirs, mandrake_tui::WatchOpts { embed }),
+        Cmd::Hex {
+            id,
+            snapshot: Some(s),
+            hunk,
+        } => print(mandrake_tui::hex_snapshot(&dirs, &id, &s, hunk)),
+        Cmd::Hex { id, .. } => mandrake_tui::hex(&dirs, &id),
         Cmd::Bench {
             fixtures,
             out,
             view,
+            snapshot,
         } => {
             let out = out.unwrap_or_else(|| dirs.state.join("bench/latest"));
-            if view {
+            if let (true, Some(s)) = (view, &snapshot) {
+                print(mandrake_tui::bench_snapshot(&out.with_extension("json"), s))
+            } else if view {
                 mandrake_tui::bench_view(&out.with_extension("json"))
             } else {
                 let fixtures = match fixtures {

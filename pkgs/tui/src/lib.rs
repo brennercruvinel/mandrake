@@ -6,6 +6,7 @@
 mod bench;
 mod fmt;
 mod hex;
+mod snap;
 mod term;
 #[cfg(test)]
 mod testutil;
@@ -41,4 +42,31 @@ pub fn bench_view(report: &Path) -> Result<()> {
 /// Walks the catalog item by item and returns the profile to apply, or None when the user quits.
 pub fn setup_wizard(dirs: &Dirs, catalog: &Catalog, current: &Profile) -> Result<Option<Profile>> {
     wizard::run(dirs, catalog, current)
+}
+
+/// One frame of `watch` as text, from the events on disk.
+pub fn watch_snapshot(dirs: &Dirs, size: &str) -> Result<String> {
+    let (w, h) = snap::size(size)?;
+    let mut tail = watch::Tail::new(dirs.events());
+    let mut state = watch::WatchState::new(tail.path().display().to_string());
+    let polled = tail.poll()?;
+    state.ingest(polled.reset, polled.events);
+    Ok(snap::text(&snap::draw(w, h, |f| watch::render(f, &state))))
+}
+
+/// One frame of `hex` as text, scrolled to the `hunk`-th changed stretch (0 is the top).
+pub fn hex_snapshot(dirs: &Dirs, id: &str, size: &str, hunk: usize) -> Result<String> {
+    let (w, h) = snap::size(size)?;
+    let mut view = hex::HexView::load(dirs, id)?;
+    for _ in 0..hunk {
+        view.next_hunk();
+    }
+    Ok(snap::text(&snap::draw(w, h, |f| hex::render(f, &mut view))))
+}
+
+/// One frame of the bench view as text.
+pub fn bench_snapshot(report: &Path, size: &str) -> Result<String> {
+    let (w, h) = snap::size(size)?;
+    let state = bench::BenchState::load(report)?;
+    Ok(snap::text(&snap::draw(w, h, |f| bench::render(f, &state))))
 }
