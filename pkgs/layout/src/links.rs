@@ -244,8 +244,8 @@ fn latest_journal(dirs: &Dirs) -> Result<Option<PathBuf>> {
     Ok(js.pop())
 }
 
-/// The current folder as a profile: every symlink at the top level and one level down becomes a
-/// `link`, relative to the deepest folder all targets share when that is not `/` or the home.
+/// The current folder as a profile: every symlink at the top level and one level down that points
+/// outside the folder becomes a `link`, relative to the deepest folder all targets share when that is not `/` or the home.
 pub fn capture(dirs: &Dirs) -> Result<Profile> {
     let mut found: Vec<(String, PathBuf)> = vec![];
     let top = std::fs::read_dir(&dirs.claude)
@@ -264,6 +264,9 @@ pub fn capture(dirs: &Dirs) -> Result<Profile> {
             _ => {}
         }
     }
+    // Links the CLI keeps inside its own folder (debug/latest) are its business, not the profile's.
+    let own = std::fs::canonicalize(&dirs.claude).unwrap_or_else(|_| dirs.claude.clone());
+    found.retain(|(_, t)| t.is_absolute() && !t.starts_with(&dirs.claude) && !t.starts_with(&own));
     found.sort();
     let root = common_root(found.iter().map(|(_, t)| t.as_path()))
         .filter(|r| r != Path::new("/") && *r != dirs.home);
