@@ -11,6 +11,7 @@ mod term;
 mod testutil;
 mod theme;
 mod watch;
+mod wizard;
 
 use anyhow::Result;
 use mandrake_home::{Dirs, Profile};
@@ -39,6 +40,5 @@ pub fn bench_view(report: &Path) -> Result<()> {
 
 /// Walks the catalog item by item and returns the profile to apply, or None when the user quits.
 pub fn setup_wizard(dirs: &Dirs, catalog: &Catalog, current: &Profile) -> Result<Option<Profile>> {
-    let _ = (dirs, catalog, current);
-    anyhow::bail!("setup wizard: not built yet (plan U4)")
+    wizard::run(dirs, catalog, current)
 }
