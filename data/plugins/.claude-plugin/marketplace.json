@@ -1,0 +1,25 @@
+{
+  "name": "mandrake",
+  "description": "Plugins Mandrake installs: prompt-trim (always, through CLAUDE_CODE_PLUGIN_DIRS), fancy and tui-embed (optional)",
+  "owner": { "name": "Brenner Cruvinel" },
+  "plugins": [
+    {
+      "name": "prompt-trim",
+      "source": "./prompt-trim",
+      "description": "Cuts the sections, attachments and tool descriptions Claude Code adds around the system prompt, and rewrites the wrappers it keeps",
+      "version": "0.1.0"
+    },
+    {
+      "name": "fancy",
+      "source": "./fancy",
+      "description": "One render pipeline for Claude's replies: themed markdown, inline color tags, status badges and swatches; a status bar and terminal tab colors by session state",
+      "version": "0.1.0"
+    },
+    {
+      "name": "tui-embed",
+      "source": "./tui-embed",
+      "description": "Terminal apps drawn inside Claude Code panes with their own keys and clicks, mandrake watch among them",
+      "version": "0.1.0"
+    }
+  ]
+}

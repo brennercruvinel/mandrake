@@ -1,0 +1,146 @@
+# Every entry of the Claude Code folder (~/.claude) that `mandrake setup` can arrange.
+# group: config (what shapes the agent), plugins, session (history and runtime the CLI writes).
+# sensitive: holds conversations, prompts or pasted content; the wizard says so before linking it.
+# A profile may name other paths too (agents/<name>.md); these are the ones the wizard walks.
+
+[[item]]
+path = "CLAUDE.md"
+kind = "file"
+group = "config"
+about = "Instructions read at the start of every session"
+
+[[item]]
+path = "settings.json"
+kind = "file"
+group = "config"
+about = "Global settings; Mandrake only writes ANTHROPIC_BASE_URL and CLAUDE_CODE_PLUGIN_DIRS in it"
+
+[[item]]
+path = "statusline.sh"
+kind = "file"
+group = "config"
+about = "Status line command"
+
+[[item]]
+path = "agents"
+kind = "dir"
+group = "config"
+about = "Subagent definitions"
+
+[[item]]
+path = "commands"
+kind = "dir"
+group = "config"
+about = "Slash commands"
+
+[[item]]
+path = "skills"
+kind = "dir"
+group = "config"
+about = "User skills"
+
+[[item]]
+path = "hooks"
+kind = "dir"
+group = "config"
+about = "Hook scripts"
+
+[[item]]
+path = "rules"
+kind = "dir"
+group = "config"
+about = "Rule files"
+
+[[item]]
+path = "output-styles"
+kind = "dir"
+group = "config"
+about = "Output styles"
+
+[[item]]
+path = "themes"
+kind = "dir"
+group = "config"
+about = "Terminal themes"
+
+[[item]]
+path = "workflows"
+kind = "dir"
+group = "config"
+about = "Workflow scripts"
+
+[[item]]
+path = "plugins"
+kind = "dir"
+group = "plugins"
+about = "Installed plugins, marketplaces and their cache"
+
+[[item]]
+path = "projects"
+kind = "dir"
+group = "session"
+sensitive = true
+about = "Session transcripts, one folder per project"
+
+[[item]]
+path = "history.jsonl"
+kind = "file"
+group = "session"
+sensitive = true
+about = "Prompt history"
+
+[[item]]
+path = "file-history"
+kind = "dir"
+group = "session"
+sensitive = true
+about = "File checkpoints for rewind"
+
+[[item]]
+path = "paste-cache"
+kind = "dir"
+group = "session"
+sensitive = true
+about = "Pasted content"
+
+[[item]]
+path = "sessions"
+kind = "dir"
+group = "session"
+about = "Live session registry"
+
+[[item]]
+path = "session-env"
+kind = "dir"
+group = "session"
+about = "Per-session environment"
+
+[[item]]
+path = "shell-snapshots"
+kind = "dir"
+group = "session"
+about = "Shell snapshots the Bash tool sources"
+
+[[item]]
+path = "tasks"
+kind = "dir"
+group = "session"
+about = "Task lists"
+
+[[item]]
+path = "backups"
+kind = "dir"
+group = "session"
+about = "Config backups the CLI keeps"
+
+[[item]]
+path = "cache"
+kind = "dir"
+group = "session"
+about = "CLI cache"
+
+[[item]]
+path = "dev-mods"
+kind = "dir"
+group = "session"
+about = "Plugin module build cache"

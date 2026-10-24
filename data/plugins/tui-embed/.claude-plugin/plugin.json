@@ -1,0 +1,26 @@
+{
+  "name": "tui-embed",
+  "displayName": "TUI embed",
+  "version": "0.1.0",
+  "description": "Terminal apps drawn inside Claude Code panes with their own keys and clicks: abtop and gitlogue",
+  "author": {
+    "name": "Brenner Cruvinel",
+    "url": "https://github.com/brennercruvinel"
+  },
+  "keywords": ["mod", "pane", "abtop", "gitlogue", "ratatui", "terminal"],
+  "types": "./types/index.d.ts",
+  "userConfig": {
+    "abtop_path": {
+      "type": "string",
+      "title": "abtop executable",
+      "description": "Command or path of an abtop binary with --embed",
+      "default": "abtop"
+    },
+    "gitlogue_path": {
+      "type": "string",
+      "title": "gitlogue executable",
+      "description": "Command or path of a gitlogue binary with --embed",
+      "default": "gitlogue"
+    }
+  }
+}

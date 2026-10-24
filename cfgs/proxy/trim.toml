@@ -1,0 +1,12 @@
+# What the proxy cuts from each POST /v1/messages* body, in trim mode. Compiled into the binary;
+# the profile's [proxy].strip_fields decides which top-level fields go (product default: metadata).
+
+# system blocks whose whole text (trimmed) equals one of these are dropped
+identities = [
+  "You are Claude Code, Anthropic's official CLI for Claude.",
+  "You are Claude Code, Anthropic's official CLI for Claude, running within the Claude Agent SDK.",
+  "You are a Claude agent, built on Anthropic's Claude Agent SDK.",
+]
+
+# message text wrapped in this tag keeps its content and loses the tag
+unwrap_tag = "system-reminder"
