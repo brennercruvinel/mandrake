@@ -87,13 +87,13 @@ pub fn merge(
     keys: &[(&str, String)],
 ) -> Result<Vec<(String, Option<String>, String)>> {
     let Some(root) = doc.as_object_mut() else {
-        anyhow::bail!("settings.json is not a JSON object");
+        anyhow::bail!("settings.json não é um objeto JSON");
     };
     let env = root
         .entry("env")
         .or_insert_with(|| Value::Object(Map::new()));
     let Some(env) = env.as_object_mut() else {
-        anyhow::bail!("settings.json: `env` is not an object");
+        anyhow::bail!("settings.json: `env` não é um objeto");
     };
     let mut changed = vec![];
     for (k, v) in keys {

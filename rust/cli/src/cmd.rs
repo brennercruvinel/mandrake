@@ -180,7 +180,7 @@ pub fn capture(dirs: &Dirs, out: Option<PathBuf>) -> Result<()> {
     match out {
         Some(f) => {
             p.save(&f)?;
-            println!("captured {} links into {}", p.links.len(), f.display());
+            println!("{} links capturados em {}", p.links.len(), f.display());
         }
         None => print!("{text}"),
     }
@@ -199,7 +199,7 @@ fn print_steps(dirs: &Dirs, steps: &[links::Step]) {
 
 pub fn link_plan(dirs: &Dirs) -> Result<()> {
     let p = Profile::load(&dirs.profile())
-        .context("no profile yet: run mandrake setup or mandrake capture --out")?;
+        .context("ainda não há perfil: rode mandrake setup, ou mandrake capture --out")?;
     print_steps(dirs, &links::plan(dirs, &Catalog::builtin()?, &p)?);
     Ok(())
 }
@@ -207,7 +207,7 @@ pub fn link_plan(dirs: &Dirs) -> Result<()> {
 pub fn link_apply(dirs: &Dirs) -> Result<()> {
     let catalog = Catalog::builtin()?;
     let p = Profile::load(&dirs.profile())
-        .context("no profile yet: run mandrake setup or mandrake capture --out")?;
+        .context("ainda não há perfil: rode mandrake setup, ou mandrake capture --out")?;
     let steps = links::plan(dirs, &catalog, &p)?;
     print_steps(dirs, &steps);
     if let Some(j) = links::apply(dirs, &catalog, &steps)? {
@@ -361,11 +361,14 @@ pub fn status(dirs: &Dirs) -> Result<()> {
             );
         }
         _ => println!(
-            "Ainda não mediu: rode `mandrake bench` (2 requisições curtas por prompt, pela sua sessão)."
+            "Para ver o corte: `mandrake compare` mostra o que o Claude Code envia sem e com o Mandrake,\n\
+             sem gastar nada. `mandrake bench` mede de verdade, com 2 requisições por prompt."
         ),
     }
     println!(
-        "\nComandos: setup · doctor · bench · watch · audit · capture · link · proxy   (mandrake <comando> --help)"
+        "\nPara começar: {}\nAvançado: {}\n(mandrake <comando> --help)",
+        crate::help::START.join(" · "),
+        crate::help::ADVANCED.join(" · ")
     );
     Ok(())
 }

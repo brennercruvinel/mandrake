@@ -46,7 +46,7 @@ claude() {
     fi
   done
   case "$want" in
-    1) echo "claude invoke: which soul? ($(_mandrake_souls))" >&2; return 1 ;;
+    1) echo "claude invoke: qual soul? ($(_mandrake_souls))" >&2; return 1 ;;
     2) ( _mandrake_route; _mandrake_summon "$name" "${rest[@]}" ) ;;
     *) ( _mandrake_route; command claude "$@" ) ;;
   esac
@@ -55,7 +55,7 @@ claude() {
 # A soul's folder from its name or an alias in <souls>/agents.json, case-insensitive.
 _mandrake_soul() {
   local n d dir="${MANDRAKE_SOULS:-}"
-  [ -d "$dir" ] || { echo "claude invoke: no souls folder (MANDRAKE_SOULS='$dir'); run mandrake setup" >&2; return 1; }
+  [ -d "$dir" ] || { echo "claude invoke: sem pasta de souls (MANDRAKE_SOULS='$dir'); rode mandrake setup" >&2; return 1; }
   n="$(printf '%s' "$1" | tr '[:upper:]' '[:lower:]')"
   d=""
   if [ -f "$dir/agents.json" ] && command -v jq >/dev/null; then
@@ -64,7 +64,7 @@ _mandrake_soul() {
   fi
   [ -n "$d" ] || d="$n"
   if [ -n "$(_mandrake_prompt "$dir/$d")" ]; then echo "$d"; return 0; fi
-  echo "claude invoke: '$1' is not a soul ($(_mandrake_souls))" >&2
+  echo "claude invoke: '$1' não é uma soul ($(_mandrake_souls))" >&2
   return 1
 }
 
@@ -80,7 +80,7 @@ _mandrake_souls() {
   for d in "${MANDRAKE_SOULS:-/nonexistent}"/*/; do
     [ -n "$(_mandrake_prompt "${d%/}")" ] && out="$out${out:+, }$(basename "$d")"
   done
-  echo "${out:-none}"
+  echo "${out:-nenhuma}"
 }
 
 _mandrake_summon() (

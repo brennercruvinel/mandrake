@@ -66,7 +66,7 @@ pub(crate) fn claude(cwd: &Path, port: u16, plugin_dir: &str, prompt: &str) -> R
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .spawn()
-        .context("running claude (is Claude Code installed and logged in?)")?;
+        .context("rodando claude (o Claude Code está instalado e com login?)")?;
     let end = Instant::now() + Duration::from_secs(120);
     loop {
         if child.try_wait()?.is_some() {

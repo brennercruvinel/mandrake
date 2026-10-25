@@ -27,7 +27,7 @@ Snap 03-status-up
 Caption "a request through it, as Claude Code would send one"
 Type "send short; mandrake"
 Key Enter
-Wait "Comandos"
+Wait "Para começar"
 Sleep 2
 Poster
 Snap 04-one-request

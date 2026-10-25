@@ -45,12 +45,16 @@ mkdir -p "$t/home/.local/bin"
 check "a new shell finds mandrake's folder" "$(env -u MANDRAKE_BIN_DIR HOME="$t/home" MANDRAKE_HOME="$t/mh" PATH=/usr/bin:/bin bash -c ". '$t/mh/data/shell/mandrake.sh'; echo \"\$PATH\"" | grep -c "^$t/home/.local/bin:")" 1
 check "settings gets prompt-trim" "$(jq -r .env.CLAUDE_CODE_PLUGIN_DIRS "$t/dev/devops/settings.json")" "$t/mh/data/src/data/plugins/prompt-trim"
 check "prompt-trim copied" "$([ -f "$t/mh/data/src/data/plugins/prompt-trim/hooks/register.js" ] && echo y)" y
-check "fancy skipped, already on" "$(grep -c 'plugin fancy: already on as fancy@other' "$t/setup.log")" 1
+check "fancy skipped, already on" "$(grep -c 'plugin fancy: já ligado como fancy@other' "$t/setup.log")" 1
 check "rc keeps its line and gets one block" "$(grep -c KEEP "$t/home/.zshrc")$(grep -c '>>> mandrake >>>' "$t/home/.zshrc")" 11
 check "env.sh points at the souls" "$(grep -c "MANDRAKE_SOULS='$t/dev/souls'" "$t/mh/data/shell/env.sh")" 1
 m setup --profile "$t/p.toml" --yes > "$t/setup2.log" 2>&1
 check "second setup changes no link" "$(grep -c 'ok   links: sem mudança' "$t/setup2.log")" 1
 check "second setup leaves one block" "$(grep -c '>>> mandrake >>>' "$t/home/.zshrc")" 1
+# `mandrake` alone: the next step spends nothing, and every command is listed (#32).
+alone="$(m 2>&1)"
+check "mandrake alone suggests compare, which spends nothing" "$(grep -c '`mandrake compare` mostra' <<< "$alone")" 1
+check "mandrake alone lists hex and capture too" "$(grep -c 'hex · audit · bench · link · proxy · capture' <<< "$alone")" 1
 m doctor > "$t/doctor.log" 2>&1
 check "the core goes into prompt-trim" "$(grep -c '# Core' "$t/mh/data/src/data/plugins/prompt-trim/hooks/core.js")" 1
 check "setup reports no errors" "$(grep -c 'Erros: nenhum' "$t/setup.log")" 1

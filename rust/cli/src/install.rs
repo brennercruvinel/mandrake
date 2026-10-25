@@ -15,7 +15,7 @@ pub fn source(dirs: &Dirs) -> Result<PathBuf> {
         if is_src(&s) {
             return Ok(s);
         }
-        bail!("MANDRAKE_SRC={} is not a Mandrake checkout", s.display());
+        bail!("MANDRAKE_SRC={} não é uma cópia do Mandrake", s.display());
     }
     if let Ok(exe) = std::env::current_exe()
         && let Some(p) = exe.ancestors().find(|p| is_src(p))
@@ -26,7 +26,7 @@ pub fn source(dirs: &Dirs) -> Result<PathBuf> {
     if is_src(&installed) {
         return Ok(installed);
     }
-    bail!("no Mandrake source found: run from the checkout, or set MANDRAKE_SRC")
+    bail!("não achei os arquivos do Mandrake: rode de dentro da cópia, ou defina MANDRAKE_SRC")
 }
 
 /// Copies `data/`, `cfgs/` and the bench fixtures into the data folder, replacing the previous copy; returns the root.
@@ -62,8 +62,8 @@ pub fn settings_keys(dirs: &Dirs, profile: &Profile, root: &Path) -> Result<Vec<
         .into_iter()
         .map(|(k, old, new)| {
             format!(
-                "settings env.{k}: {} -> {new}",
-                old.unwrap_or_else(|| "unset".into())
+                "settings env.{k}: {} → {new}",
+                old.unwrap_or_else(|| "vazio".into())
             )
         })
         .collect())
@@ -89,8 +89,9 @@ pub fn core_file(dirs: &Dirs, profile: &Profile, root: &Path) -> Option<PathBuf>
 /// The core text into the installed prompt-trim (`hooks/core.js`), for sessions without a soul.
 pub fn core(dirs: &Dirs, profile: &Profile, root: &Path) -> Result<Vec<String>> {
     let text = match core_file(dirs, profile, root) {
-        Some(f) => std::fs::read_to_string(&f)
-            .with_context(|| format!("reading the core {}", f.display()))?,
+        Some(f) => {
+            std::fs::read_to_string(&f).with_context(|| format!("lendo o core {}", f.display()))?
+        }
         None => String::new(),
     };
     let js = format!(
@@ -170,7 +171,7 @@ pub fn shell(dirs: &Dirs, profile: &Profile, root: &Path) -> Result<Vec<String>>
     let rc = shell::rc_file(&dirs.home, std::env::var("SHELL").ok().as_deref());
     let mut out = vec![];
     if shell::install(&rc, &script)? {
-        out.push(format!("shell: block added to {}", rc.display()));
+        out.push(format!("shell: bloco acrescentado em {}", rc.display()));
     }
     Ok(out)
 }
@@ -190,7 +191,7 @@ pub fn plugins(dirs: &Dirs, profile: &Profile, root: &Path) -> Result<Vec<String
     let mut added = false;
     for name in want {
         if let Some(on) = settings::plugin_enabled(&doc, name) {
-            out.push(format!("plugin {name}: already on as {on}, skipped"));
+            out.push(format!("plugin {name}: já ligado como {on}, mantido"));
             continue;
         }
         if !added {
@@ -210,7 +211,7 @@ pub fn plugins(dirs: &Dirs, profile: &Profile, root: &Path) -> Result<Vec<String
             "user",
         ])?;
         out.push(format!(
-            "plugin {name}: installed from the mandrake marketplace"
+            "plugin {name}: instalado do marketplace do mandrake"
         ));
     }
     if profile.plugins.fancy
@@ -223,9 +224,9 @@ pub fn plugins(dirs: &Dirs, profile: &Profile, root: &Path) -> Result<Vec<String
             .status()
             .is_ok_and(|s| s.success());
         out.push(if ok {
-            "plugin fancy: tab tint built".into()
+            "plugin fancy: cor da aba compilada".into()
         } else {
-            "plugin fancy: no Go, tab tint left out".into()
+            "plugin fancy: sem Go, a cor da aba ficou de fora".into()
         });
     }
     Ok(out)
@@ -235,9 +236,9 @@ fn claude(args: &[&str]) -> Result<()> {
     let st = Command::new("claude")
         .args(args)
         .status()
-        .context("running claude (is Claude Code installed?)")?;
+        .context("rodando claude (o Claude Code está instalado?)")?;
     if !st.success() {
-        bail!("claude {} failed", args.join(" "));
+        bail!("claude {} falhou", args.join(" "));
     }
     Ok(())
 }
@@ -249,10 +250,10 @@ pub fn skill(dirs: &Dirs, profile: &Profile, root: &Path) -> Result<Vec<String>>
     }
     let at = dirs.claude.join("skills/invoke");
     if at.join("SKILL.md").exists() {
-        return Ok(vec!["skill invoke: one is already there, kept".into()]);
+        return Ok(vec!["skill invoke: já existe uma, mantida".into()]);
     }
     copy_tree(&root.join("data/skills/invoke"), &at)?;
-    Ok(vec![format!("skill invoke: installed in {}", at.display())])
+    Ok(vec![format!("skill invoke: instalada em {}", at.display())])
 }
 
 pub fn copy_tree(from: &Path, to: &Path) -> Result<()> {
