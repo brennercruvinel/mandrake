@@ -128,12 +128,12 @@ fn check_one(
     }
 }
 
-/// The fix when the app is installed but its folder is not on PATH. A new shell is enough only once
-/// setup has written the PATH block and env.sh, and only if no stale `MANDRAKE_BIN_DIR` wins (#33).
+/// The fix when the app is installed but its folder is not on PATH. A new shell is enough once setup
+/// has written the PATH block and env.sh: since #33 the installed `MANDRAKE_BIN_DIR` wins there.
 fn path_fix(prefix_bin: &Path, bin_env: Option<&OsString>) -> String {
     match bin_env.filter(|v| !v.is_empty() && Path::new(v) != prefix_bin) {
         Some(v) => format!(
-            "unset MANDRAKE_BIN_DIR (herdado: {}, instalado: {}) e abra um shell novo",
+            "abra um shell novo (exec $SHELL): este herdou MANDRAKE_BIN_DIR={}, o instalado é {}",
             Path::new(v).display(),
             prefix_bin.display()
         ),
@@ -319,7 +319,7 @@ mod tests {
         let stale: OsString = d.join("old/bin").into();
         let (_, _, fix) = check_one(&APPS[0], Some(&d.join("empty").into()), &bin, Some(&stale));
         assert!(
-            fix.is_some_and(|f| f.starts_with("unset MANDRAKE_BIN_DIR (herdado: ")),
+            fix.is_some_and(|f| f.contains("herdou MANDRAKE_BIN_DIR=")),
             "a stale MANDRAKE_BIN_DIR wins over the installed one"
         );
         std::fs::remove_dir_all(&d).unwrap();

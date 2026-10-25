@@ -77,6 +77,7 @@ pub fn checks(dirs: &Dirs) -> Result<Vec<Check>> {
         "",
     ));
     links_checks(dirs, &p, &mut out)?;
+    out.extend(env_checks(dirs, |k| std::env::var(k).ok()));
 
     // The installed copy: what env.sh, the launcher and prompt-trim point at, not the checkout.
     let root = dirs.data.join("src");
@@ -182,6 +183,28 @@ pub fn checks(dirs: &Dirs) -> Result<Vec<Check>> {
         "instale o Claude Code: https://docs.claude.com/claude-code",
     ));
     Ok(out)
+}
+
+/// A `MANDRAKE_*` in this shell that differs from what setup installed: a shell from before a
+/// reinstall, or one that inherited an old value (#33). A new shell takes the installed one.
+fn env_checks(dirs: &Dirs, get: impl Fn(&str) -> Option<String>) -> Vec<Check> {
+    let Ok(text) = std::fs::read_to_string(dirs.data.join("shell/env.sh")) else {
+        return vec![];
+    };
+    let stale: Vec<String> = mandrake_layout::shell::env_vars(&text)
+        .into_iter()
+        .filter_map(|(k, v)| get(&k).filter(|have| *have != v).map(|have| (k, have, v)))
+        .map(|(k, have, v)| format!("{k} é {have}, o instalado é {v}"))
+        .collect();
+    vec![Check::ok(
+        stale.is_empty(),
+        if stale.is_empty() {
+            "ambiente: os MANDRAKE_* deste shell são os instalados".into()
+        } else {
+            format!("ambiente: neste shell {}", stale.join("; "))
+        },
+        "abra um shell novo (exec $SHELL): ele carrega os valores instalados",
+    )]
 }
 
 fn links_checks(dirs: &Dirs, p: &Profile, out: &mut Vec<Check>) -> Result<()> {
@@ -307,6 +330,38 @@ mod tests {
         let mut out = vec![];
         links_checks(&d, &p, &mut out).unwrap();
         assert_eq!(out[0].mark, Mark::Ok, "{:?}", out[0].what);
+    }
+
+    #[test]
+    fn a_stale_mandrake_variable_in_the_shell_is_named() {
+        let tmp = tempfile::tempdir().unwrap();
+        let d = dirs(tmp.path());
+        std::fs::create_dir_all(d.data.join("shell")).unwrap();
+        std::fs::write(
+            d.data.join("shell/env.sh"),
+            mandrake_layout::shell::env_file(&[
+                ("MANDRAKE_SOULS", "/new/souls".into()),
+                ("MANDRAKE_PORT", "8787".into()),
+            ]),
+        )
+        .unwrap();
+        let c = &env_checks(&d, |k| match k {
+            "MANDRAKE_SOULS" => Some("/old".into()),
+            "MANDRAKE_PORT" => Some("8787".into()),
+            _ => None,
+        })[0];
+        assert_eq!(c.mark, Mark::Fail);
+        assert_eq!(
+            c.what,
+            "ambiente: neste shell MANDRAKE_SOULS é /old, o instalado é /new/souls"
+        );
+        assert!(c.fix.as_deref().unwrap().starts_with("abra um shell novo"));
+        let c = &env_checks(&d, |_| None)[0];
+        assert_eq!(
+            c.mark,
+            Mark::Ok,
+            "a shell that never loaded env.sh is not stale"
+        );
     }
 
     #[test]

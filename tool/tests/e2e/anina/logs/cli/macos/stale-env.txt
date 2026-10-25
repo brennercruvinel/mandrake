@@ -1,0 +1,22 @@
+stale-env
+=========
+
+[0.0s]
+
+## a shell that still exports an old souls folder
+
+[6.1s]
+    ~ $ export MANDRAKE_SOULS=/old/souls; mandrake doctor 2>&1 | grep ambiente
+    FAIL ambiente: neste shell MANDRAKE_SOULS é /old/souls, o instalado é $TMPDIR//mandrake-cli.0KDnyw/mh/data/src
+    /data/prompt/souls · conserte com: abra um shell novo (exec $SHELL):
+    ele carrega os valores instalados
+    ~ $
+
+## a new shell loads the installed values: claude invoke uses the installed souls
+
+[12.7s]
+    MANDRAKE_SOULS=$TMPDIR//mandrake-cli.0KDnyw/mh/data/src/data/prompt
+    mandrake: proxy fora do ar em 127.0.0.1:64563, esta sessão vai direto para a API (mandrake doctor)
+    [claude stub] claude --system-prompt-file $TMPDIR//mandrake-soul-rh
+    ~ $ exit
+    exit

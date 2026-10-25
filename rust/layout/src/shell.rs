@@ -70,13 +70,29 @@ pub fn env_file(vars: &[(&str, String)]) -> String {
     let mut s =
         String::from("# Written by mandrake setup; edit the profile and run it again instead.\n");
     for (k, v) in vars {
-        // The environment wins: `MANDRAKE_PORT=8788 claude` must reach the launcher unchanged.
-        s.push_str(&format!(
-            "[ -n \"${{{k}+x}}\" ] || export {k}={}\n",
-            sh_quote(v)
-        ));
+        // The installed value wins over one a parent shell exported, an old install's or another
+        // checkout's (#33). A one-off `MANDRAKE_PORT=8788 claude` still reaches the launcher: it is
+        // set at the call, long after the shell sourced this file.
+        s.push_str(&format!("export {k}={}\n", sh_quote(v)));
     }
     s
+}
+
+/// The variables an `env.sh` exports, in order; reads this format and the one before #33.
+pub fn env_vars(text: &str) -> Vec<(String, String)> {
+    text.lines()
+        .filter_map(|l| l.split_once("export ").map(|(_, kv)| kv))
+        .filter_map(|kv| kv.split_once('='))
+        .map(|(k, v)| (k.to_string(), unquote(v)))
+        .collect()
+}
+
+/// The inverse of `sh_quote`.
+fn unquote(v: &str) -> String {
+    v.strip_prefix('\'')
+        .and_then(|v| v.strip_suffix('\''))
+        .map(|v| v.replace("'\\''", "'"))
+        .unwrap_or_else(|| v.to_string())
 }
 
 /// Single-quoted for sh.
@@ -114,7 +130,16 @@ mod tests {
     fn env_file_quotes() {
         assert_eq!(
             env_file(&[("X", "it's".into())]).lines().nth(1),
-            Some("[ -n \"${X+x}\" ] || export X='it'\\''s'")
+            Some("export X='it'\\''s'")
         );
+    }
+
+    #[test]
+    fn env_vars_reads_both_formats_back() {
+        let text = env_file(&[("A", "it's".into()), ("B", "/x y".into())]);
+        let want = vec![("A".into(), "it's".into()), ("B".into(), "/x y".into())];
+        assert_eq!(env_vars(&text), want);
+        let old = "# old\n[ -n \"${A+x}\" ] || export A='it'\\''s'\n[ -n \"${B+x}\" ] || export B='/x y'\n";
+        assert_eq!(env_vars(old), want);
     }
 }

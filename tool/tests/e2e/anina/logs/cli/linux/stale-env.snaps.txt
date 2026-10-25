@@ -1,0 +1,13 @@
+
+### 01-doctor
+
+~ $ export MANDRAKE_SOULS=/old/souls; mandrake doctor 2>&1 | grep ambiente
+FAIL ambiente: neste shell MANDRAKE_SOULS é /old/souls, o instalado é /tmp/mandrake-cli.jlpIF0/mh/data/src/dat
+a/prompt/souls · conserte com: abra um shell novo (exec $SHELL): ele carrega os valores instalados
+~ $
+### 02-new-shell
+
+MANDRAKE_SOULS=/tmp/mandrake-cli.jlpIF0/mh/data/src/data/prompt/souls
+mandrake: proxy fora do ar em 127.0.0.1:37717, esta sessão vai direto para a API (mandrake doctor)
+[claude stub] claude --system-prompt-file /tmp/mandrake-soul-rhizo-411412.md --name Rhizo
+~ $
