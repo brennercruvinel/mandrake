@@ -1,0 +1,12 @@
+setup-wizard-wide
+=================
+
+[0.0s]
+
+## mandrake setup at 140x40
+
+[11.8s]
+    ~ $ mandrake setup
+    setup: nada mudou
+    ~ $ exit
+    exit

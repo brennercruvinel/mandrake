@@ -1,0 +1,182 @@
+
+### 01-devroot
+
+ Mandrake  setup passo 1 de 6 · Pasta de desenvolvimento
+ 1 Pasta › 2 Itens › 3 Plugins › 4 Proxy › 5 Souls › 6 Resumo
+┌ Pasta de desenvolvimento ────────────────────────────────────────────────────┐
+│Onde ficam seus projetos. Destinos relativos dos itens são resolvidos a partir│
+│dela, então o mesmo perfil serve num Mac e num Linux com pastas diferentes.   │
+│                                                                              │
+│› pasta                 ex.: ~/dev                                            │
+│                      sem pasta: só destinos absolutos ou com ~/ funcionam    │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+Enter próximo · Shift+Tab voltar · Esc sair
+### 02-items
+
+ Mandrake  setup passo 2 de 6 · Itens da pasta do Claude Code
+ 1 Pasta › 2 Itens › 3 Plugins › 4 Proxy › 5 Souls › 6 Resumo
+┌ Itens da pasta do Claude Code ───────────────────────────────────────────────┐
+│21 entradas ainda não existem nesta máquina · a mostra todas                  │
+│Configuração                                                                  │
+│ manter  CLAUDE.md                                                            │
+│ manter  agents                                                               │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│┌────────────────────────────────────────────────────────────────────────────┐│
+││agents (pasta)                                                              ││
+││Definições de subagentes                                                    ││
+││                                                                            ││
+││agora               pasta                                                   ││
+││ação                manter                                                  ││
+││destino             claude/agents                                           ││
+││resolve para        nada muda nesse item                                    ││
+│└────────────────────────────────────────────────────────────────────────────┘│
+└──────────────────────────────────────────────────────────────────────────────┘
+
+↑↓ item · ←→ espaço ação · m l c manter/linkar/copiar · e editar destino · a
+todas · Enter próximo · Shift+Tab voltar · Esc sair
+### 03-plugins
+
+ Mandrake  setup passo 3 de 6 · Plugins
+ 1 Pasta › 2 Itens › 3 Plugins › 4 Proxy › 5 Souls › 6 Resumo
+┌ Plugins ─────────────────────────────────────────────────────────────────────┐
+│O prompt-trim sempre instala; os outros são opcionais.                        │
+│                                                                              │
+│› [x] prompt-trim   travado · corta o que o Claude Code injeta no prompt      │
+│  [ ] fancy         status line e temas do Mandrake                           │
+│  [ ] tui-embed     /abtop e /gitlogue num painel ao lado da conversa         │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+↑↓ plugin · espaço marca · Enter próximo · Shift+Tab voltar · Esc sair
+### 04-proxy
+
+ Mandrake  setup passo 4 de 6 · Proxy
+ 1 Pasta › 2 Itens › 3 Plugins › 4 Proxy › 5 Souls › 6 Resumo
+┌ Proxy ───────────────────────────────────────────────────────────────────────┐
+│› porta               8787                                                    │
+│  remover safeguards  [ ] desligado por padrão                                │
+│                      o campo safeguards alimenta o classificador de segurança│
+│da API; o padrão é mantê-lo                                                   │
+│  auditoria           [ ] guarda os corpos antes e depois do corte em         │
+│state/audit, modo 600                                                         │
+│  retenção (dias)     7  só vale com a auditoria ligada                       │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+↑↓ campo · espaço alterna · Enter próximo · Shift+Tab voltar · Esc sair
+### 05-souls
+
+ Mandrake  setup passo 5 de 6 · Souls e skill invoke
+ 1 Pasta › 2 Itens › 3 Plugins › 4 Proxy › 5 Souls › 6 Resumo
+┌ Souls e skill invoke ────────────────────────────────────────────────────────┐
+│Souls são as personalidades que o claude invoke <nome> abre; a skill invoke   │
+│traz a memória.                                                               │
+│                                                                              │
+│› pasta de souls        vazio: as souls que vêm com o Mandrake                │
+│  skill invoke        [ ] abre a sessão com o que a memória registrou         │
+│  comando de memória  ex.: mem.sh find (sem ele, o invoke abre e avisa)       │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+↑↓ campo · espaço alterna · Enter próximo · Shift+Tab voltar · Esc sair
+### 06-summary
+
+ Mandrake  setup passo 6 de 6 · Resumo
+ 1 Pasta › 2 Itens › 3 Plugins › 4 Proxy › 5 Souls › 6 Resumo
+┌ Resumo ──────────────────────────────────────────────────────────────────────┐
+│Primeira instalação. Enter confirma, e o setup escreve:                       │
+│[x] prompt-trim instala sempre                                                │
+│                                                                              │
+│perfil                                                                        │
+│$TMPDIR//mandrake-cli.giuyZ1/mh/confi                                         │
+│g/mandrake.toml                                                               │
+│settings.json             CLAUDE_CODE_PLUGIN_DIRS com o prompt-trim           │
+│shell                     um bloco em                                         │
+│$TMPDIR//mandrake-cli.giuyZ1/home/.ba                                         │
+│sh_profile: Mandrake e PATH                                                   │
+│proxy                     serviço do usuário em 127.0.0.1:8787                │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+Enter confirma · ↑↓ rolar · Shift+Tab voltar · Esc q sair sem salvar
+### 07-applied
+
+~ $ mandrake setup
+
+Instalando
+  ok   perfil: $TMPDIR//mandrake-cli.gi
+uyZ1/mh/config/mandrake.toml
+  ok   dados: $TMPDIR//mandrake-cli.giu
+yZ1/mh/data/src
+  ok   core: 4251 caracteres nas sessões sem soul e antes de cada soul
+  ok   links: sem mudança
+  ok   settings: settings env.CLAUDE_CODE_PLUGIN_DIRS: unset -> $TMPDIR//mandrak
+e-cli.giuyZ1/mh/data/src/data/plugins/prompt-trim
+
+  ok   shell: shell: block added to $TMPDIR//mandrake-cli.giuyZ1/home/.bash_prof
+ile
+  ok   plugins: sem mudança
+  ok   skill: sem mudança
+wrote $TMPDIR//mandrake-cli.giuyZ1/mh/s
+tate/service/dev.mandrake.proxy.plist (MANDRAKE_HOME is set: not loaded)
+  ok   proxy: serviço escrito para 127.0.0.1:8787 (MANDRAKE_HOME: não carregado)
+
+Erros: nenhum
+próximo passo: abra um shell novo e rode `mandrake doctor`
+~ $

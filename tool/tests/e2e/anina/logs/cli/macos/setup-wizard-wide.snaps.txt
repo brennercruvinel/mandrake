@@ -1,0 +1,132 @@
+
+### 01-devroot
+
+ Mandrake  setup passo 1 de 6 · Pasta de desenvolvimento
+ 1 Pasta › 2 Itens › 3 Plugins › 4 Proxy › 5 Souls › 6 Resumo
+┌ Pasta de desenvolvimento ────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│Onde ficam seus projetos. Destinos relativos dos itens são resolvidos a partir dela, então o mesmo perfil serve num Mac e num Linux com   │
+│pastas diferentes.                                                                                                                        │
+│                                                                                                                                          │
+│› pasta                 ex.: ~/dev                                                                                                        │
+│                      sem pasta: só destinos absolutos ou com ~/ funcionam                                                                │
+│                                                                                                                                          │
+│                                                                                                                                          │
+│                                                                                                                                          │
+│                                                                                                                                          │
+│                                                                                                                                          │
+│                                                                                                                                          │
+│                                                                                                                                          │
+│                                                                                                                                          │
+│                                                                                                                                          │
+│                                                                                                                                          │
+│                                                                                                                                          │
+│                                                                                                                                          │
+│                                                                                                                                          │
+│                                                                                                                                          │
+│                                                                                                                                          │
+│                                                                                                                                          │
+│                                                                                                                                          │
+│                                                                                                                                          │
+│                                                                                                                                          │
+│                                                                                                                                          │
+│                                                                                                                                          │
+│                                                                                                                                          │
+│                                                                                                                                          │
+│                                                                                                                                          │
+│                                                                                                                                          │
+│                                                                                                                                          │
+│                                                                                                                                          │
+│                                                                                                                                          │
+│                                                                                                                                          │
+└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+Enter próximo · Shift+Tab voltar · Esc sair
+### 02-items
+
+ Mandrake  setup passo 2 de 6 · Itens da pasta do Claude Code
+ 1 Pasta › 2 Itens › 3 Plugins › 4 Proxy › 5 Souls › 6 Resumo
+┌ Itens da pasta do Claude Code ───────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│21 entradas ainda não existem nesta máquina · a mostra todas                ┌────────────────────────────────────────────────────────────┐│
+│Configuração                                                                │CLAUDE.md (arquivo)                                         ││
+│ manter  CLAUDE.md                                                          │Instruções lidas no começo de cada sessão                   ││
+│ manter  agents                                                             │                                                            ││
+│                                                                            │agora               arquivo                                 ││
+│                                                                            │ação                manter                                  ││
+│                                                                            │destino             claude/CLAUDE.md                        ││
+│                                                                            │resolve para        nada muda nesse item                    ││
+│                                                                            │                                                            ││
+│                                                                            │                                                            ││
+│                                                                            │                                                            ││
+│                                                                            │                                                            ││
+│                                                                            │                                                            ││
+│                                                                            │                                                            ││
+│                                                                            │                                                            ││
+│                                                                            │                                                            ││
+│                                                                            │                                                            ││
+│                                                                            │                                                            ││
+│                                                                            │                                                            ││
+│                                                                            │                                                            ││
+│                                                                            │                                                            ││
+│                                                                            │                                                            ││
+│                                                                            │                                                            ││
+│                                                                            │                                                            ││
+│                                                                            │                                                            ││
+│                                                                            │                                                            ││
+│                                                                            │                                                            ││
+│                                                                            │                                                            ││
+│                                                                            │                                                            ││
+│                                                                            │                                                            ││
+│                                                                            │                                                            ││
+│                                                                            │                                                            ││
+│                                                                            │                                                            ││
+│                                                                            └────────────────────────────────────────────────────────────┘│
+└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+↑↓ item · ←→ espaço ação · m l c manter/linkar/copiar · e editar destino · a todas · Enter próximo · Shift+Tab voltar · Esc sair
+### 03-summary
+
+ Mandrake  setup passo 6 de 6 · Resumo
+ 1 Pasta › 2 Itens › 3 Plugins › 4 Proxy › 5 Souls › 6 Resumo
+┌ Resumo ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│Primeira instalação. Enter confirma, e o setup escreve:                                                                                   │
+│[x] prompt-trim instala sempre                                                                                                            │
+│                                                                                                                                          │
+│perfil                    $TMPDIR//mandrake-cli.7dQWWn/mh/config/mandrake.toml                                                            │
+│settings.json             CLAUDE_CODE_PLUGIN_DIRS com o prompt-trim                                                                       │
+│shell                     um bloco em $TMPDIR//mandrake-cli.7dQWWn/home/.bash_profile: Mandrake e                                         │
+│PATH                                                                                                                                      │
+│proxy                     serviço do usuário em 127.0.0.1:8787                                                                            │
+│                                                                                                                                          │
+│                                                                                                                                          │
+│                                                                                                                                          │
+│                                                                                                                                          │
+│                                                                                                                                          │
+│                                                                                                                                          │
+│                                                                                                                                          │
+│                                                                                                                                          │
+│                                                                                                                                          │
+│                                                                                                                                          │
+│                                                                                                                                          │
+│                                                                                                                                          │
+│                                                                                                                                          │
+│                                                                                                                                          │
+│                                                                                                                                          │
+│                                                                                                                                          │
+│                                                                                                                                          │
+│                                                                                                                                          │
+│                                                                                                                                          │
+│                                                                                                                                          │
+│                                                                                                                                          │
+│                                                                                                                                          │
+│                                                                                                                                          │
+│                                                                                                                                          │
+│                                                                                                                                          │
+│                                                                                                                                          │
+└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+Enter confirma · ↑↓ rolar · Shift+Tab voltar · Esc q sair sem salvar
+### 04-quit
+
+~ $ mandrake setup
+setup: nada mudou
+~ $

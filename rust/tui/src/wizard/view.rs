@@ -14,12 +14,19 @@ use ratatui::text::{Line, Span};
 use ratatui::widgets::{Block, List, ListItem, ListState, Paragraph, Tabs, Wrap};
 
 pub fn render(f: &mut Frame, w: &Wizard) {
+    // The key line wraps onto a second row when the terminal is too narrow for it (80 columns).
+    let help_line = theme::help(&help_for(w));
+    let help_rows = if help_line.width() > usize::from(f.area().width) {
+        2
+    } else {
+        1
+    };
     let [title, tabs, body, notice, help] = Layout::vertical([
         Constraint::Length(1),
         Constraint::Length(1),
         Constraint::Min(6),
         Constraint::Length(1),
-        Constraint::Length(1),
+        Constraint::Length(help_rows),
     ])
     .areas(f.area());
     let n = w.step.index() + 1;
@@ -68,7 +75,7 @@ pub fn render(f: &mut Frame, w: &Wizard) {
             notice,
         );
     }
-    f.render_widget(Paragraph::new(theme::help(&help_for(w))), help);
+    f.render_widget(Paragraph::new(help_line).wrap(Wrap { trim: true }), help);
 }
 
 fn help_for(w: &Wizard) -> Vec<(&'static str, &'static str)> {
@@ -87,6 +94,14 @@ fn help_for(w: &Wizard) -> Vec<(&'static str, &'static str)> {
             ("←→ espaço", "ação"),
             ("m l c", "manter/linkar/copiar"),
             ("e", "editar destino"),
+            (
+                "a",
+                if w.show_all {
+                    "só as que existem"
+                } else {
+                    "todas"
+                },
+            ),
         ],
         Step::Plugins => vec![("↑↓", "plugin"), ("espaço", "marca")],
         Step::Proxy | Step::Souls => vec![("↑↓", "campo"), ("espaço", "alterna")],
@@ -135,9 +150,8 @@ fn dev_root(f: &mut Frame, area: Rect, w: &Wizard) {
         .unwrap_or_else(|| "sem pasta: só destinos absolutos ou com ~/ funcionam".into());
     let lines = vec![
         Line::from(
-            "Onde ficam seus projetos. Destinos relativos dos itens são resolvidos a partir dela,",
+            "Onde ficam seus projetos. Destinos relativos dos itens são resolvidos a partir dela, então o mesmo perfil serve num Mac e num Linux com pastas diferentes.",
         ),
-        Line::from("então o mesmo perfil serve num Mac e num Linux com pastas diferentes."),
         Line::from(""),
         Line::from(
             [
@@ -152,7 +166,7 @@ fn dev_root(f: &mut Frame, area: Rect, w: &Wizard) {
             Span::styled(resolved, theme::dim()),
         ]),
     ];
-    f.render_widget(Paragraph::new(lines), area);
+    f.render_widget(Paragraph::new(lines).wrap(Wrap { trim: false }), area);
 }
 
 fn group_label(g: Group) -> &'static str {
@@ -180,7 +194,16 @@ fn items(f: &mut Frame, area: Rect, w: &Wizard) {
     let mut rows = vec![];
     let mut selected_row = 0;
     let mut last_group = None;
-    for (i, it) in w.items.iter().enumerate() {
+    let shown = w.visible();
+    let hidden = w.items.len() - shown.len();
+    if hidden > 0 {
+        rows.push(ListItem::new(Line::from(Span::styled(
+            format!("{hidden} entradas ainda não existem nesta máquina · a mostra todas"),
+            theme::dim(),
+        ))));
+    }
+    for i in shown {
+        let it = &w.items[i];
         if last_group != Some(it.group) {
             rows.push(ListItem::new(Line::from(Span::styled(
                 group_label(it.group),
@@ -285,7 +308,7 @@ fn plugins(f: &mut Frame, area: Rect, w: &Wizard) {
         spans.push(Span::styled(*about, theme::dim()));
         lines.push(Line::from(spans));
     }
-    f.render_widget(Paragraph::new(lines), area);
+    f.render_widget(Paragraph::new(lines).wrap(Wrap { trim: false }), area);
 }
 
 fn proxy(f: &mut Frame, area: Rect, w: &Wizard) {
@@ -374,16 +397,14 @@ fn souls(f: &mut Frame, area: Rect, w: &Wizard) {
             SoulsRow::MemoryCmd => Line::from(
                 [
                     vec![pointer(focus), label("comando de memória")],
-                    w.memory_cmd.spans(
-                        focus,
-                        "ex.: mem.sh find; sem ele o invoke avisa e abre mesmo assim",
-                    ),
+                    w.memory_cmd
+                        .spans(focus, "ex.: mem.sh find (sem ele, o invoke abre e avisa)"),
                 ]
                 .concat(),
             ),
         });
     }
-    f.render_widget(Paragraph::new(lines), area);
+    f.render_widget(Paragraph::new(lines).wrap(Wrap { trim: false }), area);
 }
 
 fn summary(f: &mut Frame, area: Rect, w: &Wizard) {
@@ -431,7 +452,7 @@ fn summary(f: &mut Frame, area: Rect, w: &Wizard) {
         }
         lines.push(Line::from(spans));
     }
-    f.render_widget(Paragraph::new(lines), area);
+    f.render_widget(Paragraph::new(lines).wrap(Wrap { trim: false }), area);
 }
 
 /// What a first setup writes besides the changes: shown so the summary never reads as "nothing".

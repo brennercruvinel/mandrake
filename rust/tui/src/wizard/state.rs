@@ -64,14 +64,11 @@ pub struct ItemChoice {
 
 /// Rows of the plugins step; the first one is locked on.
 pub const PLUGINS: [(&str, &str); 3] = [
-    (
-        "prompt-trim",
-        "corta o que o Claude Code injeta no prompt; obrigatório",
-    ),
+    ("prompt-trim", "corta o que o Claude Code injeta no prompt"),
     ("fancy", "status line e temas do Mandrake"),
     (
         "tui-embed",
-        "painel dentro do Claude Code para o mandrake watch --embed",
+        "/abtop e /gitlogue num painel ao lado da conversa",
     ),
 ];
 
@@ -134,6 +131,8 @@ pub struct Wizard {
     pub first: bool,
     /// Shown under the form until the next key.
     pub notice: Option<String>,
+    /// The items step lists the entries that do not exist yet too (`a`).
+    pub show_all: bool,
 }
 
 fn group_order(g: Group) -> u8 {
@@ -205,11 +204,34 @@ impl Wizard {
             summary_scroll: 0,
             first: !dirs.profile().exists(),
             notice: None,
+            show_all: false,
         }
+        .at_first_visible()
+    }
+
+    fn at_first_visible(mut self) -> Self {
+        self.item = self.visible().first().copied().unwrap_or(0);
+        self
     }
 
     pub fn selected(&self) -> Option<&ItemChoice> {
         self.items.get(self.item)
+    }
+
+    /// The entries the items step lists: those that exist on this machine or that the profile
+    /// changes, unless `show_all`. With none of them (a machine without `~/.claude` yet), all.
+    pub fn visible(&self) -> Vec<usize> {
+        let some: Vec<usize> = (0..self.items.len())
+            .filter(|&i| {
+                let it = &self.items[i];
+                it.present != Presence::Missing || it.action != Action::Keep
+            })
+            .collect();
+        if self.show_all || some.is_empty() {
+            (0..self.items.len()).collect()
+        } else {
+            some
+        }
     }
 
     /// The warning for the item under the cursor, when it holds conversations.
@@ -358,19 +380,29 @@ impl Wizard {
     }
 
     fn items_key(&mut self, code: KeyCode) {
-        let last = self.items.len().saturating_sub(1);
+        let shown = self.visible();
+        let at = shown.iter().position(|&i| i == self.item).unwrap_or(0);
+        let last = shown.len().saturating_sub(1);
+        let go = |w: &mut Self, pos: usize| w.item = shown.get(pos.min(last)).copied().unwrap_or(0);
         let set = |w: &mut Self, a: Action| {
             if let Some(i) = w.items.get_mut(w.item) {
                 i.action = a;
             }
         };
         match code {
-            KeyCode::Up | KeyCode::Char('k') => self.item = self.item.saturating_sub(1),
-            KeyCode::Down | KeyCode::Char('j') => self.item = (self.item + 1).min(last),
-            KeyCode::PageUp => self.item = self.item.saturating_sub(10),
-            KeyCode::PageDown => self.item = (self.item + 10).min(last),
-            KeyCode::Home => self.item = 0,
-            KeyCode::End => self.item = last,
+            KeyCode::Up | KeyCode::Char('k') => go(self, at.saturating_sub(1)),
+            KeyCode::Down | KeyCode::Char('j') => go(self, at + 1),
+            KeyCode::PageUp => go(self, at.saturating_sub(10)),
+            KeyCode::PageDown => go(self, at + 10),
+            KeyCode::Home => go(self, 0),
+            KeyCode::End => go(self, last),
+            KeyCode::Char('a') => {
+                self.show_all = !self.show_all;
+                let shown = self.visible();
+                if !shown.contains(&self.item) {
+                    self.item = shown.first().copied().unwrap_or(0);
+                }
+            }
             KeyCode::Right | KeyCode::Char(' ') => self.cycle(1),
             KeyCode::Left => self.cycle(-1),
             KeyCode::Char('m') => set(self, Action::Keep),

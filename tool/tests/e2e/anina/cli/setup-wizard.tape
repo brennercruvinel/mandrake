@@ -15,7 +15,7 @@ Wait "Pasta de desenvolvimento"
 Sleep 2
 Snap 01-devroot
 
-Caption "step 2 · each entry of ~/.claude: keep, link or copy"
+Caption "step 2 · the entries this ~/.claude has: keep, link or copy (a shows the others)"
 Key Tab
 Wait "Itens"
 Sleep 1.5
