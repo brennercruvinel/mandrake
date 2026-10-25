@@ -9,14 +9,14 @@ last-updated: 2026-10-25
 tags: [contributors]
 supersedes: []
 superseded-by: null
-related: ["#13", "#14", docs/plan-v0.md]
+related: ["#13", "#14", docs/plan/plan-v0.md]
 ---
 
 # ADR-0001: Decision records and changelog fragments
 
 ## Context
 
-The v0 plan (`docs/plan-v0.md`, 2026-10-24) said "internal use, no ADR": `docs/` explained how Mandrake works, and the decisions lived in that plan and in chat. Two contributors joined in #3 the next day. They cannot read the chat, the plan mixes decisions with a task list, and nothing told them what changed between two pulls.
+The v0 plan (`docs/plan/plan-v0.md`, 2026-10-24) said "internal use, no ADR": `docs/` explained how Mandrake works, and the decisions lived in that plan and in chat. Two contributors joined in #3 the next day. They cannot read the chat, the plan mixes decisions with a task list, and nothing told them what changed between two pulls.
 
 ## Considered options
 

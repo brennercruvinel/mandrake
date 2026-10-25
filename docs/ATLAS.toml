@@ -2,7 +2,7 @@
 #
 # Current state only. History (what changed, when, why) goes in docs/CHANGELOG and the ADRs in
 # docs/adr/; a change updates the entry it touches instead of appending a dated paragraph. How to
-# use Mandrake is in docs/how-it-works.md and docs/setup.md.
+# use Mandrake is in docs/guide/how-it-works.md and docs/guide/setup.md.
 
 project = "mandrake"
 last-updated = "2026-10-25"
@@ -61,4 +61,4 @@ role = "What the installer writes: the catalog of ~/.claude entries, trim rules 
 
 [[layers]]
 name = "tool"
-role = "Tests outside cargo: tool/tests/e2e (setup in a throwaway HOME, the anina cases and tapes), tool/tests/fixtures (redacted request bodies), tool/relink.sh (puts ~/.claude links back by hand)."
+role = "Tests outside cargo: tool/tests/e2e (setup in a throwaway HOME, the anina cases and tapes), tool/tests/fixtures (redacted request bodies), tool/relink.sh (puts ~/.claude links back by hand), tool/demo (the README recordings, `tool/demo/record.sh`)."

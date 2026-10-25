@@ -2,6 +2,21 @@
 
 Keep it simple. Mandrake does three things (trim, measure, rebuild a `~/.claude`), and a change earns its place by making one of them better for someone using it.
 
+## The flow
+
+```mermaid
+flowchart LR
+  I[issue] --> B[branch from main] --> C[change] --> G[tool/fullcheck.sh] --> N[fragment in docs/news] --> P[pull request with POCS] --> R[review] --> M[maintainer merges]
+```
+
+1. Open or pick an issue; an epic groups several.
+2. `git switch -c <you>/<short-name> origin/main`, change what the issue asks, nothing else.
+3. `tool/fullcheck.sh` until it says `everything passed`.
+4. One line in `docs/news/<issue>.<type>.md`, the way it should read in the changelog.
+5. Open the pull request from the template: `Closes #<issue>`, a `[POCS]` line, the checks you ran.
+
+## The rules
+
 - **Start from an issue.** One change is one issue; several independent items are an epic with one sub-issue each. The pull request starts with `Closes #<sub-issue>. Part of #<epic>.` and follows the template.
 - **No agent instruction files.** No `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `.cursorrules` or the like ([ADR-0004](docs/adr/workflows/0004-no-agent-instruction-files.md)). The code, `docs/`, the ADRs and the changelog are the context, for people and agents alike.
 - **Code files stay under 639 lines.** Data formats (JSON, JSONL, TOML catalogs, lockfiles, SVG, logs) are exempt.
@@ -11,4 +26,12 @@ Keep it simple. Mandrake does three things (trim, measure, rebuild a `~/.claude`
 - **Show it working.** A `[POCS]` line in the pull request says where the change can be seen; test evidence from a terminal goes as anina recordings, embedded one per line.
 - **Sign your commits**, in plain English. The maintainer merges, after review.
 
-Setup: Rust (rustup.rs), then `cargo build --workspace` and `cargo test --workspace`. How Mandrake works for someone using it is in [`docs/how-it-works.md`](docs/how-it-works.md).
+## The records, checked
+
+The ADRs in force, the changelog drafted from the fragments, and `towncrier check` passing with a fragment and failing without one (`tool/tests/e2e/anina/records/check.sh`):
+
+![records check](docs/img/contributing/records.svg)
+
+## Setup
+
+Rust (rustup.rs), then `cargo build --workspace` and `cargo test --workspace`. How Mandrake works for someone using it is in [`docs/guide/how-it-works.md`](docs/guide/how-it-works.md).

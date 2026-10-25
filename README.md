@@ -2,44 +2,83 @@
 
 A middle guy to cut the bullshit. Mandrake makes a Claude Code setup reproducible on any Mac or
 Linux machine: it trims what the CLI wraps around your prompt, measures what that saves, and
-rebuilds your `~/.claude` arrangement from one profile.
+rebuilds your `~/.claude` arrangement from one profile. Every demo below was recorded with
+anina in a throwaway HOME, and none of them spent a request.
+
+## Install
 
 ```sh
-./install.sh        # build, install, interactive setup
-exec $SHELL
-mandrake doctor
+git clone git@github.com:brennercruvinel/mandrake.git && cd mandrake
+./install.sh --cli     # builds, installs, then asks item by item what to do
+exec $SHELL            # loads Mandrake in this terminal
+mandrake doctor        # checks everything
 ```
+
+Needs Rust ([rustup.rs](https://rustup.rs)) and Claude Code. The shell block setup writes also puts
+`~/.local/bin` on `PATH`, so `mandrake` is found once `exec $SHELL` loads it. Then use `claude` as always.
+
+### `mandrake setup`
+
+One screen per step: your development folder, each entry of `~/.claude` (keep, link or copy),
+plugins, the proxy, the prompts. Whatever is in the way goes to a backup first.
+
+![mandrake setup](docs/img/demo/setup.svg)
+
+## See the cut
+
+### `mandrake compare`
+
+One prompt through your own Claude Code, without and with Mandrake, part by part: system prompt,
+tools, messages. Both requests are answered locally, so nothing is spent and no login is needed.
+
+![mandrake compare](docs/img/demo/compare.svg)
+
+### `mandrake watch`
+
+Every request live as it goes through the proxy: without Mandrake on the left, with it on the right.
+
+![mandrake watch](docs/img/demo/watch.svg)
+
+### `mandrake hex <id>`
+
+One request before and after the cut, byte by byte; ids come from `mandrake audit`.
+
+![mandrake hex](docs/img/demo/hex-wide.svg)
+
+### `mandrake bench --view`
+
+The saving over fixed prompts. `mandrake bench` measures it with real requests (two short ones per
+prompt); `--view` draws the last report.
+
+![mandrake bench --view](docs/img/demo/bench-view-wide.svg)
+
+## Everything else
 
 | Command | Does |
 | - | - |
-| `mandrake setup` | wizard over every entry of `~/.claude`, plugins, proxy, souls; `--profile f --yes` applies a saved one |
-| `mandrake capture` | the current `~/.claude` as a profile |
+| `mandrake doctor` | checks links, settings, plugins, shell and proxy |
+| `mandrake capture` | writes the current `~/.claude` as a profile, to rebuild another machine |
 | `mandrake link plan\|apply\|rollback` | the links, with backup and journal; nothing is deleted |
 | `mandrake proxy run\|install\|uninstall\|status` | the local proxy that trims and measures |
-| `mandrake compare` | what Claude Code sends without and with Mandrake, side by side, part by part; answered locally, spends nothing |
-| `mandrake watch` | live split view: without and with Mandrake, tokens and savings |
-| `mandrake hex <id>` | one request before and after the cut, side by side in hex |
-| `mandrake bench` | token savings over fixed requests; `--view` draws the report |
-| `mandrake audit` | requests with bodies kept |
-| `mandrake doctor` | checks links, settings, plugins, shell, proxy |
-| `claude invoke <soul>` | opens a soul: core prompt + the soul's own, its settings and gh login |
+| `mandrake audit` | requests whose bodies were kept |
+| `claude invoke <soul>` | a session with a soul: the core prompt plus its own, its settings and gh login |
+
+**If something breaks:** `mandrake link rollback` undoes the last apply, the originals wait in
+`~/.local/state/mandrake/backups/`, and `mandrake doctor` says what is off.
 
 ## Layout
 
 ```
-rust/    Rust workspace: cli (the binary), home (dirs, profile), layout (links), meter (events),
-         proxy (trim, measure, service), tui (watch, hex, bench, wizard)
-cfgs/    what the installer writes: setup/items.toml (the catalog), proxy/ (trim rules, service
-         templates), shell/mandrake.sh (the launcher)
-data/    what gets installed: plugins/ (prompt-trim, fancy, tui-embed), prompt/cores, prompt/souls,
-         skills/invoke
-docs/    how it works, setup, measure and audit; ATLAS.toml (architecture), adr/ (decisions),
-         TERMS.md (abbreviations), CHANGELOG and news/ (its fragments)
-tool/    tests outside cargo: e2e scripts and anina tapes, request fixtures
+rust/    the Rust workspace: cli (the binary), home, layout, meter, proxy, tui
+cfgs/    what the installer writes: the ~/.claude catalog, trim rules, services, the shell launcher
+data/    what gets installed: plugins (prompt-trim, fancy, tui-embed), the core prompt, souls, skills
+docs/    guide/ (how it works, setup, measure), adr/ (decisions), audit/ and plan/ (records),
+         img/ (demos and evidence), ATLAS.toml, TERMS.md, CHANGELOG
+tool/    tests outside cargo (e2e scripts, anina tapes, fixtures) and demo/ (these recordings)
 ```
 
-Read [docs/how-it-works.md](docs/how-it-works.md) first.
+Start with [docs/guide/how-it-works.md](docs/guide/how-it-works.md).
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md).
+See [CONTRIBUTING.md](CONTRIBUTING.md): the flow on one screen, and what the gate checks.

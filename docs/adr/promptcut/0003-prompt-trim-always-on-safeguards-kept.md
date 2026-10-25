@@ -9,7 +9,7 @@ last-updated: 2026-10-25
 tags: [proxy, installer]
 supersedes: []
 superseded-by: null
-related: [data/plugins/prompt-trim, cfgs/proxy, docs/how-it-works.md, docs/audit-2026-10-24.md]
+related: [data/plugins/prompt-trim, cfgs/proxy, docs/guide/how-it-works.md, docs/audit/audit-2026-10-24.md]
 ---
 
 # ADR-0003: prompt-trim is always on; the default profile keeps safeguards and strips only metadata
@@ -43,4 +43,4 @@ A few tokens more per request, decided for the user without telling them.
 
 ## References
 
-- `docs/how-it-works.md`, `docs/audit-2026-10-24.md`, `docs/plan-v0.md` (P2)
+- `docs/guide/how-it-works.md`, `docs/audit/audit-2026-10-24.md`, `docs/plan/plan-v0.md` (P2)

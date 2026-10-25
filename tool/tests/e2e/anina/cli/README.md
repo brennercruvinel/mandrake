@@ -40,4 +40,4 @@ MANDRAKE_BIN=$PWD/target/debug/mandrake MANDRAKE_REPO=$PWD CLI_SEED=traffic \
   bash --rcfile tool/tests/e2e/anina/cli/env.sh -i
 ```
 
-The findings of the Linux pass are in `docs/audit-cli-2026-10-25-linux.md`.
+The findings of the Linux pass are in `docs/audit/audit-cli-2026-10-25-linux.md`.
