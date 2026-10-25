@@ -7,140 +7,140 @@
 path = "CLAUDE.md"
 kind = "file"
 group = "config"
-about = "Instructions read at the start of every session"
+about = "Instruções lidas no começo de cada sessão"
 
 [[item]]
 path = "settings.json"
 kind = "file"
 group = "config"
-about = "Global settings; Mandrake only writes ANTHROPIC_BASE_URL and CLAUDE_CODE_PLUGIN_DIRS in it"
+about = "Configuração global; o Mandrake só acrescenta a pasta do prompt-trim em CLAUDE_CODE_PLUGIN_DIRS"
 
 [[item]]
 path = "statusline.sh"
 kind = "file"
 group = "config"
-about = "Status line command"
+about = "Comando da linha de status"
 
 [[item]]
 path = "agents"
 kind = "dir"
 group = "config"
-about = "Subagent definitions"
+about = "Definições de subagentes"
 
 [[item]]
 path = "commands"
 kind = "dir"
 group = "config"
-about = "Slash commands"
+about = "Comandos de barra (/comando)"
 
 [[item]]
 path = "skills"
 kind = "dir"
 group = "config"
-about = "User skills"
+about = "Skills do usuário"
 
 [[item]]
 path = "hooks"
 kind = "dir"
 group = "config"
-about = "Hook scripts"
+about = "Scripts de hook"
 
 [[item]]
 path = "rules"
 kind = "dir"
 group = "config"
-about = "Rule files"
+about = "Arquivos de regras"
 
 [[item]]
 path = "output-styles"
 kind = "dir"
 group = "config"
-about = "Output styles"
+about = "Estilos de resposta"
 
 [[item]]
 path = "themes"
 kind = "dir"
 group = "config"
-about = "Terminal themes"
+about = "Temas do terminal"
 
 [[item]]
 path = "workflows"
 kind = "dir"
 group = "config"
-about = "Workflow scripts"
+about = "Scripts de workflow"
 
 [[item]]
 path = "plugins"
 kind = "dir"
 group = "plugins"
-about = "Installed plugins, marketplaces and their cache"
+about = "Plugins instalados, marketplaces e o cache deles"
 
 [[item]]
 path = "projects"
 kind = "dir"
 group = "session"
 sensitive = true
-about = "Session transcripts, one folder per project"
+about = "Transcrições das sessões, uma pasta por projeto"
 
 [[item]]
 path = "history.jsonl"
 kind = "file"
 group = "session"
 sensitive = true
-about = "Prompt history"
+about = "Histórico de prompts"
 
 [[item]]
 path = "file-history"
 kind = "dir"
 group = "session"
 sensitive = true
-about = "File checkpoints for rewind"
+about = "Pontos de restauração de arquivos (rewind)"
 
 [[item]]
 path = "paste-cache"
 kind = "dir"
 group = "session"
 sensitive = true
-about = "Pasted content"
+about = "Conteúdo colado"
 
 [[item]]
 path = "sessions"
 kind = "dir"
 group = "session"
-about = "Live session registry"
+about = "Registro das sessões abertas"
 
 [[item]]
 path = "session-env"
 kind = "dir"
 group = "session"
-about = "Per-session environment"
+about = "Ambiente de cada sessão"
 
 [[item]]
 path = "shell-snapshots"
 kind = "dir"
 group = "session"
-about = "Shell snapshots the Bash tool sources"
+about = "Retratos do shell que a ferramenta Bash carrega"
 
 [[item]]
 path = "tasks"
 kind = "dir"
 group = "session"
-about = "Task lists"
+about = "Listas de tarefas"
 
 [[item]]
 path = "backups"
 kind = "dir"
 group = "session"
-about = "Config backups the CLI keeps"
+about = "Backups de configuração que o Claude Code guarda"
 
 [[item]]
 path = "cache"
 kind = "dir"
 group = "session"
-about = "CLI cache"
+about = "Cache do Claude Code"
 
 [[item]]
 path = "dev-mods"
 kind = "dir"
 group = "session"
-about = "Plugin module build cache"
+about = "Cache de build dos módulos de plugin"

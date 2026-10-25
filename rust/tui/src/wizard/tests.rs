@@ -431,3 +431,78 @@ fn a_first_setup_lists_what_it_writes_instead_of_no_change() {
         "{screen}"
     );
 }
+
+/// Words a wide screen shows that the 80x24 one does not show whole: cut by the edge instead of
+/// wrapped. Paths and other long tokens may wrap mid-word, so they are left out.
+fn cut_words(wide: &str, narrow: &str) -> Vec<String> {
+    let words = |s: &str| -> std::collections::BTreeSet<String> {
+        s.split(|c: char| c.is_whitespace() || "│─┌┐└┘├┤".contains(c))
+            .map(|w| w.trim_matches(|c: char| !c.is_alphanumeric()).to_string())
+            .filter(|w| w.chars().count() > 2 && w.chars().count() <= 30 && !w.contains('/'))
+            .collect()
+    };
+    let have = words(narrow);
+    words(wide)
+        .into_iter()
+        .filter(|w| !have.contains(w))
+        .collect()
+}
+
+#[test]
+fn nothing_is_cut_at_80x24() {
+    let (_t, mut w) = setup();
+    let mut cut = vec![];
+    w.step = Step::DevRoot;
+    loop {
+        let narrow = text(&draw(80, 24, |f| render(f, &w)));
+        let wide = text(&draw(220, 24, |f| render(f, &w)));
+        let lost = cut_words(&wide, &narrow);
+        if !lost.is_empty() {
+            cut.push(format!("{:?}: {}\n{narrow}", w.step, lost.join(", ")));
+        }
+        if w.step == Step::Summary {
+            break;
+        }
+        key(&mut w, KeyCode::Tab);
+    }
+    assert!(cut.is_empty(), "cut at 80x24:\n{}", cut.join("\n"));
+}
+
+#[test]
+fn entries_that_do_not_exist_are_hidden_until_a() {
+    let (_t, mut w) = setup();
+    w.step = Step::Items;
+    let names = |w: &Wizard| -> Vec<String> {
+        w.visible()
+            .iter()
+            .map(|&i| w.items[i].path.clone())
+            .collect()
+    };
+    // CLAUDE.md is a file, skills a link and in the profile; nothing else exists in the fixture.
+    assert_eq!(names(&w), ["CLAUDE.md", "skills"]);
+    let screen = text(&draw(80, 24, |f| render(f, &w)));
+    assert!(screen.contains("21 entradas ainda não existem"), "{screen}");
+    assert!(!screen.contains("history.jsonl"), "{screen}");
+    key(&mut w, KeyCode::Down);
+    assert_eq!(
+        w.selected().unwrap().path,
+        "skills",
+        "the cursor skips hidden entries"
+    );
+    key(&mut w, KeyCode::Char('a'));
+    assert_eq!(w.visible().len(), w.items.len());
+    assert!(text(&draw(120, 40, |f| render(f, &w))).contains("history.jsonl"));
+    key(&mut w, KeyCode::Char('a'));
+    assert_eq!(names(&w).len(), 2);
+}
+
+#[test]
+fn a_machine_without_any_entry_lists_them_all() {
+    let tmp = tempfile::tempdir().unwrap();
+    let w = Wizard::new(
+        &dirs(tmp.path()),
+        &Catalog::builtin().unwrap(),
+        &Profile::default(),
+    );
+    assert_eq!(w.visible().len(), w.items.len());
+}
