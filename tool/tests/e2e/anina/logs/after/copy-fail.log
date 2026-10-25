@@ -1,0 +1,21 @@
+== 1. a copy that fails midway, then rollback
+
+$ mandrake link apply
+  links: backupcopy  rules -> $T/does-not-exist
+  Error: stopped at rules; `mandrake link rollback` undoes this run ($T/mh/state/journal/20261025-011256-001.json)
+  
+  Caused by:
+      0: copy source $T/does-not-exist
+      1: No such file or directory (os error 2)
+  exit 1
+
+$ mandrake link rollback
+  rolled back 1 steps
+  exit 0
+
+$ ls ~/.claude/rules
+  original.txt
+
+$ find state/backups -type f
+
+verdict: FIXED original.txt is back in ~/.claude/rules
