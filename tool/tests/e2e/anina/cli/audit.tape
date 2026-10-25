@@ -11,7 +11,7 @@ Wait '/~ \$/'
 Caption "mandrake audit · three requests kept, newest first"
 Type "mandrake audit"
 Key Enter
-Wait "saved"
+Wait "economia"
 Sleep 2
 Poster
 Snap 01-list
@@ -22,8 +22,8 @@ Key Enter
 Sleep 1.5
 Snap 02-last
 
-Caption "the kept bodies gone (deleted, or past audit_keep_days): does the list still offer them?"
-Type 'clear; rm -rf ~/../mh/state/audit; mandrake audit; mandrake hex $(mandrake audit | head -1 | cut -f1)'
+Caption "the kept bodies gone (deleted, or past audit_keep_days): the list says so, hex says why"
+Type 'clear; ls ~/../mh/state/audit | head -1 | cut -d. -f1 > ~/id; rm -rf ~/../mh/state/audit; mandrake audit; mandrake hex "$(cat ~/id)"; mandrake hex'
 Key Enter
 Wait "audit"
 Sleep 2.5

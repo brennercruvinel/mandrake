@@ -30,9 +30,18 @@ pub fn watch(dirs: &Dirs, opts: WatchOpts) -> Result<()> {
     watch::run(dirs, opts.embed)
 }
 
-/// Side-by-side hex of `audit/<id>.before.json` and `.after.json`.
-pub fn hex(dirs: &Dirs, id: &str) -> Result<()> {
-    hex::run(dirs, id)
+/// Side-by-side hex of `audit/<id>.before.json` and `.after.json`; without an id, the newest.
+pub fn hex(dirs: &Dirs, id: Option<&str>) -> Result<()> {
+    let id = match id {
+        Some(id) => id.to_string(),
+        None => hex::HexView::latest(dirs)?,
+    };
+    hex::run(dirs, &id)
+}
+
+/// Whether both audited bodies of a request are still on disk.
+pub fn has_bodies(dirs: &Dirs, id: &str) -> bool {
+    hex::has_bodies(dirs, id)
 }
 
 /// Side by side, part by part, the request Claude Code sends without Mandrake and with it.
@@ -84,9 +93,13 @@ pub fn watch_snapshot(dirs: &Dirs, size: &str) -> Result<String> {
 }
 
 /// One frame of `hex` as text, scrolled to the `hunk`-th changed stretch (0 is the top).
-pub fn hex_snapshot(dirs: &Dirs, id: &str, size: &str, hunk: usize) -> Result<String> {
+pub fn hex_snapshot(dirs: &Dirs, id: Option<&str>, size: &str, hunk: usize) -> Result<String> {
     let (w, h) = snap::size(size)?;
-    let mut view = hex::HexView::load(dirs, id)?;
+    let id = match id {
+        Some(id) => id.to_string(),
+        None => hex::HexView::latest(dirs)?,
+    };
+    let mut view = hex::HexView::load(dirs, &id)?;
     for _ in 0..hunk {
         view.next_hunk();
     }

@@ -1,4 +1,4 @@
-# `mandrake audit` then `mandrake hex <id>` at 80x24: one request before and after the cut.
+# `mandrake audit` then `mandrake hex` at 80x24: the newest request before and after the cut.
 Set Cols 80
 Set Rows 24
 Set FPS 10
@@ -11,12 +11,12 @@ Wait '/~ \$/'
 Caption "mandrake audit · the ids hex needs"
 Type "mandrake audit"
 Key Enter
-Wait "saved"
+Wait "economia"
 Sleep 1.5
 Snap 01-audit
 
-Caption "mandrake hex <id> · the newest one"
-Type "clear; mandrake hex $(mandrake audit | head -1 | cut -f1)"
+Caption "mandrake hex · with no id, the newest one"
+Type "clear; mandrake hex"
 Key Enter
 Wait "q voltar"
 Sleep 2

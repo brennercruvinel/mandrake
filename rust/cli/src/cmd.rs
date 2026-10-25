@@ -253,14 +253,41 @@ pub fn audit(dirs: &Dirs, last: usize) -> Result<()> {
             dirs.profile().display()
         );
     }
-    for e in events.into_iter().take(last) {
-        let saved = e
-            .saved_tokens()
-            .map(|s| s.to_string())
-            .unwrap_or_else(|| "-".into());
+    let (kept, gone): (Vec<_>, Vec<_>) = events
+        .into_iter()
+        .partition(|e| mandrake_tui::has_bodies(dirs, &e.id));
+    if !kept.is_empty() {
         println!(
-            "{}\t{}\t{:?}\t{}\t{} -> {} bytes\tsaved {} tokens",
-            e.id, e.ts, e.mode, e.status, e.bytes_before, e.bytes_after, saved
+            "{:<24}  {:<16}  {:<3}  {:>6}  {:>21}  economia",
+            "id", "quando", "lado", "status", "bytes antes → depois"
+        );
+    }
+    for e in kept.iter().take(last) {
+        let saved = match e.saved_tokens() {
+            Some(s) if s > 0 => format!("{s} tokens"),
+            Some(s) => format!("{s} tokens (cresceu)"),
+            None => "-".into(),
+        };
+        println!(
+            "{:<24}  {:<16}  {:<3}  {:>6}  {:>21}  {saved}",
+            e.id,
+            e.ts.get(..16).unwrap_or(&e.ts).replace('T', " "),
+            if e.mode == mandrake_meter::Mode::Trim {
+                "com"
+            } else {
+                "sem"
+            },
+            e.status,
+            format!("{} → {}", e.bytes_before, e.bytes_after),
+        );
+    }
+    if !kept.is_empty() {
+        println!("\n`mandrake hex` abre a mais recente; `mandrake hex <id>`, uma delas.");
+    }
+    if !gone.is_empty() {
+        println!(
+            "{} requisição(ões) com o corpo já apagado (audit_keep_days) ficaram fora da lista.",
+            gone.len()
         );
     }
     Ok(())

@@ -23,11 +23,13 @@ untouched, start that session without the plugin as well (`CLAUDE_CODE_PLUGIN_DI
 
 `mandrake watch --embed` draws without the alternate screen, for a tui-embed pane inside Claude Code.
 
-## Hex: `mandrake hex <id>`
+## Hex: `mandrake hex [id]`
 
 The request before and after the cut, side by side in hex and ASCII. Removed bytes are red,
 inserted bytes green; `n` and `p` jump between changed regions, and the slider shows where you are
-in the body. `mandrake audit` lists the audited ids.
+in the body. Without an id it opens the newest audited request. `mandrake audit` lists the ones
+whose bodies are still kept, newest first, and says how many are left out because their bodies
+were removed (`audit_keep_days`).
 
 ## Bench: `mandrake bench`
 
