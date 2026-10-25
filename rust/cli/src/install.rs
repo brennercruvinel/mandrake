@@ -55,6 +55,7 @@ pub fn settings_keys(dirs: &Dirs, profile: &Profile, root: &Path) -> Result<Vec<
     let changed = settings::apply(
         &dirs.claude.join("settings.json"),
         &keys,
+        profile.proxy.port,
         &dirs.backups().join(dirs.fresh_stamp()),
     )?;
     Ok(changed
