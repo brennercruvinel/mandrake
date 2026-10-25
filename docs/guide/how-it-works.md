@@ -22,12 +22,14 @@ Um plugin carregado por `CLAUDE_CODE_PLUGIN_DIRS`. Age antes de a requisição e
 | Tira | Põe no lugar |
 | - | - |
 | as seções do prompt padrão do Claude Code (`intro`, `doing_tasks`, `tools`, `tone`…) | o core, `data/prompt/cores/coding.md`, nas sessões sem soul |
-| cerca de 75 tipos de lembretes e anexos (data, ambiente, todo, plano, modelo, idioma…) | nada; o core diz ao modelo que pergunte à máquina (`date`, `pwd`) |
+| 64 tipos de lembretes e anexos (data, ambiente, todo, modelo, idioma…) | nada; o core diz ao modelo que pergunte à máquina (`date`, `pwd`) |
 | a descrição de cada tool (~16 mil caracteres) | o core resume os contratos que importam (Read antes de Edit, cuidados do Bash) |
 | a lista de tipos de subagente | nada |
 
 Reescreve os textos fixos dos anexos que ficam: `Contents of X (…):` vira `# X`, o cabeçalho da lista
 de skills vira `Skills:`.
+O que o corte nunca muda (tools, instruções do usuário, hooks, modos como plan mode) está em
+[prompt-trim-invariants.md](prompt-trim-invariants.md), com um teste para cada regra.
 
 ## 2. proxy local, entre o Claude Code e a API
 
