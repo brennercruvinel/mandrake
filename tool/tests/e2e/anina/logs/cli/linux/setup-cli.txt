@@ -1,0 +1,124 @@
+setup-cli
+=========
+
+[0.0s]
+
+## mandrake setup --cli · step 1, the development folder
+
+[2.7s]
+    ~ $ mandrake setup --cli
+    Mandrake setup. Enter aceita o valor entre colchetes.
+    
+    1. Pasta de desenvolvimento: a raiz dos destinos relativos.
+       pasta [~/dev]:
+    
+    2. Itens de /tmp/mandrake-cli.SIUHZ8/home/.claude (23 itens): manter (m), linkar (l) ou copiar (c).
+    
+       [1/23] CLAUDE.md: Instructions read at the start of every session
+             hoje: arquivo
+             ação [m]:
+
+## step 2 · 23 entries of ~/.claude, one question each
+
+[4.7s]
+    ~ $ mandrake setup --cli
+    Mandrake setup. Enter aceita o valor entre colchetes.
+    
+    1. Pasta de desenvolvimento: a raiz dos destinos relativos.
+       pasta [~/dev]:
+    
+    2. Itens de /tmp/mandrake-cli.SIUHZ8/home/.claude (23 itens): manter (m), linkar (l) ou copiar (c).
+    
+       [1/23] CLAUDE.md: Instructions read at the start of every session
+             hoje: arquivo
+             ação [m]:
+    
+       [2/23] settings.json: Global settings; Mandrake only writes ANTHROPIC_BASE_URL and CLAUDE_CODE_PL
+    UGIN_DIRS in it
+             hoje: não existe
+             ação [m]:
+    
+       [3/23] statusline.sh: Status line command
+             hoje: não existe
+             ação [m]:
+    
+       [4/23] agents: Subagent definitions
+             hoje: pasta
+             ação [m]:
+
+## agents: l links it to a folder under the development folder
+
+[6.2s]
+    ~ $ mandrake setup --cli
+    Mandrake setup. Enter aceita o valor entre colchetes.
+    
+    1. Pasta de desenvolvimento: a raiz dos destinos relativos.
+       pasta [~/dev]:
+    
+    2. Itens de /tmp/mandrake-cli.SIUHZ8/home/.claude (23 itens): manter (m), linkar (l) ou copiar (c).
+    
+       [1/23] CLAUDE.md: Instructions read at the start of every session
+             hoje: arquivo
+             ação [m]:
+    
+       [2/23] settings.json: Global settings; Mandrake only writes ANTHROPIC_BASE_URL and CLAUDE_CODE_PL
+    UGIN_DIRS in it
+             hoje: não existe
+             ação [m]:
+    
+       [3/23] statusline.sh: Status line command
+             hoje: não existe
+             ação [m]:
+    
+       [4/23] agents: Subagent definitions
+             hoje: pasta
+             ação [m]: l
+             destino [claude/agents]:
+    
+       [5/23] commands: Slash commands
+             hoje: não existe
+             ação [m]:
+
+## the other 19 entries, plugins, proxy and prompts: Enter takes the default each time
+
+[15.1s]
+             ação [m]:
+    
+       [23/23] dev-mods: Plugin module build cache
+             hoje: não existe
+             ação [m]:
+    
+    3. Plugins. prompt-trim é obrigatório e vai sempre.
+       fancy (markdown com tema, badges, barra de status) [n]:
+       tui-embed (apps de terminal em painéis) [n]:
+    
+    4. Proxy local.
+       porta [8787]:
+       safeguards alimenta o classificador de segurança da API; tirá-lo é escolha consciente.
+       remover safeguards [n]:
+       auditoria (guarda os corpos antes e depois, local, 600) [n]:
+    
+    5. Prompts.
+       core (padrao, none ou um caminho) [padrao]:
+       pasta de souls (padrao = os do Mandrake) [padrao]:
+       skill invoke (abre a sessão com a memória) [n]:
+    
+    6. Resumo
+       pasta ~/dev
+       1 links no perfil, 1 mudam agora
+         backuplink  agents
+       plugins: prompt-trim
+       proxy 127.0.0.1:8787 removendo metadata, auditoria desligada
+       core padrão, souls do Mandrake
+    
+       aplicar [s]:
+
+## aplicar [s] · Enter applies
+
+[21.0s]
+    total 8
+    -rw-rw-r-- 1 use user 11 Oct 24 22:27 CLAUDE.md
+    lrwxrwxrwx 1 use user 47 Oct 24 22:28 agents -> /tmp/mandrake-cli.SIUHZ8/home/dev/claude/agents
+    -rw-rw-r-- 1 user user 114 Oct 24 22:28 settings.json
+    ~ $ exit
+    exit

@@ -1,0 +1,60 @@
+
+### 01-view
+
+ Mandrake  bench 3 corpos fixos, só o corte do proxy · 2026-10-25T02:25:20.560Z
+┌ Por fixture ─────────────────────────────────────────────────────────────────┐
+│fixture          ytes antes tes depois  economia ens antes ns depois  economia│
+│reminders             4.326      3.784     12,5%     1.036       937      9,6%│
+│short                 1.920      1.612     16,0%       434       394      9,2%│
+│tools                 5.664      5.317      6,1%     1.370     1.321      3,6%│
+│total                11.910     10.713     10,1%     2.840     2.652      6,6%│
+└──────────────────────────────────────────────────────────────────────────────┘
+┌ Economia por linha, em tokens ───────────────────────────────────────────────┐
+│reminders   9,6% █████                                                        │
+│short       9,2% █████                                                        │
+│tools       3,6% ██                                                           │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+ q sair · ↑↓ fixture
+### 02-row
+
+ Mandrake  bench 3 corpos fixos, só o corte do proxy · 2026-10-25T02:25:20.560Z
+┌ Por fixture ─────────────────────────────────────────────────────────────────┐
+│fixture          ytes antes tes depois  economia ens antes ns depois  economia│
+│reminders             4.326      3.784     12,5%     1.036       937      9,6%│
+│short                 1.920      1.612     16,0%       434       394      9,2%│
+│tools                 5.664      5.317      6,1%     1.370     1.321      3,6%│
+│total                11.910     10.713     10,1%     2.840     2.652      6,6%│
+└──────────────────────────────────────────────────────────────────────────────┘
+┌ Economia por linha, em tokens ───────────────────────────────────────────────┐
+│reminders   9,6% █████                                                        │
+│short       9,2% █████                                                        │
+│tools       3,6% ██                                                           │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+ q sair · ↑↓ fixture
+### 03-none
+
+Error: lendo o relatório /tmp/mandrake-cli.NclZAx/mh/state/bench/latest.json
+
+Caused by:
+    No such file or directory (os error 2)
+~ $

@@ -1,0 +1,37 @@
+invoke
+======
+
+[0.0s]
+
+## a new shell loads the block setup wrote in ~/.bashrc
+
+[4.0s]
+    ~ $ source ~/.bashrc; type claude | head -3
+    claude is a function
+    claude ()
+    {
+    ~ $
+
+## claude invoke rhizo · the example soul
+
+[7.8s]
+    mandrake: proxy fora do ar em 127.0.0.1:56849, esta sessão vai direto para a API (mandrake doctor)
+    [claude stub] claude --system-prompt-file /tmp/mandrake-soul-rhizo-283650.md --name Rhizo
+    ~ $
+
+## claude invoke with no soul, and with one that does not exist
+
+[14.6s]
+    claude invoke: which soul? (rhizo)
+    exit 1
+    claude invoke: 'nobody' is not a soul (rhizo)
+    exit 1
+    ~ $
+
+## plain claude: the core prompt, no soul
+
+[18.2s]
+    mandrake: proxy fora do ar em 127.0.0.1:56849, esta sessão vai direto para a API (mandrake doctor)
+    [claude stub] claude
+    ~ $ exit
+    exit

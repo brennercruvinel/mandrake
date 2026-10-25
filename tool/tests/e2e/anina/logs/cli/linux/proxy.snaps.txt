@@ -1,0 +1,50 @@
+
+### 01-status
+
+~ $ mandrake proxy status
+proxy: service file at /tmp/mandrake-cli.Bq1x7T/mh/state/service/mandrake-proxy.service (MANDRAKE_HO
+ME is set: not loaded); 127.0.0.1:58623 not answering
+~ $
+### 02-run
+
+[2] 283999
+~ $ mandrake proxy on http://127.0.0.1:58623 -> http://127.0.0.1:56143 (trim)
+### 03-status-up
+
+[2] 283999
+~ $ mandrake proxy on http://127.0.0.1:58623 -> http://127.0.0.1:56143 (trim)
+mandrake proxy status
+proxy: service file at /tmp/mandrake-cli.Bq1x7T/mh/state/service/mandrake-proxy.service (MANDRAKE_HO
+ME is set: not loaded); 127.0.0.1:58623 answering
+~ $
+### 04-one-request
+
+[2] 283999
+~ $ mandrake proxy on http://127.0.0.1:58623 -> http://127.0.0.1:56143 (trim)
+mandrake proxy status
+proxy: service file at /tmp/mandrake-cli.Bq1x7T/mh/state/service/mandrake-proxy.service (MANDRAKE_HO
+ME is set: not loaded); 127.0.0.1:58623 answering
+~ $ send short; mandrake
+Mandrake: corta o que o Claude Code coloca em volta do seu prompt e mede a economia.
+
+Como funciona, em duas camadas:
+  1. prompt-trim (dentro do Claude Code) ........ ligado
+     tira o prompt padrão, os lembretes, data, pasta e as descrições longas das tools,
+     e põe no lugar o core (data/prompt/cores/coding.md) nas sessões sem soul
+  2. proxy local 127.0.0.1:58623 (entre o Claude Code e a API) ... ligado
+     tira as tags <system-reminder> e os campos metadata; mede tokens antes e depois
+     sessões abertas por um shell com o Mandrake usam o proxy quando ele responde;
+     se ele estiver fora, vão direto para a API, sem quebrar
+
+Pelo proxy passaram 1 requisições. Última: 424 tokens enviados.
+Ainda não mediu: rode `mandrake bench` (2 requisições curtas por prompt, pela sua sessão).
+
+Comandos: setup · doctor · bench · watch · audit · capture · link · proxy   (mandrake <comando> --he
+lp)
+~ $
+### 05-stopped
+
+[2]+  Terminated                 mandrake proxy run
+proxy: service file at /tmp/mandrake-cli.Bq1x7T/mh/state/service/mandrake-proxy.service (MANDRAKE_HO
+ME is set: not loaded); 127.0.0.1:58623 not answering
+~ $

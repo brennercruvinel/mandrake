@@ -1,0 +1,40 @@
+audit
+=====
+
+[0.0s]
+
+## mandrake audit · three requests kept, newest first
+
+[4.3s]
+    aved 69 tokens
+    1792895103414-44a5b-0001               2026-10-25T02:25:03.414Z        Trim        200      5665 ->
+    5437 bytes      s
+    aved 19 tokens
+    1792895103403-44a5b-0000               2026-10-25T02:25:03.403Z        Trim        200      1921 ->
+    1732 bytes      s
+    aved 10 tokens
+    ~ $
+
+## mandrake audit --last 1
+
+[7.8s]
+    3904 bytes      s
+    aved 69 tokens
+    ~ $
+
+## the kept bodies gone (deleted, or past audit_keep_days): does the list still offer them?
+
+[17.2s]
+    1792895103414-44a5b-0001               2026-10-25T02:25:03.414Z        Trim        200      5665 ->
+    5437 bytes      s
+    aved 19 tokens
+    1792895103403-44a5b-0000               2026-10-25T02:25:03.403Z        Trim        200      1921 ->
+    1732 bytes      s
+    aved 10 tokens
+    Error: corpo de auditoria não encontrado: /tmp/mandrake-cli.EO7mLn/mh/state/audit/1792895103423-44a5
+    b-0002.before.json
+    
+    Caused by:
+        No such file or directory (os error 2)
+    ~ $ exit
+    exit

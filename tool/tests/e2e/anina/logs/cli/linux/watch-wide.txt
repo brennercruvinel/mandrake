@@ -1,0 +1,16 @@
+watch-wide
+==========
+
+[0.0s]
+
+## mandrake watch at 140x40 · requests arriving live
+
+[14.1s]
+    ~ $ traffic_later 3; mandrake watch
+    [3] 298483
+    [3]+  Done                       ( sleep "${1:-2}"; for f in tools short reminders;
+    do
+        send "$f"; sleep 1;
+    done ) > /dev/null 2>&1
+    ~ $ exit
+    exit

@@ -1,0 +1,11 @@
+hex-wide
+========
+
+[0.0s]
+
+## mandrake hex <id> at 160x40
+
+[11.2s]
+    ~ $ mandrake hex $(mandrake audit | head -1 | cut -f1)
+    ~ $ exit
+    exit
