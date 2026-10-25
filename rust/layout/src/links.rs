@@ -3,6 +3,9 @@
 //! Nothing is ever deleted. A real file or folder in the way moves to `state/backups/<stamp>/`, and
 //! every step goes to `state/journal/<stamp>.json`, which `rollback` replays backwards. A step is
 //! written as pending before anything moves, so a run that stops halfway can still be undone.
+//!
+//! A real folder linked to a target that does not exist yet fills the target first (`seed-link`),
+//! so the entry shows the same files through the link (#27).
 
 use anyhow::{Context, Result, bail};
 use mandrake_home::{Action, Dirs, LinkSpec, Profile};
@@ -54,6 +57,9 @@ pub enum Op {
     Relink,
     /// A real file or folder moves to the backup, then the link goes in.
     BackupLink,
+    /// The target is missing, or an empty folder: the real file or folder is copied there first,
+    /// then it moves to the backup and the link goes in, so nothing disappears from view.
+    SeedLink,
     Copy,
     BackupCopy,
 }
@@ -91,6 +97,11 @@ pub fn plan(dirs: &Dirs, catalog: &Catalog, profile: &Profile) -> Result<Vec<Ste
             (Action::Link, Found::Link(t)) if Some(t) == target.as_ref() => Op::None,
             (Action::Link, Found::Missing) => Op::Link,
             (Action::Link, Found::Link(_)) => Op::Relink,
+            (Action::Link, Found::File | Found::Dir)
+                if target.as_deref().is_some_and(|t| vacant(t, &found)) =>
+            {
+                Op::SeedLink
+            }
             (Action::Link, _) => Op::BackupLink,
             (Action::Copy, Found::Missing) => Op::Copy,
             (Action::Copy, Found::File | Found::Dir)
@@ -111,6 +122,44 @@ pub fn plan(dirs: &Dirs, catalog: &Catalog, profile: &Profile) -> Result<Vec<Ste
         });
     }
     Ok(steps)
+}
+
+/// A target with nothing to show yet: missing, or an empty folder when the entry is a folder.
+fn vacant(target: &Path, entry: &Found) -> bool {
+    match inspect(target) {
+        Found::Missing => true,
+        Found::Dir => {
+            *entry == Found::Dir && std::fs::read_dir(target).is_ok_and(|mut d| d.next().is_none())
+        }
+        _ => false,
+    }
+}
+
+impl Step {
+    /// What applying does to this entry, in one line a person reads.
+    pub fn say(&self, dirs: &Dirs) -> String {
+        let t = self
+            .target
+            .as_deref()
+            .map(|t| dirs.tilde(t))
+            .unwrap_or_default();
+        let p = &self.path;
+        match self.op {
+            Op::None => format!("{p}: fica como está"),
+            Op::Link => format!("{p}: link para {t}"),
+            Op::Relink => format!("{p}: o link passa a apontar para {t}"),
+            Op::BackupLink => {
+                format!("{p}: vai para o backup, e o link mostra o que já está em {t}")
+            }
+            Op::SeedLink => match tree::count_files(&dirs.claude.join(p)) {
+                0 => format!("{p}: vira link para {t}"),
+                1 => format!("{p}: 1 arquivo vai para {t}, e o backup guarda uma cópia"),
+                n => format!("{p}: {n} arquivos vão para {t}, e o backup guarda uma cópia"),
+            },
+            Op::Copy => format!("{p}: recebe uma cópia de {t}"),
+            Op::BackupCopy => format!("{p}: vai para o backup e recebe uma cópia de {t}"),
+        }
+    }
 }
 
 /// A profile key is a relative path that stays inside the Claude Code folder.
@@ -138,6 +187,27 @@ pub struct Done {
     /// have done part of it. Journals from before this field read as finished steps.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub pending: bool,
+    /// For `seed-link`: the target this step filled.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub seeded: Option<Seeded>,
+}
+
+/// A target filled by `seed-link`. Rollback puts it aside rather than deleting it, so whatever was
+/// written through the link after the run is still there.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Seeded {
+    pub target: PathBuf,
+    /// Where rollback moves the target: `backups/<stamp>/.seeded/<path>`.
+    pub aside: PathBuf,
+    /// The target was an empty folder before the run, and rollback leaves one there again.
+    pub was_dir: bool,
+}
+
+/// What a rollback undid, and the filled targets it put aside.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct Rolled {
+    pub steps: usize,
+    pub aside: Vec<Seeded>,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -162,14 +232,25 @@ pub fn apply(dirs: &Dirs, catalog: &Catalog, steps: &[Step]) -> Result<Option<Pa
         done: vec![],
     };
     for s in todo {
-        let backup = matches!(s.op, Op::BackupLink | Op::BackupCopy)
-            .then(|| dirs.backups().join(&journal.stamp).join(&s.path));
+        let run = dirs.backups().join(&journal.stamp);
+        let backup = matches!(s.op, Op::BackupLink | Op::BackupCopy | Op::SeedLink)
+            .then(|| run.join(&s.path));
+        let seeded = s
+            .target
+            .as_ref()
+            .filter(|_| s.op == Op::SeedLink)
+            .map(|t| Seeded {
+                target: t.clone(),
+                aside: run.join(".seeded").join(&s.path),
+                was_dir: inspect(t) == Found::Dir,
+            });
         journal.done.push(Done {
             path: s.path.clone(),
             before: s.found.clone(),
             op: s.op,
             backup: backup.clone(),
             pending: true,
+            seeded,
         });
         write_journal(&jpath, &journal)?;
         let kind = catalog.get(&s.path).map(|i| i.kind);
@@ -210,6 +291,13 @@ fn run_step(at: &Path, s: &Step, kind: Option<Kind>, backup: Option<&Path>) -> R
     let Some(target) = s.target.as_ref() else {
         bail!("{} has no target in the profile", s.path)
     };
+    if s.op == Op::SeedLink {
+        if let Some(dir) = target.parent() {
+            std::fs::create_dir_all(dir)?;
+        }
+        tree::copy(at, target)
+            .with_context(|| format!("copying {} to {}", at.display(), target.display()))?;
+    }
     if let Some(to) = backup {
         if let Some(dir) = to.parent() {
             std::fs::create_dir_all(dir)?;
@@ -242,18 +330,44 @@ fn write_journal(path: &Path, j: &Journal) -> Result<()> {
         .with_context(|| format!("writing {}", path.display()))
 }
 
-/// Undoes the newest journal not rolled back yet; returns how many steps it undid.
-pub fn rollback(dirs: &Dirs) -> Result<usize> {
+/// Undoes the newest journal not rolled back yet.
+pub fn rollback(dirs: &Dirs) -> Result<Rolled> {
     let Some(jpath) = latest_journal(dirs)? else {
         bail!("no journal to roll back in {}", dirs.journal().display())
     };
     let j: Journal = serde_json::from_slice(&std::fs::read(&jpath)?)
         .with_context(|| format!("reading {}", jpath.display()))?;
+    let mut rolled = Rolled {
+        steps: j.done.len(),
+        aside: vec![],
+    };
     for d in j.done.iter().rev() {
+        if let Some(s) = &d.seeded
+            && put_aside(s)?
+        {
+            rolled.aside.push(s.clone());
+        }
         undo(&j.claude.join(&d.path), d)?;
     }
     std::fs::rename(&jpath, jpath.with_extension("rolled-back.json"))?;
-    Ok(j.done.len())
+    Ok(rolled)
+}
+
+/// Moves a filled target out of the way, and leaves an empty folder when there was one before.
+/// Returns whether there was anything to move.
+fn put_aside(s: &Seeded) -> Result<bool> {
+    if s.target.symlink_metadata().is_err() {
+        return Ok(false);
+    }
+    if let Some(dir) = s.aside.parent() {
+        std::fs::create_dir_all(dir)?;
+    }
+    std::fs::rename(&s.target, &s.aside)
+        .with_context(|| format!("moving {} aside", s.target.display()))?;
+    if s.was_dir {
+        std::fs::create_dir_all(&s.target)?;
+    }
+    Ok(true)
 }
 
 /// Puts back what was at `at` before the step. A pending step may have stopped anywhere: when the
