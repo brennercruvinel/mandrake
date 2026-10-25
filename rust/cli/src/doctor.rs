@@ -203,7 +203,7 @@ fn links_checks(dirs: &Dirs, p: &Profile, out: &mut Vec<Check>) -> Result<()> {
                 format!("; diferem: {}", off.join(", "))
             }
         ),
-        &links_fix(dirs, &steps),
+        "mandrake link apply",
     ));
     let dangling: Vec<_> = steps
         .iter()
@@ -221,35 +221,6 @@ fn links_checks(dirs: &Dirs, p: &Profile, out: &mut Vec<Check>) -> Result<()> {
         });
     }
     Ok(())
-}
-
-/// `link apply` moves a real folder to the backup before linking; when the target does not exist
-/// yet, the entry would come back empty (#27). Then the fix starts by filling the target.
-fn links_fix(dirs: &Dirs, steps: &[links::Step]) -> String {
-    let fill: Vec<String> = steps
-        .iter()
-        .filter(|s| s.op == links::Op::BackupLink && s.found == links::Found::Dir)
-        .filter_map(|s| {
-            let t = s.target.as_ref().filter(|t| !t.exists())?;
-            let q =
-                |p: &std::path::Path| mandrake_layout::shell::sh_quote(&p.display().to_string());
-            let parent = t.parent().unwrap_or(t);
-            Some(format!(
-                "mkdir -p {} && cp -R {} {}",
-                q(parent),
-                q(&dirs.claude.join(&s.path)),
-                q(t)
-            ))
-        })
-        .collect();
-    if fill.is_empty() {
-        "mandrake link apply".into()
-    } else {
-        format!(
-            "{} (o destino ainda não existe), depois mandrake link apply",
-            fill.join(" && ")
-        )
-    }
 }
 
 #[cfg(test)]
@@ -308,35 +279,34 @@ mod tests {
     }
 
     #[test]
-    fn a_folder_linked_to_a_missing_target_is_copied_there_first() {
+    fn a_folder_linked_to_a_missing_target_is_fixed_by_link_apply() {
+        // Since #27 `link apply` fills a missing target first, so the fix is the command itself.
         let tmp = tempfile::tempdir().unwrap();
         let d = dirs(tmp.path());
         std::fs::create_dir_all(d.claude.join("agents")).unwrap();
         std::fs::write(d.claude.join("agents/reviewer.md"), "r").unwrap();
-        let target = tmp.path().join("dev/agents");
         let mut p = Profile::default();
         p.links.insert(
             "agents".into(),
             mandrake_home::LinkSpec {
                 action: Action::Link,
-                target: Some(target.display().to_string()),
+                target: Some(tmp.path().join("dev/agents").display().to_string()),
             },
         );
-        let steps = links::plan(&d, &Catalog::builtin().unwrap(), &p).unwrap();
-        let fix = links_fix(&d, &steps);
-        assert!(
-            fix.starts_with(&format!(
-                "mkdir -p '{}' && cp -R '{}' '{}'",
-                tmp.path().join("dev").display(),
-                d.claude.join("agents").display(),
-                target.display()
-            )),
-            "{fix}"
+        let mut out = vec![];
+        links_checks(&d, &p, &mut out).unwrap();
+        assert_eq!(
+            out[0].fix.as_deref(),
+            Some("mandrake link apply"),
+            "{:?}",
+            out[0].fix
         );
-        assert!(fix.ends_with("depois mandrake link apply"), "{fix}");
-        std::fs::create_dir_all(&target).unwrap();
         let steps = links::plan(&d, &Catalog::builtin().unwrap(), &p).unwrap();
-        assert_eq!(links_fix(&d, &steps), "mandrake link apply");
+        links::apply(&d, &Catalog::builtin().unwrap(), &steps).unwrap();
+        assert!(d.claude.join("agents/reviewer.md").exists());
+        let mut out = vec![];
+        links_checks(&d, &p, &mut out).unwrap();
+        assert_eq!(out[0].mark, Mark::Ok, "{:?}", out[0].what);
     }
 
     #[test]

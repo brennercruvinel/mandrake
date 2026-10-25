@@ -49,7 +49,7 @@ check "a second setup changes no setting" "$(jq -r .env.CLAUDE_CODE_PLUGIN_DIRS 
 
 printf '#!/bin/sh\necho "base=${ANTHROPIC_BASE_URL:-none}"\n' > "$t/bin/claude"
 chmod +x "$t/bin/claude"
-launch() { env -u ANTHROPIC_BASE_URL HOME="$t/home" MANDRAKE_HOME="$t/mh" PATH="$t/bin:$PATH" "$@" bash -c ". '$t/mh/data/shell/mandrake.sh'; claude" 2>&1; }
+launch() { env -u ANTHROPIC_BASE_URL HOME="$t/home" MANDRAKE_HOME="$t/mh" PATH="$t/bin:$PATH" bash -c ". '$t/mh/data/shell/mandrake.sh'; claude" 2>&1; }
 
 # Something else on Mandrake's port: the session goes direct, and says why.
 python3 -m http.server "$port" --bind 127.0.0.1 > /dev/null 2>&1 &

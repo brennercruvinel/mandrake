@@ -101,6 +101,11 @@ mandrake link apply       # do it; real files in the way go to the backup
 mandrake link rollback    # undo the last apply from its journal
 ```
 
+When a link's target does not exist yet, or is an empty folder, `apply` copies the entry there
+first, so `~/.claude/agents` still shows its files through the link; the backup keeps the original.
+`rollback` puts the original back and moves the filled target to `backups/<stamp>/.seeded/`, so
+whatever was written through the link is kept.
+
 ## What setup writes outside `~/.claude`
 
 | Where | What |
