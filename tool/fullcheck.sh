@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# The whole quality gate in one script, run locally before pushing, as in urna's
-# tool/tasks/fullcheck.sh. CI (.github/workflows/ci.yml) runs this same script on Linux and macOS.
+# The whole quality gate in one script, run locally before pushing. There is no CI: this script is
+# the gate, on the Claude Code versions in docs/guide/setup.md.
 #
 #   tool/fullcheck.sh                every check
-#   tool/fullcheck.sh rust shell     only those groups: rust test ts go shell python files ci news e2e
+#   tool/fullcheck.sh rust shell     only those groups: rust test ts go shell python files news e2e
 #
 # Each check prints "ok" or "FAIL <check>: <why>" with the tail of its output; the run ends with
 # one line per failure and exits 1 when there is any. A missing tool is a failure that says how to
@@ -167,17 +167,6 @@ file_checks() {
   check "agent files" agent_files
 }
 
-# The workflows: actionlint for the syntax, zizmor for the security of each step. Both are optional
-# locally (the CI has no secret to leak); when one is missing the run says so.
-ci_checks() {
-  if has actionlint; then check "actionlint" actionlint; else
-    skip "actionlint" "not installed: github.com/rhysd/actionlint"
-  fi
-  if has zizmor; then check "zizmor" zizmor --offline --quiet .github/workflows; else
-    skip "zizmor" "not installed: uvx zizmor, or docs.zizmor.sh"
-  fi
-}
-
 news_check() {
   if [ ! -f towncrier.toml ]; then
     skip "changelog" "no towncrier.toml yet"
@@ -220,7 +209,7 @@ e2e_checks() {
   done
 }
 
-all_groups=(rust ts go shell python files ci news e2e)
+all_groups=(rust ts go shell python files news e2e)
 groups=("$@")
 [ "${#groups[@]}" -gt 0 ] || groups=("${all_groups[@]}")
 for g in "${groups[@]}"; do
@@ -233,10 +222,9 @@ for g in "${groups[@]}"; do
     shell) shell_checks ;;
     python) py_checks ;;
     files) file_checks ;;
-    ci) ci_checks ;;
     news) news_check ;;
     e2e) e2e_checks ;;
-    *) fail "fullcheck" "unknown group $g (rust test ts go shell python files ci news e2e)" ;;
+    *) fail "fullcheck" "unknown group $g (rust test ts go shell python files news e2e)" ;;
   esac
 done
 

@@ -138,13 +138,12 @@ Any other `claude` call is plain Claude Code.
 
 ## Claude Code versions
 
-prompt-trim hooks into Claude Code's plugin API, which can change between releases. CI runs the whole
-gate on each of these:
+prompt-trim hooks into Claude Code's plugin API, which can change between releases. There is no CI:
+`tool/fullcheck.sh` runs on each machine, with the Claude Code installed there. The versions checked so far:
 
 | Version | Where |
 | - | - |
 | 2.1.287 | Linux |
-| 2.1.310 | Linux and macOS |
-| the newest on npm | Linux; a failure there is a warning, the sign to check a new release |
+| 2.1.310 | macOS |
 
-To add a version, add it to the `claude` matrix in `.github/workflows/ci.yml` and to this table.
+A new release is checked by running the gate with it; when it passes, it goes in this table.
