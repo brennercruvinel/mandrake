@@ -130,6 +130,8 @@ pub struct Wizard {
     pub invoke: bool,
     pub memory_cmd: TextField,
     pub summary_scroll: usize,
+    /// No saved profile yet: setup will write everything, even when nothing differs from the start.
+    pub first: bool,
     /// Shown under the form until the next key.
     pub notice: Option<String>,
 }
@@ -201,6 +203,7 @@ impl Wizard {
             invoke: current.skills.invoke,
             memory_cmd: TextField::new(current.skills.memory_cmd.clone().unwrap_or_default()),
             summary_scroll: 0,
+            first: !dirs.profile().exists(),
             notice: None,
         }
     }

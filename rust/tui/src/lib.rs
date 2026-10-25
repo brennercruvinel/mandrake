@@ -4,6 +4,7 @@
 //! that draws it into any [`ratatui::Frame`], and a thin loop that only [`term`] connects to stdout.
 
 mod bench;
+mod compare;
 mod fmt;
 mod hex;
 mod snap;
@@ -32,6 +33,34 @@ pub fn watch(dirs: &Dirs, opts: WatchOpts) -> Result<()> {
 /// Side-by-side hex of `audit/<id>.before.json` and `.after.json`.
 pub fn hex(dirs: &Dirs, id: &str) -> Result<()> {
     hex::run(dirs, id)
+}
+
+/// Side by side, part by part, the request Claude Code sends without Mandrake and with it.
+/// On a terminal it opens the screen; otherwise, or with `print`, it prints the table.
+pub fn compare(without: &[u8], with: &[u8], prompt: &str, print: bool) -> Result<()> {
+    use std::io::IsTerminal;
+    let mut view = compare::CompareView::new(without, with, prompt);
+    if print || !std::io::stdout().is_terminal() {
+        print!("{}", compare::summary(&view));
+        return Ok(());
+    }
+    compare::run(&mut view)
+}
+
+/// One frame of `compare` as text, on part `part` (0 system, 1 tools, 2 messages).
+pub fn compare_snapshot(
+    without: &[u8],
+    with: &[u8],
+    prompt: &str,
+    size: &str,
+    part: usize,
+) -> Result<String> {
+    let (w, h) = snap::size(size)?;
+    let mut view = compare::CompareView::new(without, with, prompt);
+    view.part = compare::Part::ALL[part.min(2)];
+    Ok(snap::text(&snap::draw(w, h, |f| {
+        compare::render(f, &mut view)
+    })))
 }
 
 /// Draws a bench report written by `mandrake_proxy::bench`.

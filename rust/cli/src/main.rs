@@ -4,6 +4,8 @@ mod ab;
 mod apps;
 mod ask;
 mod cmd;
+mod compare;
+mod doctor;
 mod install;
 
 use clap::{Parser, Subcommand};
@@ -49,6 +51,18 @@ enum Cmd {
         view: bool,
         /// Com --view: imprime a tela como texto, LARGURAxALTURA
         #[arg(long)]
+        snapshot: Option<String>,
+    },
+    /// Mostra lado a lado o que o Claude Code envia sem e com o Mandrake, parte por parte (não gasta nada: a resposta é local)
+    Compare {
+        /// O prompt enviado nos dois lados
+        #[arg(default_value = compare::PROMPT)]
+        prompt: String,
+        /// Imprime a tabela em vez de abrir a tela
+        #[arg(long)]
+        print: bool,
+        /// Imprime a tela como texto, LARGURAxALTURA
+        #[arg(long, hide = true)]
         snapshot: Option<String>,
     },
     /// Tela ao vivo das requisições: sem Mandrake à esquerda, com Mandrake à direita
@@ -168,6 +182,20 @@ fn main() -> anyhow::Result<()> {
                 }
             }
         }
+        Cmd::Compare {
+            prompt,
+            print,
+            snapshot,
+        } => {
+            let p = cmd::profile(&dirs)?;
+            let trim = install::prompt_trim(&dirs.data.join("src"));
+            let shown = match snapshot {
+                Some(s) => compare::Shown::Snapshot(s),
+                None if print => compare::Shown::Table,
+                None => compare::Shown::Screen,
+            };
+            compare::run(&dirs, &p, &trim, &prompt, shown)
+        }
         Cmd::Watch {
             snapshot: Some(s), ..
         } => print(mandrake_tui::watch_snapshot(&dirs, &s)),
@@ -203,6 +231,6 @@ fn main() -> anyhow::Result<()> {
             }
         }
         Cmd::Audit { last } => cmd::audit(&dirs, last),
-        Cmd::Doctor => cmd::doctor(&dirs),
+        Cmd::Doctor => doctor::run(&dirs),
     }
 }

@@ -4,6 +4,7 @@
 
 mod audit;
 mod bench;
+mod capture;
 mod clock;
 mod count;
 mod log;
@@ -21,6 +22,8 @@ use std::path::Path;
 
 /// Writes a bench report as `<out>.json` and `<out>.md`.
 pub use bench::write as write_bench;
+/// A stand-in API on loopback for `mandrake compare`: answers locally, sends nothing anywhere.
+pub use capture::serve as serve_capture;
 /// `trim` cuts per `cfgs/proxy/trim.toml` and the profile; `pass` forwards untouched and still measures.
 pub use mandrake_meter::Mode;
 
@@ -64,6 +67,21 @@ pub fn uninstall_service(dirs: &Dirs) -> Result<()> {
 /// One line for `doctor` and `proxy status`: whether the service is loaded and the port answers.
 pub fn status(dirs: &Dirs, profile: &Profile) -> Result<String> {
     Ok(service::status(
+        dirs,
+        service::Os::current()?,
+        service::isolated(),
+        profile.proxy.port,
+    ))
+}
+
+/// Whether `MANDRAKE_HOME` isolates this run: the service file is written but never loaded.
+pub fn isolated() -> bool {
+    service::isolated()
+}
+
+/// The status line, and whether the service is loaded (or isolated) and the port answers.
+pub fn health(dirs: &Dirs, profile: &Profile) -> Result<(bool, String)> {
+    Ok(service::health(
         dirs,
         service::Os::current()?,
         service::isolated(),

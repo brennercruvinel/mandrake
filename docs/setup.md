@@ -5,7 +5,7 @@
 ```sh
 git clone git@github.com:brennercruvinel/mandrake.git && cd mandrake
 ./install.sh            # builds, installs ~/.local/bin/mandrake, opens the setup wizard
-exec $SHELL             # loads the shell block
+exec $SHELL             # loads the shell block, which also puts ~/.local/bin on PATH
 mandrake doctor
 ```
 
@@ -43,8 +43,9 @@ cargo install --git https://github.com/tiamatio/abtop --branch embed --locked --
 cargo install --git https://github.com/tiamatio/gitlogue --branch embed --locked --root ~/.local
 ```
 
-The pane spawns each app by name, so its folder must be on the `PATH` Claude Code starts with;
-otherwise set `abtop_path` and `gitlogue_path` in `/config`. `mandrake doctor` checks both: found
+The pane spawns each app by name, so its folder must be on the `PATH` Claude Code starts with.
+The shell block puts `~/.local/bin` (or `$MANDRAKE_PREFIX/bin`) there, also on macOS, which leaves
+it out; otherwise set `abtop_path` and `gitlogue_path` in `/config`. `mandrake doctor` checks both: found
 on `PATH`, and answering `--embed`.
 
 ## Rebuilding a machine from a profile

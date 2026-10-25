@@ -41,6 +41,8 @@ check "same links after setup" "$after" "$before"
 check "settings keeps its keys" "$(jq -r .env.KEEP "$t/dev/devops/settings.json")" 1
 check "settings never gets the base url" "$(jq -r .env.ANTHROPIC_BASE_URL "$t/dev/devops/settings.json")" "null"
 check "env.sh carries the proxy port" "$(grep -c "MANDRAKE_PORT='8787'" "$t/mh/data/shell/env.sh")" 1
+mkdir -p "$t/home/.local/bin"
+check "a new shell finds mandrake's folder" "$(env -u MANDRAKE_BIN_DIR HOME="$t/home" MANDRAKE_HOME="$t/mh" PATH=/usr/bin:/bin bash -c ". '$t/mh/data/shell/mandrake.sh'; echo \"\$PATH\"" | grep -c "^$t/home/.local/bin:")" 1
 check "settings gets prompt-trim" "$(jq -r .env.CLAUDE_CODE_PLUGIN_DIRS "$t/dev/devops/settings.json")" "$t/mh/data/src/data/plugins/prompt-trim"
 check "prompt-trim copied" "$([ -f "$t/mh/data/src/data/plugins/prompt-trim/hooks/register.js" ] && echo y)" y
 check "fancy skipped, already on" "$(grep -c 'plugin fancy: already on as fancy@other' "$t/setup.log")" 1

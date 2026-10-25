@@ -2,13 +2,13 @@
 
 use crate::term::{self, Opts, Session};
 use crate::{fmt, theme};
-use anyhow::{Context, Result};
+use anyhow::{Context, Result, bail};
 use crossterm::event::KeyCode;
 use mandrake_meter::{BenchReport, BenchRow};
 use ratatui::Frame;
 use ratatui::layout::{Constraint, Direction, Layout};
 use ratatui::style::{Color, Modifier, Style};
-use ratatui::text::{Line, Span};
+use ratatui::text::{Line, Span, Text};
 use ratatui::widgets::{Bar, BarChart, BarGroup, Block, Cell, Paragraph, Row, Table, TableState};
 use std::path::Path;
 use std::time::Duration;
@@ -47,6 +47,12 @@ impl BenchState {
     }
 
     pub fn load(path: &Path) -> Result<Self> {
+        if !path.exists() {
+            bail!(
+                "ainda não há medição. `mandrake bench --fixtures` mede o corte do proxy sem gastar \
+                 requisições; `mandrake bench` mede de verdade, com 2 requisições curtas por prompt"
+            );
+        }
         let text = std::fs::read_to_string(path)
             .with_context(|| format!("lendo o relatório {}", path.display()))?;
         let report = serde_json::from_str(&text)
@@ -86,7 +92,8 @@ impl BenchState {
 pub fn render(f: &mut Frame, s: &BenchState) {
     let r = &s.report;
     let notice = if r.counted { 0 } else { 1 };
-    let table_h = (r.rows.len() as u16 + 4).min(f.area().height / 2);
+    // rows, the total, a two-line header and the borders
+    let table_h = (r.rows.len() as u16 + 5).min(f.area().height / 2);
     let [title, warn, table, chart, help] = Layout::vertical([
         Constraint::Length(1),
         Constraint::Length(notice),
@@ -112,7 +119,7 @@ pub fn render(f: &mut Frame, s: &BenchState) {
     if !r.counted {
         f.render_widget(
             Paragraph::new(Span::styled(
-                " ⚠ sem credencial para count_tokens: só bytes foram medidos, a economia abaixo é em bytes",
+                " ⚠ sem credencial: só bytes foram medidos, a economia é em bytes",
                 theme::warn(),
             )),
             warn,
@@ -137,97 +144,108 @@ fn opt(n: Option<u64>) -> String {
     n.map(fmt::num).unwrap_or_else(|| "-".into())
 }
 
-fn cells(row: &BenchRow, counted: bool) -> Vec<Cell<'static>> {
-    let right = |s: String| Cell::from(Line::from(s).right_aligned());
+/// The text of each column for one row, the name first.
+fn texts(row: &BenchRow, counted: bool) -> Vec<String> {
     let bytes_saved = fmt::saved_ratio(row.bytes_before, row.bytes_after);
     let tokens_saved = match (counted, row.tokens_before, row.tokens_after) {
         (true, Some(b), Some(a)) => fmt::pct(fmt::saved_ratio(b, a)),
         _ => "-".into(),
     };
+    let tokens = |t| if counted { opt(t) } else { "-".into() };
     vec![
-        Cell::from(row.name.clone()),
-        right(fmt::num(row.bytes_before)),
-        right(fmt::num(row.bytes_after)),
-        right(fmt::pct(bytes_saved)),
-        right(if counted {
-            opt(row.tokens_before)
-        } else {
-            "-".into()
-        }),
-        right(if counted {
-            opt(row.tokens_after)
-        } else {
-            "-".into()
-        }),
-        right(tokens_saved),
+        row.name.clone(),
+        fmt::num(row.bytes_before),
+        fmt::num(row.bytes_after),
+        fmt::pct(bytes_saved),
+        tokens(row.tokens_before),
+        tokens(row.tokens_after),
+        tokens_saved,
     ]
+}
+
+fn cells(texts: Vec<String>) -> Vec<Cell<'static>> {
+    texts
+        .into_iter()
+        .enumerate()
+        .map(|(i, t)| {
+            if i == 0 {
+                Cell::from(t)
+            } else {
+                Cell::from(Line::from(t).right_aligned())
+            }
+        })
+        .collect()
+}
+
+/// Nine cells fit 80 columns; a longer number widens its column instead of losing digits.
+fn widths(rows: &[Vec<String>]) -> Vec<Constraint> {
+    let mut w = vec![Constraint::Min(10)];
+    w.extend((1..7).map(|c| {
+        let longest = rows.iter().map(|r| r[c].chars().count()).max().unwrap_or(0);
+        Constraint::Length(longest.max(9) as u16)
+    }));
+    w
 }
 
 fn rows_table(f: &mut Frame, area: ratatui::layout::Rect, s: &BenchState) {
     let counted = s.report.counted;
-    let header = if s.report.kind == "ab" {
-        [
-            "prompt",
-            "bytes sem",
-            "bytes com",
-            "economia",
-            "tokens sem",
-            "tokens com",
-            "economia",
-        ]
+    // Two lines, the unit over the column, so every word stays whole at 80 columns.
+    let (name, before, after) = if s.report.kind == "ab" {
+        ("prompt", "sem", "com")
     } else {
-        [
-            "fixture",
-            "bytes antes",
-            "bytes depois",
-            "economia",
-            "tokens antes",
-            "tokens depois",
-            "economia",
-        ]
+        ("fixture", "antes", "depois")
     };
-    let mut rows: Vec<Row> = s
-        .report
-        .rows
-        .iter()
-        .map(|r| Row::new(cells(r, counted)))
+    let header = [
+        ("", name),
+        ("bytes", before),
+        ("bytes", after),
+        ("bytes", "economia"),
+        ("tokens", before),
+        ("tokens", after),
+        ("tokens", "economia"),
+    ];
+    let mut all: Vec<Vec<String>> = s.report.rows.iter().map(|r| texts(r, counted)).collect();
+    all.push(texts(&s.total(), counted));
+    let widths = widths(&all);
+    let last = all.len() - 1;
+    let rows: Vec<Row> = all
+        .into_iter()
+        .enumerate()
+        .map(|(i, t)| {
+            let row = Row::new(cells(t));
+            if i == last {
+                row.style(Style::new().add_modifier(Modifier::BOLD))
+            } else {
+                row
+            }
+        })
         .collect();
-    rows.push(
-        Row::new(cells(&s.total(), counted)).style(Style::new().add_modifier(Modifier::BOLD)),
-    );
-    let w = Constraint::Length(13);
-    let table = Table::new(
-        rows,
-        [
-            Constraint::Min(16),
-            w,
-            w,
-            Constraint::Length(9),
-            w,
-            w,
-            Constraint::Length(9),
-        ],
-    )
-    .header(
-        Row::new(header.iter().enumerate().map(|(i, &h)| {
-            let line = Line::from(h);
-            Cell::from(if i == 0 { line } else { line.right_aligned() })
-        }))
-        .style(theme::label()),
-    )
-    .block(
-        Block::bordered()
-            .border_style(theme::frame())
-            .title(Span::styled(
-                if s.report.kind == "ab" {
-                    " Por prompt: sem e com Mandrake "
+    let table = Table::new(rows, widths)
+        .header(
+            Row::new(header.iter().enumerate().map(|(i, &(unit, h))| {
+                let lines = [Line::from(unit), Line::from(h)];
+                Cell::from(Text::from(if i == 0 {
+                    lines.to_vec()
                 } else {
-                    " Por fixture "
-                },
-                theme::accent(),
-            )),
-    )
-    .row_highlight_style(theme::selected());
+                    lines.map(|l| l.right_aligned()).to_vec()
+                }))
+            }))
+            .height(2)
+            .style(theme::label()),
+        )
+        .block(
+            Block::bordered()
+                .border_style(theme::frame())
+                .title(Span::styled(
+                    if s.report.kind == "ab" {
+                        " Por prompt: sem e com Mandrake "
+                    } else {
+                        " Por fixture "
+                    },
+                    theme::accent(),
+                )),
+        )
+        .row_highlight_style(theme::selected());
     let mut state = TableState::default().with_selected(Some(s.selected));
     f.render_stateful_widget(table, area, &mut state);
 }
@@ -383,6 +401,19 @@ mod tests {
     }
 
     #[test]
+    fn a_total_over_ten_million_keeps_every_digit() {
+        let mut r = report(false);
+        r.rows = vec![
+            row("a", (6_000_000, 5_000_000), None),
+            row("b", (6_345_678, 5_000_000), None),
+        ];
+        let s = BenchState::new(r);
+        let screen = text(&draw(80, 24, |f| render(f, &s)));
+        assert!(screen.contains("12.345.678"), "{screen}");
+        assert!(screen.contains("10.000.000"), "{screen}");
+    }
+
+    #[test]
     fn load_reads_json_and_explains_bad_files() {
         let dir = tempfile::tempdir().unwrap();
         let p = dir.path().join("latest.json");
@@ -397,6 +428,53 @@ mod tests {
                 .contains("BenchReport")
         );
         assert!(BenchState::load(&dir.path().join("none.json")).is_err());
+    }
+
+    #[test]
+    fn at_80_columns_every_header_word_is_whole() {
+        for kind in ["", "ab"] {
+            let mut r = report(false);
+            r.kind = kind.into();
+            let screen = text(&draw(80, 24, |f| render(f, &BenchState::new(r))));
+            let words = |l: &str| {
+                l.split(|c: char| !c.is_alphanumeric())
+                    .filter(|w| !w.is_empty())
+                    .map(String::from)
+                    .collect::<Vec<_>>()
+            };
+            let all: Vec<String> = screen.lines().flat_map(words).collect();
+            let want: &[&str] = if kind == "ab" {
+                &["prompt", "sem", "com", "economia", "bytes", "tokens"]
+            } else {
+                &["fixture", "antes", "depois", "economia", "bytes", "tokens"]
+            };
+            for w in want {
+                assert!(
+                    all.iter().any(|a| a == w),
+                    "{w} whole at 80 columns:\n{screen}"
+                );
+            }
+            for cut in ["ytes", "okens", "ntes", "epois", "conomia"] {
+                assert!(
+                    !all.iter().any(|a| a == cut),
+                    "{cut} is a cut header:\n{screen}"
+                );
+            }
+            assert!(screen.contains("a economia é em bytes"), "{screen}");
+        }
+    }
+
+    #[test]
+    fn no_report_says_how_to_measure() {
+        let dir = tempfile::tempdir().unwrap();
+        let e = BenchState::load(&dir.path().join("latest.json"))
+            .err()
+            .unwrap();
+        let msg = format!("{e:#}");
+        assert!(
+            msg.contains("bench --fixtures") && !msg.contains("os error"),
+            "{msg}"
+        );
     }
 
     #[test]
