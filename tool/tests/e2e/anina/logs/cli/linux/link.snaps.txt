@@ -3,30 +3,30 @@
 
 ~ $ ls -l ~/.claude
 total 8
--rw-rw-r-- 1 use user 11 Oct 24 22:27 CLAUDE.md
-lrwxrwxrwx 1 use user 43 Oct 24 22:27 agents -> /tmp/mandrake-cli.xfdXSm/work/claude/agents
-lrwxrwxrwx 1 use user 45 Oct 24 22:27 commands -> /tmp/mandrake-cli.xfdXSm/work/claude/commands
--rw-rw-r-- 1 user user 114 Oct 24 22:27 settings.json
+-rw-rw-r-- 1 use user 11 Oct 25 02:27 CLAUDE.md
+lrwxrwxrwx 1 use user 43 Oct 25 02:27 agents -> /tmp/mandrake-cli.Mxhcff/work/claude/agents
+lrwxrwxrwx 1 use user 45 Oct 25 02:27 commands -> /tmp/mandrake-cli.Mxhcff/work/claude/commands
+-rw-rw-r-- 1 user user 114 Oct 25 02:27 settings.json
 ~ $
 ### 02-plan
 
-links: link        commands -> /tmp/mandrake-cli.xfdXSm/work/claude/commands
+links: commands: link para /tmp/mandrake-cli.Mxhcff/work/claude/commands
 ~ $
 ### 03-apply
 
-links: link        commands -> /tmp/mandrake-cli.xfdXSm/work/claude/commands
-journal /tmp/mandrake-cli.xfdXSm/mh/state/journal/20261025-022718-001.json
+links: commands: link para /tmp/mandrake-cli.Mxhcff/work/claude/commands
+journal /tmp/mandrake-cli.Mxhcff/mh/state/journal/20261025-062741-001.json
 total 8
--rw-rw-r-- 1 use user 11 Oct 24 22:27 CLAUDE.md
-lrwxrwxrwx 1 use user 43 Oct 24 22:27 agents -> /tmp/mandrake-cli.xfdXSm/work/claude/agents
-lrwxrwxrwx 1 use user 45 Oct 24 22:27 commands -> /tmp/mandrake-cli.xfdXSm/work/claude/commands
--rw-rw-r-- 1 user user 114 Oct 24 22:27 settings.json
+-rw-rw-r-- 1 use user 11 Oct 25 02:27 CLAUDE.md
+lrwxrwxrwx 1 use user 43 Oct 25 02:27 agents -> /tmp/mandrake-cli.Mxhcff/work/claude/agents
+lrwxrwxrwx 1 use user 45 Oct 25 02:27 commands -> /tmp/mandrake-cli.Mxhcff/work/claude/commands
+-rw-rw-r-- 1 user user 114 Oct 25 02:27 settings.json
 ~ $
 ### 04-rollback
 
-rolled back 1 steps
+desfeito: 1 passo
 total 8
--rw-rw-r-- 1 use user 11 Oct 24 22:27 CLAUDE.md
-lrwxrwxrwx 1 use user 43 Oct 24 22:27 agents -> /tmp/mandrake-cli.xfdXSm/work/claude/agents
--rw-rw-r-- 1 user user 114 Oct 24 22:27 settings.json
+-rw-rw-r-- 1 use user 11 Oct 25 02:27 CLAUDE.md
+lrwxrwxrwx 1 use user 43 Oct 25 02:27 agents -> /tmp/mandrake-cli.Mxhcff/work/claude/agents
+-rw-rw-r-- 1 user user 114 Oct 25 02:27 settings.json
 ~ $
