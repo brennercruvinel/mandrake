@@ -23,6 +23,12 @@ tool/tests/e2e/anina/record.sh after              # with anina on PATH: SVGs and
 
 `record.sh <label>` writes `docs/img/e2e/<label>/<case>.svg` and `logs/<label>/<case>.log`. The
 `before` set was recorded on Linux (x86_64, Ubuntu) against `main` at `b815ea6`, before the fix.
+The `macos` set was recorded on macOS 27 (arm64) against `main` at `7b82f23`, after the fix.
+
+A binary built outside the checkout (`CARGO_TARGET_DIR` elsewhere) finds no Mandrake data, and
+setup stops with `no Mandrake source found`; point `MANDRAKE_SRC` at the checkout. Both scripts
+drop the `MANDRAKE_*` variables a shell with Mandrake installed exports, except `MANDRAKE_SRC` and
+`MANDRAKE_BIN`, so the throwaway install never reads the real souls or core.
 
 ## Repository hygiene (#9)
 

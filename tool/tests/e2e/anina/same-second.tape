@@ -6,6 +6,8 @@ Set FPS 10
 Set EndHold 4
 Set Cwd $TAPE_DIR
 Set Env PS1='$ '
+# macOS bash 3.2 opens with a notice about zsh; it is noise in the recording.
+Set Env BASH_SILENCE_DEPRECATION_WARNING=1
 Spawn bash --norc --noprofile
 Wait '/^\$/'
 Caption "#6 · 2 · two applies in the same second, then rollback twice"

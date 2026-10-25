@@ -1,0 +1,3 @@
+anina: 25 frames, 22 screens -> $OUT/doctor-copy/doctor-copy.cast.json.gz
+anina: svg -> $OUT/doctor-copy/doctor-copy.svg
+anina check: nothing to hide (4 files checked, 1 PNG read through their screen text)
