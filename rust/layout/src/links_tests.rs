@@ -429,3 +429,22 @@ fn a_seed_that_stopped_midway_is_rolled_back() {
     assert_eq!(std::fs::read_to_string(agents.join("a.md")).unwrap(), "a");
     assert_eq!(inspect(&t.dev.join("claude/agents")), Found::Missing);
 }
+
+#[test]
+fn a_copy_from_nowhere_is_refused_before_anything_moves() {
+    let t = setup();
+    let cat = Catalog::builtin().unwrap();
+    std::fs::create_dir_all(t.dirs.claude.join("rules")).unwrap();
+    std::fs::write(t.dirs.claude.join("rules/mine.md"), "mine").unwrap();
+    let p = only(&t, "rules", copy_spec("nowhere/rules"));
+    let err = apply(&t.dirs, &cat, &plan(&t.dirs, &cat, &p).unwrap()).unwrap_err();
+    assert!(format!("{err}").contains("nada foi mudado"), "{err}");
+    assert_eq!(
+        std::fs::read_to_string(t.dirs.claude.join("rules/mine.md")).unwrap(),
+        "mine"
+    );
+    assert!(
+        !t.dirs.journal().exists(),
+        "no journal for a run that did nothing"
+    );
+}
