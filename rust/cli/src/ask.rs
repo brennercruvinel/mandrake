@@ -193,16 +193,19 @@ pub fn run(
     let steps = links::plan(dirs, catalog, &p)?;
     let changing: Vec<_> = steps.iter().filter(|s| s.op.changes()).collect();
     println!(
-        "   {} links no perfil, {} mudam agora",
-        p.links.len(),
-        changing.len()
+        "   {} no perfil; {}",
+        match p.links.len() {
+            1 => "1 link".to_string(),
+            n => format!("{n} links"),
+        },
+        match changing.len() {
+            0 => "nada muda agora".to_string(),
+            1 => "1 muda agora:".to_string(),
+            n => format!("{n} mudam agora:"),
+        }
     );
     for s in changing {
-        println!(
-            "     {:<11} {}",
-            format!("{:?}", s.op).to_lowercase(),
-            s.path
-        );
+        println!("     {}", s.say(dirs));
     }
     println!(
         "   plugins: prompt-trim{}{}",
