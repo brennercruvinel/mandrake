@@ -12,7 +12,7 @@ pub const FG: Color = Color::White;
 pub const BG: Color = Color::Black;
 pub const GAUGE_BG: Color = Color::DarkGray;
 /// Bytes only the "before" body has.
-pub const REMOVED: Style = Style::new().fg(Color::White).bg(Color::Red);
+pub const REMOVED: Style = Style::new().fg(Color::Black).bg(Color::Red);
 /// Bytes only the "after" body has.
 pub const INSERTED: Style = Style::new().fg(Color::Black).bg(Color::Green);
 

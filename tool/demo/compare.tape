@@ -9,7 +9,7 @@ Set Env BASH_SILENCE_DEPRECATION_WARNING=1
 Spawn bash --norc --noprofile
 Wait '/^\$/'
 Caption "mandrake compare · one prompt through Claude Code, without and with Mandrake; answered locally, nothing spent"
-Type "../tests/e2e/anina/compare/run.sh \"$MANDRAKE_BIN\""
+Type "../tests/e2e/anina/compare/run.sh"
 Key Enter
 Wait '/q sair/' 180s
 
@@ -47,7 +47,7 @@ Sleep 2.5
 Caption "the whole request, part by part"
 Key q
 Wait '/^\$/'
-Type "../tests/e2e/anina/compare/run.sh \"$MANDRAKE_BIN\" --print"
+Type "../tests/e2e/anina/compare/run.sh '' --print"
 Key Enter
 Wait '/tokens \(bytes/' 180s
 Sleep 4

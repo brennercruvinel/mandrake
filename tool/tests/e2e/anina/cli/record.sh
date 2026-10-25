@@ -27,7 +27,7 @@ trap 'rm -rf "$out"' EXIT
 mkdir -p "$img" "$logs"
 fails=0
 for t in "${tapes[@]}"; do
-  if ! anina record "$here/$t.tape" -o "$out/$t" > "$logs/$t.anina.log" 2>&1; then
+  if ! anina record "$here/$t.tape" --theme "$repo/cfgs/anina/mandrake.json" -o "$out/$t" > "$logs/$t.anina.log" 2>&1; then
     echo "$t: anina record failed, see $logs/$t.anina.log"
     fails=$((fails + 1))
   fi

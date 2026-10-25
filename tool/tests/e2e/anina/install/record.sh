@@ -25,7 +25,7 @@ tidy() {
 }
 trap tidy EXIT
 mkdir -p "$repo/docs/img/e2e/install" "$here/../logs/install"
-anina record "$here/install.tape" -o "$out/install" 2>&1 | sed "s#$out#\$OUT#g"
+anina record "$here/install.tape" --theme "$repo/cfgs/anina/mandrake.json" -o "$out/install" 2>&1 | sed "s#$out#\$OUT#g"
 cp "$out/install/install.svg" "$repo/docs/img/e2e/install/$label.svg" || exit 1
 sed 's#/tmp/mandrake-install\.[A-Za-z0-9]*#$T#g' "$out/install/install.txt" \
   > "$here/../logs/install/$label.txt"

@@ -1,0 +1,47 @@
+{
+  "name": "mandrake",
+  "about": "Mandrake's recordings: a near-black window, very dark grey terminal, a soft neon green for what matters.",
+  "max_hold": 3.0,
+  "window": {
+    "bg": ["#121513", "#0C0E0D", "#080909"],
+    "bar": ["#181C19", "#111412"],
+    "title_color": "#7E8A82",
+    "radius": 16,
+    "pad": 22,
+    "bar_h": 40,
+    "lights": true
+  },
+  "brand": {
+    "text": "",
+    "gradient": ["#6FEFA0", "#6FEFA0"],
+    "tagline": ""
+  },
+  "terminal": {
+    "fg": "#D9E2DC",
+    "bg": "#0D0F0E",
+    "border": "#1E2420",
+    "cursor": "#6FEFA0",
+    "radius": 8,
+    "font_family": "ui-monospace, 'JetBrains Mono', 'SF Mono', Menlo, Monaco, Consolas, 'DejaVu Sans Mono', monospace",
+    "font_size": 13,
+    "cell_w": 8,
+    "cell_h": 17,
+    "palette16": [
+      "#0D0F0E", "#E57880", "#6FEFA0", "#E6C77A", "#82A9C8", "#B79CD6", "#5ED6B4", "#C5CEC8",
+      "#5E6862", "#F08D94", "#9CF7BF", "#F1D696", "#A2C2DB", "#CDB6E6", "#8BE6CC", "#EEF3EF"
+    ]
+  },
+  "caption": {
+    "height": 34,
+    "font_size": 13,
+    "bg": "#111412",
+    "fg": "#D9E2DC",
+    "accent": "#6FEFA0",
+    "muted": "#7E8A82"
+  },
+  "progress": {
+    "height": 3,
+    "track": "#1E2420",
+    "fill": "#6FEFA0"
+  }
+}

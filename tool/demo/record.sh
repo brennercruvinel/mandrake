@@ -22,7 +22,7 @@ fails=0
 for n in "${names[@]}"; do
   tape="$here/$n.tape"
   [ -f "$tape" ] || tape="$cli/$n.tape"
-  if anina record "$tape" -o "$out/$n" > "$out/$n.log" 2>&1 && [ -f "$out/$n/$n.svg" ]; then
+  if anina record "$tape" --theme "$repo/cfgs/anina/mandrake.json" -o "$out/$n" > "$out/$n.log" 2>&1 && [ -f "$out/$n/$n.svg" ]; then
     cp "$out/$n/$n.svg" "$repo/docs/img/demo/$n.svg"
     echo "$n: $(du -h "$repo/docs/img/demo/$n.svg" | cut -f1) docs/img/demo/$n.svg"
   else

@@ -22,7 +22,7 @@ for c in copy-fail same-second doctor-copy eof; do
   "$here/cases.sh" "$c" "$MANDRAKE_BIN" > "$logs/$c.log" 2>&1 || fails=$((fails + 1))
   echo "$c: $(grep '^verdict:' "$logs/$c.log")"
   # The temp folder is per user on macOS (/var/folders/…); the log keeps it as $OUT.
-  if ! anina record "$here/$c.tape" -o "$out/$c" 2>&1 | sed "s#$out#\$OUT#g" > "$logs/$c.anina.log"; then
+  if ! anina record "$here/$c.tape" --theme "$repo/cfgs/anina/mandrake.json" -o "$out/$c" 2>&1 | sed "s#$out#\$OUT#g" > "$logs/$c.anina.log"; then
     echo "  anina record failed, see $logs/$c.anina.log"
     continue
   fi
