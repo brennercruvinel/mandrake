@@ -9,7 +9,7 @@ Set Env BASH_SILENCE_DEPRECATION_WARNING=1
 Spawn bash --norc --noprofile
 Wait '/^\$/'
 Caption "mandrake compare · sem e com o Mandrake, lado a lado, sem gastar nada"
-Type "./run.sh \"$MANDRAKE_BIN\""
+Type "./run.sh"
 Key Enter
 Wait '/q sair/' 180s
 Sleep 1
@@ -23,7 +23,7 @@ Snap messages
 Poster
 Key q
 Wait '/^\$/'
-Type "./run.sh \"$MANDRAKE_BIN\" --print"
+Type "./run.sh '' --print"
 Key Enter
 Wait '/tokens \(bytes/' 180s
 Sleep 1.5

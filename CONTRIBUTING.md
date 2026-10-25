@@ -23,7 +23,7 @@ flowchart LR
 - **Run the gate before pushing:** `tool/fullcheck.sh`. There is no CI: this script is the gate, run on Linux and macOS and on the Claude Code versions in [setup](docs/guide/setup.md#claude-code-versions).
 - **Add a news fragment** in `docs/news/<issue>.<type>.md`: one line, written as the changelog entry, with a type of `added`, `changed`, `removed`, `fixed` or `security`; `+<name>.<type>.md` when there is no issue. Never edit `docs/CHANGELOG` by hand. A change nobody using Mandrake would notice takes the `skip-news` label instead.
 - **Write an ADR** in `docs/adr/` when a choice has trade-offs someone will ask about ([how](docs/adr/README.md)). Architecture lives in [`docs/ATLAS.toml`](docs/ATLAS.toml); the names and abbreviations in [`docs/TERMS.md`](docs/TERMS.md).
-- **Show it working.** A `[POCS]` line in the pull request says where the change can be seen; test evidence from a terminal goes as anina recordings, embedded one per line.
+- **Show it working.** A `[POCS]` line in the pull request says where the change can be seen; test evidence from a terminal goes as anina recordings, embedded one per line. Record with Mandrake's theme, `cfgs/anina/mandrake.json` (the recording scripts pass it; by hand, `anina record <tape> --theme cfgs/anina/mandrake.json`), and type no `$VARIABLE` in a tape: anina expands it, and the recording would show a path of your machine.
 - **Sign your commits**, in plain English. The maintainer merges, after review.
 
 ## Labels and the board

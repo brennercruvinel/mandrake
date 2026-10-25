@@ -1,0 +1,1 @@
+Mandrake's recordings have their own look: a near-black window, a very dark grey terminal and a soft neon green (`cfgs/anina/mandrake.json`), used by every recording script; the README's demos are recorded again with it, and removed bytes in `mandrake hex` are black on red, readable in any palette.

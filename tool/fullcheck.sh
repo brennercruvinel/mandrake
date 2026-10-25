@@ -206,7 +206,7 @@ e2e_checks() {
   export MANDRAKE_BIN="$PWD/$bin"
   # The four #6 tapes; hygiene and gate run this script themselves and are recorded by hand.
   for tape in copy-fail same-second doctor-copy eof; do
-    check "anina $tape" anina record "tool/tests/e2e/anina/$tape.tape" -o "$out/rec/$tape"
+    check "anina $tape" anina record "tool/tests/e2e/anina/$tape.tape" --theme cfgs/anina/mandrake.json -o "$out/rec/$tape"
   done
 }
 
