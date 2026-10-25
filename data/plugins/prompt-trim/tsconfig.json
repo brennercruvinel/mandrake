@@ -1,3 +1,7 @@
 {
-  "extends": "./.claude-plugin/types/tsconfig.json"
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "typeRoots": ["./.claude-plugin/types"]
+  },
+  "include": ["hooks"]
 }
