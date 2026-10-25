@@ -1,0 +1,12 @@
+== 4. setup --cli with input closed
+
+$ mandrake setup --cli < /dev/null
+  Mandrake setup. Enter aceita o valor entre colchetes.
+  
+  1. Pasta de desenvolvimento: a raiz dos destinos relativos.
+     pasta [~/dev]: 
+  Error: a entrada terminou antes das respostas; nada foi aplicado
+  exit 1
+  written: nothing
+
+verdict: FIXED closed input exits 1 and applies nothing
