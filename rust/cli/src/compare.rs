@@ -33,6 +33,13 @@ pub fn run(
             plugin_dir.display()
         );
     }
+    let core = std::fs::read_to_string(plugin_dir.join("hooks/core.js")).unwrap_or_default();
+    if core.contains("CORE = ''") || core.contains("CORE = \"\"") {
+        eprintln!(
+            "aviso: o core está vazio em {}; o lado com Mandrake sai sem ele (rode mandrake setup)",
+            plugin_dir.display()
+        );
+    }
     let run = dirs
         .state
         .join("compare")
