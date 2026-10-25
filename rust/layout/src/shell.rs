@@ -6,16 +6,28 @@ use std::path::{Path, PathBuf};
 const BEGIN: &str = "# >>> mandrake >>>";
 const END: &str = "# <<< mandrake <<<";
 
-/// The rc file of the user's shell: zsh's `.zshrc`, or bash's `.bashrc` (`.bash_profile` on macOS).
+/// The rc file of the user's shell: zsh's `.zshrc`, or bash's `.bashrc`; on macOS, where Terminal
+/// opens login shells, the login file bash reads.
 pub fn rc_file(home: &Path, shell: Option<&str>) -> PathBuf {
     let name = shell
         .and_then(|s| Path::new(s).file_name())
         .map(|n| n.to_string_lossy().into_owned());
     match name.as_deref() {
-        Some("bash") if cfg!(target_os = "macos") => home.join(".bash_profile"),
+        Some("bash") if cfg!(target_os = "macos") => bash_login_file(home),
         Some("bash") => home.join(".bashrc"),
         _ => home.join(".zshrc"),
     }
+}
+
+/// A login bash reads the first of these that exists and skips the rest, so creating
+/// `.bash_profile` next to an existing `.profile` would silently stop `.profile` (Homebrew's PATH,
+/// nvm...). The block goes into the one bash already reads.
+fn bash_login_file(home: &Path) -> PathBuf {
+    [".bash_profile", ".bash_login", ".profile"]
+        .iter()
+        .map(|n| home.join(n))
+        .find(|p| p.exists())
+        .unwrap_or_else(|| home.join(".bash_profile"))
 }
 
 /// The block that sources Mandrake's shell file.
@@ -107,6 +119,24 @@ mod tests {
         assert_eq!(rc_file(h, Some("/bin/zsh")), h.join(".zshrc"));
         assert_eq!(rc_file(h, None), h.join(".zshrc"));
         let bash = rc_file(h, Some("/usr/bin/bash"));
+        #[cfg(target_os = "macos")]
+        {
+            let tmp = tempfile::tempdir().unwrap();
+            let home = tmp.path();
+            assert_eq!(
+                bash_login_file(home),
+                home.join(".bash_profile"),
+                "none yet"
+            );
+            std::fs::write(home.join(".profile"), "eval brew").unwrap();
+            assert_eq!(
+                bash_login_file(home),
+                home.join(".profile"),
+                "an existing .profile is the file bash reads; a new .bash_profile would hide it"
+            );
+            std::fs::write(home.join(".bash_profile"), "").unwrap();
+            assert_eq!(bash_login_file(home), home.join(".bash_profile"));
+        }
         assert!(bash == h.join(".bashrc") || bash == h.join(".bash_profile"));
     }
 

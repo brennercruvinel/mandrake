@@ -69,5 +69,15 @@ check "the core goes before the soul" "$(grep -c -- '# Core' <<<"$call")" 1
 down="$(env -u ANTHROPIC_BASE_URL HOME="$t/home" MANDRAKE_HOME="$t/mh" MANDRAKE_PORT=1 PATH="$t/bin:$PATH" bash -c ". '$t/mh/data/shell/mandrake.sh'; claude --y; env | grep -c ANTHROPIC_BASE_URL" 2>&1)"
 check "proxy down: claude still starts" "$(grep -c -- '--y' <<<"$down")" 1
 check "proxy down: the session goes direct, and says so" "$(grep -c 'vai direto para a API' <<<"$down")" 1
+# bash on macOS reads the first of .bash_profile, .bash_login and .profile: with only a .profile,
+# the block goes there, so no new .bash_profile hides it (second review of #35).
+b="$t/bashhome"; mkdir -p "$b/.claude"; echo 'export FROM_PROFILE=1' > "$b/.profile"
+env HOME="$b" MANDRAKE_HOME="$b/mh" CLAUDE_CONFIG_DIR="$b/.claude" SHELL=/bin/bash MANDRAKE_PREFIX="$b/pfx" "$bin" setup --profile "$t/p.toml" --yes > "$b/setup.log" 2>&1
+if [ "$(uname)" = Darwin ]; then
+  check "bash on macOS: the block goes into the existing .profile" "$(grep -c '>>> mandrake >>>' "$b/.profile")$([ -e "$b/.bash_profile" ] && echo ' and a .bash_profile')" 1
+else
+  check "bash on Linux: the block goes into .bashrc" "$(grep -c '>>> mandrake >>>' "$b/.bashrc")" 1
+fi
+check "env.sh keeps a custom MANDRAKE_PREFIX" "$(grep -c "MANDRAKE_PREFIX='$b/pfx'" "$b/mh/data/shell/env.sh")" 1
 if [ "$fails" -gt 0 ]; then echo "--- setup.log"; cat "$t/setup.log"; echo "--- doctor.log"; cat "$t/doctor.log"; fi
 exit "$fails"
