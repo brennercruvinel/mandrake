@@ -24,6 +24,29 @@ The wizard asks, step by step:
 
 It saves `~/.config/mandrake/mandrake.toml` and applies it.
 
+## What tui-embed needs
+
+`/abtop` and `/gitlogue` open the apps in a pane through their `--embed` mode, which the upstream
+releases do not have. With tui-embed chosen, setup installs both builds from the forks, with
+cargo, into the prefix Mandrake goes to (`MANDRAKE_PREFIX`, else `~/.local`):
+
+| App | Fork, branch `embed` |
+| - | - |
+| abtop | https://github.com/tiamatio/abtop |
+| gitlogue | https://github.com/tiamatio/gitlogue |
+
+A build already on `PATH` that answers `--embed` is kept. Without cargo, or when a build fails,
+setup says which one and why, and goes on with the rest. By hand:
+
+```sh
+cargo install --git https://github.com/tiamatio/abtop --branch embed --locked --root ~/.local
+cargo install --git https://github.com/tiamatio/gitlogue --branch embed --locked --root ~/.local
+```
+
+The pane spawns each app by name, so its folder must be on the `PATH` Claude Code starts with;
+otherwise set `abtop_path` and `gitlogue_path` in `/config`. `mandrake doctor` checks both: found
+on `PATH`, and answering `--embed`.
+
 ## Rebuilding a machine from a profile
 
 ```sh
@@ -85,6 +108,7 @@ mandrake link rollback    # undo the last apply from its journal
 | `settings.json` (through its link) | `env.ANTHROPIC_BASE_URL` and `env.CLAUDE_CODE_PLUGIN_DIRS`, nothing else; the old file goes to the backup |
 | `~/Library/LaunchAgents/dev.mandrake.proxy.plist` or `~/.config/systemd/user/mandrake-proxy.service` | the proxy service |
 | `~/.local/share/mandrake/` | the installed copy of `data/` and `cfgs/`, and the shell files |
+| `~/.local/bin/abtop`, `~/.local/bin/gitlogue` | the `--embed` builds, with tui-embed only, unless ones with `--embed` are already on `PATH` |
 
 ## Souls
 
