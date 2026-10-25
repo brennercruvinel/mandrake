@@ -17,7 +17,7 @@ claude_dir="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
 rc="$HOME/.zshrc"; case "${SHELL:-}" in */bash) rc="$HOME/.bashrc"; [ "$(uname -s)" = Darwin ] && rc="$HOME/.bash_profile" ;; esac
 trash="$HOME/.Trash/mandrake-rebuild-$(date +%Y%m%d-%H%M%S)"
 [ "$(uname -s)" = Darwin ] || trash="${XDG_DATA_HOME:-$HOME/.local/share}/Trash/files/mandrake-rebuild-$(date +%Y%m%d-%H%M%S)"
-[ -x "$bin" ] || { echo "no mandrake binary at $bin (cargo install --path pkgs/cli --root ~/.local)"; exit 1; }
+[ -x "$bin" ] || { echo "no mandrake binary at $bin (cargo install --path rust/cli --root ~/.local)"; exit 1; }
 port="$(sed -n 's/^port = \([0-9]*\)$/\1/p' "$profile" | head -1)"; port="${port:-8787}"
 mkdir -p "$trash/claude"
 links_of() { (cd "$claude_dir" && find . -maxdepth 2 -type l ! -path './debug/*' -exec sh -c 'echo "${1#./} -> $(readlink "$1")"' _ {} \; | sort); }
