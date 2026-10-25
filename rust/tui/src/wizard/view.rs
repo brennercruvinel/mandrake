@@ -445,7 +445,14 @@ fn first_install(w: &Wizard) -> Vec<Line<'static>> {
         ),
         (
             "shell",
-            "um bloco no .zshrc ou .bashrc: Mandrake e PATH".to_string(),
+            format!(
+                "um bloco em {}: Mandrake e PATH",
+                mandrake_layout::shell::rc_file(
+                    &w.dirs.home,
+                    std::env::var("SHELL").ok().as_deref()
+                )
+                .display()
+            ),
         ),
         ("proxy", format!("serviço do usuário em 127.0.0.1:{port}")),
     ]

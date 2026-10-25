@@ -144,30 +144,47 @@ fn opt(n: Option<u64>) -> String {
     n.map(fmt::num).unwrap_or_else(|| "-".into())
 }
 
-fn cells(row: &BenchRow, counted: bool) -> Vec<Cell<'static>> {
-    let right = |s: String| Cell::from(Line::from(s).right_aligned());
+/// The text of each column for one row, the name first.
+fn texts(row: &BenchRow, counted: bool) -> Vec<String> {
     let bytes_saved = fmt::saved_ratio(row.bytes_before, row.bytes_after);
     let tokens_saved = match (counted, row.tokens_before, row.tokens_after) {
         (true, Some(b), Some(a)) => fmt::pct(fmt::saved_ratio(b, a)),
         _ => "-".into(),
     };
+    let tokens = |t| if counted { opt(t) } else { "-".into() };
     vec![
-        Cell::from(row.name.clone()),
-        right(fmt::num(row.bytes_before)),
-        right(fmt::num(row.bytes_after)),
-        right(fmt::pct(bytes_saved)),
-        right(if counted {
-            opt(row.tokens_before)
-        } else {
-            "-".into()
-        }),
-        right(if counted {
-            opt(row.tokens_after)
-        } else {
-            "-".into()
-        }),
-        right(tokens_saved),
+        row.name.clone(),
+        fmt::num(row.bytes_before),
+        fmt::num(row.bytes_after),
+        fmt::pct(bytes_saved),
+        tokens(row.tokens_before),
+        tokens(row.tokens_after),
+        tokens_saved,
     ]
+}
+
+fn cells(texts: Vec<String>) -> Vec<Cell<'static>> {
+    texts
+        .into_iter()
+        .enumerate()
+        .map(|(i, t)| {
+            if i == 0 {
+                Cell::from(t)
+            } else {
+                Cell::from(Line::from(t).right_aligned())
+            }
+        })
+        .collect()
+}
+
+/// Nine cells fit 80 columns; a longer number widens its column instead of losing digits.
+fn widths(rows: &[Vec<String>]) -> Vec<Constraint> {
+    let mut w = vec![Constraint::Min(10)];
+    w.extend((1..7).map(|c| {
+        let longest = rows.iter().map(|r| r[c].chars().count()).max().unwrap_or(0);
+        Constraint::Length(longest.max(9) as u16)
+    }));
+    w
 }
 
 fn rows_table(f: &mut Frame, area: ratatui::layout::Rect, s: &BenchState) {
@@ -187,17 +204,23 @@ fn rows_table(f: &mut Frame, area: ratatui::layout::Rect, s: &BenchState) {
         ("tokens", after),
         ("tokens", "economia"),
     ];
-    let mut rows: Vec<Row> = s
-        .report
-        .rows
-        .iter()
-        .map(|r| Row::new(cells(r, counted)))
+    let mut all: Vec<Vec<String>> = s.report.rows.iter().map(|r| texts(r, counted)).collect();
+    all.push(texts(&s.total(), counted));
+    let widths = widths(&all);
+    let last = all.len() - 1;
+    let rows: Vec<Row> = all
+        .into_iter()
+        .enumerate()
+        .map(|(i, t)| {
+            let row = Row::new(cells(t));
+            if i == last {
+                row.style(Style::new().add_modifier(Modifier::BOLD))
+            } else {
+                row
+            }
+        })
         .collect();
-    rows.push(
-        Row::new(cells(&s.total(), counted)).style(Style::new().add_modifier(Modifier::BOLD)),
-    );
-    let w = Constraint::Length(9);
-    let table = Table::new(rows, [Constraint::Min(10), w, w, w, w, w, w])
+    let table = Table::new(rows, widths)
         .header(
             Row::new(header.iter().enumerate().map(|(i, &(unit, h))| {
                 let lines = [Line::from(unit), Line::from(h)];
@@ -375,6 +398,19 @@ mod tests {
         assert!(s.on_key(KeyCode::Down));
         assert_eq!(s.selected, 1);
         assert!(!s.on_key(KeyCode::Char('q')));
+    }
+
+    #[test]
+    fn a_total_over_ten_million_keeps_every_digit() {
+        let mut r = report(false);
+        r.rows = vec![
+            row("a", (6_000_000, 5_000_000), None),
+            row("b", (6_345_678, 5_000_000), None),
+        ];
+        let s = BenchState::new(r);
+        let screen = text(&draw(80, 24, |f| render(f, &s)));
+        assert!(screen.contains("12.345.678"), "{screen}");
+        assert!(screen.contains("10.000.000"), "{screen}");
     }
 
     #[test]

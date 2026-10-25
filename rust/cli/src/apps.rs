@@ -97,6 +97,7 @@ fn check_one(
     app: &App,
     path: Option<&OsString>,
     prefix_bin: &Path,
+    bin_env: Option<&OsString>,
 ) -> (bool, String, Option<String>) {
     let fix = format!(
         "cargo install --git {} --branch {BRANCH} --locked --root {}",
@@ -117,10 +118,7 @@ fn check_one(
                 app.name,
                 p.display()
             ),
-            Some(format!(
-                "abra um shell novo (o bloco do Mandrake põe {} no PATH)",
-                prefix_bin.display()
-            )),
+            Some(path_fix(prefix_bin, bin_env)),
         ),
         Some((p, true)) => (
             true,
@@ -130,12 +128,29 @@ fn check_one(
     }
 }
 
+/// The fix when the app is installed but its folder is not on PATH. A new shell is enough only once
+/// setup has written the PATH block and env.sh, and only if no stale `MANDRAKE_BIN_DIR` wins (#33).
+fn path_fix(prefix_bin: &Path, bin_env: Option<&OsString>) -> String {
+    match bin_env.filter(|v| !v.is_empty() && Path::new(v) != prefix_bin) {
+        Some(v) => format!(
+            "unset MANDRAKE_BIN_DIR (herdado: {}, instalado: {}) e abra um shell novo",
+            Path::new(v).display(),
+            prefix_bin.display()
+        ),
+        None => format!(
+            "mandrake setup --yes e depois abra um shell novo (o bloco do Mandrake põe {} no PATH)",
+            prefix_bin.display()
+        ),
+    }
+}
+
 /// One doctor line per app: `(ok, what it found, the command that fixes it)`.
 pub fn check(dirs: &Dirs) -> Vec<(bool, String, Option<String>)> {
     let path = std::env::var_os("PATH");
     let bin = prefix(dirs).join("bin");
+    let bin_env = std::env::var_os("MANDRAKE_BIN_DIR");
     APPS.iter()
-        .map(|a| check_one(a, path.as_ref(), &bin))
+        .map(|a| check_one(a, path.as_ref(), &bin, bin_env.as_ref()))
         .collect()
 }
 
@@ -246,7 +261,12 @@ mod tests {
     #[test]
     fn doctor_fails_with_a_clear_line_when_a_binary_is_missing() {
         let d = temp("missing");
-        let (ok, line, fix) = check_one(&APPS[1], Some(&d.clone().into()), &d.join("prefix/bin"));
+        let (ok, line, fix) = check_one(
+            &APPS[1],
+            Some(&d.clone().into()),
+            &d.join("prefix/bin"),
+            None,
+        );
         assert!(!ok);
         assert_eq!(line, "gitlogue: não está no PATH");
         let fix = fix.unwrap();
@@ -268,7 +288,7 @@ mod tests {
             "abtop",
             "echo 'Error: --embed requires a socket path' >&2",
         );
-        let (ok, line, fix) = check_one(&APPS[0], Some(&path), &d.join("prefix/bin"));
+        let (ok, line, fix) = check_one(&APPS[0], Some(&path), &d.join("prefix/bin"), None);
         assert!(ok && fix.is_none(), "{line}");
         assert!(line.ends_with("responde --embed"), "{line}");
 
@@ -277,7 +297,7 @@ mod tests {
             "gitlogue",
             "echo \"error: unexpected argument '--embed' found\" >&2; exit 2",
         );
-        let (ok, line, fix) = check_one(&APPS[1], Some(&path), &d.join("prefix/bin"));
+        let (ok, line, fix) = check_one(&APPS[1], Some(&path), &d.join("prefix/bin"), None);
         assert!(!ok && fix.is_some_and(|f| f.contains("--branch embed")));
         assert!(line.contains("não tem o modo --embed"), "{line}");
         std::fs::remove_dir_all(&d).unwrap();
@@ -289,10 +309,18 @@ mod tests {
         let bin = d.join("prefix/bin");
         std::fs::create_dir_all(&bin).unwrap();
         script(&bin, "abtop", "echo '--embed requires a socket path' >&2");
-        let (ok, line, fix) = check_one(&APPS[0], Some(&d.join("empty").into()), &bin);
+        let (ok, line, fix) = check_one(&APPS[0], Some(&d.join("empty").into()), &bin, None);
         assert!(!ok);
         assert!(line.contains("a pasta não está no PATH"), "{line}");
-        assert!(fix.is_some_and(|f| f.contains("shell novo")));
+        assert!(
+            fix.is_some_and(|f| f.starts_with("mandrake setup --yes e depois abra um shell novo"))
+        );
+        let stale: OsString = d.join("old/bin").into();
+        let (_, _, fix) = check_one(&APPS[0], Some(&d.join("empty").into()), &bin, Some(&stale));
+        assert!(
+            fix.is_some_and(|f| f.starts_with("unset MANDRAKE_BIN_DIR (herdado: ")),
+            "a stale MANDRAKE_BIN_DIR wins over the installed one"
+        );
         std::fs::remove_dir_all(&d).unwrap();
     }
 
