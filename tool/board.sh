@@ -3,7 +3,8 @@
 #
 #   tool/board.sh labels    writes .github/labels.tsv to GitHub (creates, recolors, redescribes)
 #   tool/board.sh sync      puts every issue and pull request on the board: Done when closed or
-#                           merged, Task when open with no status; an open item's status is kept
+#                           merged; with no status, an open issue gets Task and an open pull
+#                           request In progress; any other open status is kept
 #   tool/board.sh check     lists what is off the standard and exits 1 when there is anything
 #
 # check looks for: not exactly one type label, an unknown label, an item off the board, a pull
@@ -46,11 +47,12 @@ cmd_labels() {
 }
 
 cmd_sync() {
-  local project field done_id task_id on_board kind n state url labels line id status
+  local project field done_id task_id doing_id on_board kind n state url labels line id status
   project="$(gh project view "$NUMBER" --owner "$OWNER" --format json --jq .id)" || exit 2
-  read -r field done_id task_id < <(gh project field-list "$NUMBER" --owner "$OWNER" --format json \
-    --jq '.fields[] | select(.name == "Status") |
-      [.id, (.options[] | select(.name == "Done") | .id), (.options[] | select(.name == "Task") | .id)] | @tsv')
+  read -r field done_id task_id doing_id < <(gh project field-list "$NUMBER" --owner "$OWNER" --format json \
+    --jq '.fields[] | select(.name == "Status") | [.id] + ([("Done", "Task", "In progress") as $s |
+      .options[] | select(.name == $s) | .id]) | @tsv')
+  name() { [ "$1" = "$done_id" ] && echo Done || { [ "$1" = "$doing_id" ] && echo "In progress" || echo Task; }; }
   on_board="$(board)"
   while IFS=$'\t' read -r kind n state url labels; do
     line="$(grep -F "$url"$'\t' <<< "$on_board")"
@@ -64,12 +66,11 @@ cmd_sync() {
     local want=""
     case "$state" in
       CLOSED | MERGED) [ "$status" = Done ] || want="$done_id" ;;
-      *) [ -n "$status" ] || want="$task_id" ;;
+      *) [ -n "$status" ] || want="$([ "$kind" = pr ] && echo "$doing_id" || echo "$task_id")" ;;
     esac
     if [ -n "$want" ]; then
       gh project item-edit --id "$id" --project-id "$project" --field-id "$field" \
-        --single-select-option-id "$want" > /dev/null &&
-        echo "ok    $kind #$n status $([ "$want" = "$done_id" ] && echo Done || echo Task)"
+        --single-select-option-id "$want" > /dev/null && echo "ok    $kind #$n status $(name "$want")"
     fi
   done < <(items)
 }
@@ -89,7 +90,8 @@ cmd_check() {
     done
     [ "$count" -eq 1 ] || say "$kind #$n: $count type labels (one of: $(tr '\n' ' ' <<< "$types"))"
     grep -qxF "$url" <<< "$on_board" || say "$kind #$n: not on the board (tool/board.sh sync)"
-    body="$(gh "$kind" view "$n" -R "$REPO" --json body --jq .body)"
+    # Inline code is a quote ("`Closes #25 #30`" as an example), not a keyword.
+    body="$(gh "$kind" view "$n" -R "$REPO" --json body --jq .body | sed 's/`[^`]*`//g')"
     if grep -qiE '(close[sd]?|fix(e[sd])?|resolve[sd]?) #[0-9]+[ ,]+#[0-9]+' <<< "$body"; then
       say "$kind #$n: 'Closes #a #b' closes only #a; write 'Closes #a, closes #b'"
     fi
@@ -111,5 +113,5 @@ case "${1:-}" in
   labels) cmd_labels ;;
   sync) cmd_sync ;;
   check) cmd_check ;;
-  *) sed -n '2,13p' "$0"; exit 2 ;;
+  *) sed -n '2,14p' "$0"; exit 2 ;;
 esac
