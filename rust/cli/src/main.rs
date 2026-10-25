@@ -1,6 +1,7 @@
 //! `mandrake`: one binary, one subcommand per job.
 
 mod ab;
+mod apps;
 mod ask;
 mod cmd;
 mod install;

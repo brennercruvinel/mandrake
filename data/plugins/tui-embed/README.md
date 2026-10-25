@@ -69,7 +69,7 @@ The prompt keeps Esc for itself, so each pane has an `Esc no <app>` button that 
 
 ## Requirements
 
-- abtop and gitlogue with `--embed` (macOS and Linux), from this monorepo: `cargo install --path abtop --locked`, `cargo install --path gitlogue --locked`
+- abtop and gitlogue with `--embed` (macOS and Linux), from the forks: `cargo install --git https://github.com/tiamatio/abtop --branch embed --locked`, `cargo install --git https://github.com/tiamatio/gitlogue --branch embed --locked` (`mandrake setup` does this when tui-embed is chosen)
 - Claude Code 2.1.296 or newer
 - `abtop_path` and `gitlogue_path` in `/config` when a binary is not on `PATH`
 

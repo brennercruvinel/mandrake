@@ -18,7 +18,7 @@
     {
       "name": "tui-embed",
       "source": "./tui-embed",
-      "description": "Terminal apps drawn inside Claude Code panes with their own keys and clicks, mandrake watch among them",
+      "description": "Terminal apps drawn inside Claude Code panes with their own keys and clicks: /abtop (the agent sessions on this machine) and /gitlogue (a repository's commits replayed as typing)",
       "version": "0.1.0"
     }
   ]

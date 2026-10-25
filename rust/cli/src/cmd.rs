@@ -90,6 +90,14 @@ pub fn setup(dirs: &Dirs, from: Option<PathBuf>, asking: Asking) -> Result<()> {
     step("settings", install::settings_keys(dirs, &profile, &root));
     step("shell", install::shell(dirs, &profile, &root));
     step("plugins", install::plugins(dirs, &profile, &root));
+    if profile.plugins.tui_embed {
+        for app in &crate::apps::APPS {
+            step(
+                &format!("app {}", app.name),
+                crate::apps::install(dirs, app),
+            );
+        }
+    }
     step("skill", install::skill(dirs, &profile, &root));
     let exe = std::env::current_exe()?;
     step(
@@ -353,6 +361,11 @@ pub fn doctor(dirs: &Dirs) -> Result<()> {
                     on.unwrap_or_else(|| "not enabled".into())
                 ),
             );
+        }
+    }
+    if p.plugins.tui_embed {
+        for (ok, line) in crate::apps::check(dirs) {
+            check(ok, line);
         }
     }
     let rc = mandrake_layout::shell::rc_file(&dirs.home, std::env::var("SHELL").ok().as_deref());
