@@ -1,0 +1,47 @@
+bench-view
+==========
+
+[0.0s]
+
+## mandrake bench --view · the last report
+
+[3.7s]
+     Mandrake  bench 3 corpos fixos, só o corte do proxy · 2026-10-25T03:34:17.250Z
+    ┌ Por fixture ─────────────────────────────────────────────────────────────────┐
+    │                       bytes     bytes     bytes    tokens    tokens    tokens│
+    │fixture                antes    depois  economia     antes    depois  economia│
+    │reminders              4.326     3.784     12,5%     1.036       937      9,6%│
+    │short                  1.920     1.612     16,0%       434       394      9,2%│
+    │tools                  5.664     5.317      6,1%     1.370     1.321      3,6%│
+    │total                 11.910    10.713     10,1%     2.840     2.652      6,6%│
+    └──────────────────────────────────────────────────────────────────────────────┘
+    ┌ Economia por linha, em tokens ───────────────────────────────────────────────┐
+    │reminders   9,6% █████                                                        │
+    │short       9,2% █████                                                        │
+    │tools       3,6% ██                                                           │
+    │                                                                              │
+    │                                                                              │
+    │                                                                              │
+    │                                                                              │
+    │                                                                              │
+    │                                                                              │
+    │                                                                              │
+    │                                                                              │
+    │                                                                              │
+    └──────────────────────────────────────────────────────────────────────────────┘
+     q sair · ↑↓ fixture
+
+## up/down · a fixture
+
+[6.2s]
+    ~ $ mandrake bench --view
+    ~ $
+
+## bench --view on a machine that never measured
+
+[13.3s]
+    Error: ainda não há medição. `mandrake bench --fixtures` mede o corte do proxy s
+    em gastar requisições; `mandrake bench` mede de verdade, com 2 requisições curta
+    s por prompt
+    ~ $ exit
+    exit
