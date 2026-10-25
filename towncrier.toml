@@ -1,7 +1,7 @@
 # The changelog's unreleased entries: one file per change in docs/news/, named <issue>.<type>.md
 # (+<name>.<type>.md for a change with no issue), so no two pull requests edit the same line of
 # docs/CHANGELOG. `towncrier build --version X.Y.Z` writes them as the release's section below the
-# marker and removes them. Types and format follow urna (ADR-0001).
+# marker and removes them. Types and format: ADR-0001.
 [tool.towncrier]
 directory = "docs/news"
 filename = "docs/CHANGELOG"

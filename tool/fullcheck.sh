@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# The whole quality gate in one script, run locally before pushing. There is no CI for now: this
-# script is the gate, as in urna's tool/tasks/fullcheck.sh.
+# The whole quality gate in one script, run locally before pushing. There is no CI: this script is
+# the gate, on the Claude Code versions in docs/guide/setup.md.
 #
 #   tool/fullcheck.sh                every check
 #   tool/fullcheck.sh rust shell     only those groups: rust test ts go shell python files news e2e

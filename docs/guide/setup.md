@@ -135,3 +135,15 @@ whatever was written through the link is kept.
 prompt, its `settings.json` is added, and `~/.config/gh-<soul>` becomes its gh login when that folder
 exists. An `agents.json` in the souls folder gives extra names (`{"rhizo": ["Rhizo", "Root"]}`).
 Any other `claude` call is plain Claude Code.
+
+## Claude Code versions
+
+prompt-trim hooks into Claude Code's plugin API, which can change between releases. There is no CI:
+`tool/fullcheck.sh` runs on each machine, with the Claude Code installed there. The versions checked so far:
+
+| Version | Where |
+| - | - |
+| 2.1.287 | Linux |
+| 2.1.310 | macOS |
+
+A new release is checked by running the gate with it; when it passes, it goes in this table.
