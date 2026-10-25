@@ -1,4 +1,5 @@
 Closes #<sub-issue>. Part of #<epic>.
+<!-- More than one issue: "Closes #25, closes #30". Labels: one type and every area it touches (CONTRIBUTING.md). -->
 
 ## Change
 
