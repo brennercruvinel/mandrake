@@ -6,6 +6,12 @@ _mandrake_env="${XDG_DATA_HOME:-$HOME/.local/share}/mandrake/shell/env.sh"
 [ -n "${MANDRAKE_HOME:-}" ] && _mandrake_env="$MANDRAKE_HOME/data/shell/env.sh"
 [ -f "$_mandrake_env" ] && . "$_mandrake_env"
 
+# The folder install.sh puts `mandrake` in, and tui-embed its apps (~/.local/bin by default). macOS
+# does not put it on PATH, so a new shell would answer `command not found` right after the install.
+if [ -n "${MANDRAKE_BIN_DIR:-}" ] && [ -d "$MANDRAKE_BIN_DIR" ]; then
+  case ":$PATH:" in *":$MANDRAKE_BIN_DIR:"*) ;; *) export PATH="$MANDRAKE_BIN_DIR:$PATH" ;; esac
+fi
+
 # The proxy is used per session, and only when it answers: a proxy that is down sends the session
 # straight to the API instead of breaking it. MANDRAKE_PORT comes from env.sh; MANDRAKE_PROXY=0 skips it.
 _mandrake_route() {
