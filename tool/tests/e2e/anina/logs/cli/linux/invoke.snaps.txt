@@ -1,0 +1,25 @@
+
+### 01-function
+
+~ $ source ~/.bashrc; type claude | head -3
+claude is a function
+claude ()
+{
+~ $
+### 02-rhizo
+
+mandrake: proxy fora do ar em 127.0.0.1:56849, esta sessão vai direto para a API (mandrake doctor)
+[claude stub] claude --system-prompt-file /tmp/mandrake-soul-rhizo-283650.md --name Rhizo
+~ $
+### 03-errors
+
+claude invoke: which soul? (rhizo)
+exit 1
+claude invoke: 'nobody' is not a soul (rhizo)
+exit 1
+~ $
+### 04-plain
+
+mandrake: proxy fora do ar em 127.0.0.1:56849, esta sessão vai direto para a API (mandrake doctor)
+[claude stub] claude
+~ $

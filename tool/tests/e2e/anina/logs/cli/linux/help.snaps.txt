@@ -1,0 +1,78 @@
+
+### 01-help
+
+~ $ mandrake --help
+Mandrake corta o que o Claude Code coloca em volta do seu prompt, mede quanto isso economiza
+e refaz a sua pasta ~/.claude em qualquer máquina a partir de um perfil.
+
+Sem argumentos, mostra o estado desta máquina. Comece por `mandrake setup` e confira com `mandrake d
+octor`.
+
+Usage: mandrake [COMMAND]
+
+Commands:
+  setup    Instala ou ajusta: pergunta item por item e aplica (--cli em linhas, --profile f --yes se
+m perguntar)
+  doctor   Confere tudo: links, settings, plugins, shell, proxy e Claude Code
+  bench    Mede de verdade: os mesmos prompts pelo claude -p sem e com Mandrake (gasta 2 requisições
+ curtas por prompt)
+  watch    Tela ao vivo das requisições: sem Mandrake à esquerda, com Mandrake à direita
+  hex      Uma requisição antes e depois do corte, lado a lado em hex (precisa de auditoria ligada)
+  audit    Lista as requisições cujo corpo foi guardado (com [proxy] audit = true no perfil)
+  capture  Escreve a pasta ~/.claude atual como perfil, para levar a outra máquina
+  link     Links da pasta ~/.claude: plan mostra, apply aplica, rollback desfaz
+  proxy    O proxy local: run, install, uninstall, status
+  help     Print this message or the help of the given subcommand(s)
+
+Options:
+  -h, --help
+          Print help (see a summary with '-h')
+
+  -V, --version
+          Print version
+~ $
+### 02-link
+
+Links da pasta ~/.claude: plan mostra, apply aplica, rollback desfaz
+
+Usage: mandrake link <COMMAND>
+
+Commands:
+  plan      Mostra o que mudaria, sem tocar em nada
+  apply     Aplica; o que estiver no caminho vai para o backup
+  rollback  Desfaz o último apply
+  help      Print this message or the help of the given subcommand(s)
+
+Options:
+  -h, --help  Print help
+~ $
+### 03-proxy
+
+O proxy local: run, install, uninstall, status
+
+Usage: mandrake proxy <COMMAND>
+
+Commands:
+  run        Roda em primeiro plano
+  install    Instala como serviço do usuário (launchd ou systemd)
+  uninstall  Remove o serviço
+  status     Diz se está no ar
+  help       Print this message or the help of the given subcommand(s)
+
+Options:
+  -h, --help  Print help
+~ $
+### 04-bench
+
+Mede de verdade: os mesmos prompts pelo claude -p sem e com Mandrake (gasta 2 requisições curtas por
+ prompt)
+
+Usage: mandrake bench [OPTIONS]
+
+Options:
+      --fixtures <FIXTURES>  Mede só o corte do proxy sobre corpos de requisição desta pasta (sem ro
+dar o Claude Code)
+      --view                 Mostra o último relatório em vez de medir
+      --snapshot <SNAPSHOT>  Com --view: imprime a tela como texto, LARGURAxALTURA
+  -h, --help                 Print help
+~ $

@@ -1,0 +1,47 @@
+
+### 01-fresh
+
+~ $ mandrake
+Mandrake: corta o que o Claude Code coloca em volta do seu prompt e mede a economia.
+
+Ainda não instalado nesta máquina. Rode: mandrake setup
+~ $
+### 02-setup-yes
+
+
+Instalando
+  ok   perfil: /tmp/mandrake-cli.h4od4z/mh/config/mandrake.toml
+  ok   dados: /tmp/mandrake-cli.h4od4z/mh/data/src
+  ok   core: 4251 caracteres nas sessões sem soul e antes de cada soul
+  ok   links: sem mudança
+  ok   settings: settings env.CLAUDE_CODE_PLUGIN_DIRS: unset -> /tmp/mandrake-cli.h4od4z/mh/data/src
+/data/plugins/prompt-trim
+  ok   shell: shell: block added to /tmp/mandrake-cli.h4od4z/home/.bashrc
+  ok   plugins: sem mudança
+  ok   skill: sem mudança
+wrote /tmp/mandrake-cli.h4od4z/mh/state/service/mandrake-proxy.service (MANDRAKE_HOME is set: not lo
+aded)
+  ok   proxy: serviço escrito para 127.0.0.1:8787 (MANDRAKE_HOME: não carregado)
+
+Erros: nenhum
+próximo passo: abra um shell novo e rode `mandrake doctor`
+~ $
+### 03-installed
+
+Mandrake: corta o que o Claude Code coloca em volta do seu prompt e mede a economia.
+
+Como funciona, em duas camadas:
+  1. prompt-trim (dentro do Claude Code) ........ ligado
+     tira o prompt padrão, os lembretes, data, pasta e as descrições longas das tools,
+     e põe no lugar o core (data/prompt/cores/coding.md) nas sessões sem soul
+  2. proxy local 127.0.0.1:8787 (entre o Claude Code e a API) ... DESLIGADO
+     tira as tags <system-reminder> e os campos metadata; mede tokens antes e depois
+     sessões abertas por um shell com o Mandrake usam o proxy quando ele responde;
+     se ele estiver fora, vão direto para a API, sem quebrar
+
+Pelo proxy passaram 0 requisições.
+Ainda não mediu: rode `mandrake bench` (2 requisições curtas por prompt, pela sua sessão).
+
+Comandos: setup · doctor · bench · watch · audit · capture · link · proxy   (mandrake <comando> --he
+lp)
+~ $

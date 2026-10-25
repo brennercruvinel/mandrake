@@ -1,0 +1,20 @@
+anina: [1/4] 120x40-truecolor       ok       13.9s
+anina: [2/4] 60x20-truecolor        ok       13.8s
+anina: [3/4] 120x40-nocolor         ok       13.9s
+anina: [4/4] 120x40-16              ok       13.9s
+
+  category        score
+  stability         100   the journey ran to the end in all 4 terminals
+  responsiveness     63   first screen after 1316 ms
+  readability        96   text: 47 of 966 cells below 4.5:1 (0 below 3:1)
+  compatibility     100   all 5 checks passed
+  hygiene           100   all 9 checks passed
+
+  terminal               status      first      p50/p95 ms   text<AA  colors
+  120x40-truecolor       ok         1316ms          16/406      4.9%  
+  60x20-truecolor        ok         1304ms          14/406      5.8%  
+  120x40-nocolor         ok         1312ms          15/403      0.0%  ok
+  120x40-16              ok         1323ms          15/405      4.9%  ok
+
+anina: report -> /tmp/aud-watch-wide/report.html
+anina check: nothing to hide (10 files checked, 4 PNG read through their screen text)

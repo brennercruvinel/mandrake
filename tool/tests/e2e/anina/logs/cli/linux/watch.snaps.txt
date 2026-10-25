@@ -1,0 +1,131 @@
+
+### 01-open
+
+ Mandrake  watch requisições ao vivo, relidas a cada 0,5 s
+┏ Sem Mandrake · pass ━━━━━━━━━━━━━━━━━┓┌ Com Mandrake · trim ─────────────────┐
+┃ requisições 0                        ┃│ requisições 3                        │
+┃ tokens      sem contagem             ┃│ tokens      2.840 → 2.742  (3,5%)    │
+┃ bytes       0 B → 0 B                ┃│ bytes       11,6 KB → 10,8 KB        │
+┃ usage       entrada 0 · saída 0      ┃│ usage       entrada 2.768 · saída 36 │
+┃ cache       lido 0 · criado 0        ┃│ cache       lido 0 · criado 0        │
+┃                                      ┃│hora U modelo   status tokens         │
+┃ aguardando requisições em            ┃│02:36: sonnet-4 200    1.036→967      │
+┃ /tmp/mandrake-cli.Ct1P3L/mh/state/eve┃│02:36: opus-4-1 200    1.370→1.351    │
+┃                                      ┃│02:36: sonnet-4 200    434→424        │
+┃                                      ┃│                                      │
+┃                                      ┃│                                      │
+┃                                      ┃│                                      │
+┃                                      ┃│                                      │
+┃                                      ┃│                                      │
+┃                                      ┃│                                      │
+┃                                      ┃│                                      │
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛└──────────────────────────────────────┘
+┌ Economia ────────────────────────────────────────────────────────────────────┐
+│██▊                   corte do proxy: +98 tokens (3,5%)                       │
+│ a diferença entre os lados aparece quando os dois tiverem requisições contada│
+└──────────────────────────────────────────────────────────────────────────────┘
+ q sair · Tab ←→ lado · ↑↓ requisição · Enter hex (auditada ◆)
+### 02-live
+
+ Mandrake  watch requisições ao vivo, relidas a cada 0,5 s
+┏ Sem Mandrake · pass ━━━━━━━━━━━━━━━━━┓┌ Com Mandrake · trim ─────────────────┐
+┃ requisições 0                        ┃│ requisições 6                        │
+┃ tokens      sem contagem             ┃│ tokens      5.680 → 5.484  (3,5%)    │
+┃ bytes       0 B → 0 B                ┃│ bytes       23,3 KB → 21,6 KB        │
+┃ usage       entrada 0 · saída 0      ┃│ usage       entrada 5.536 · saída 72 │
+┃ cache       lido 0 · criado 0        ┃│ cache       lido 0 · criado 0        │
+┃                                      ┃│hora U modelo   status tokens         │
+┃ aguardando requisições em            ┃│02:36: sonnet-4 200    1.036→967      │
+┃ /tmp/mandrake-cli.Ct1P3L/mh/state/eve┃│02:36: sonnet-4 200    434→424        │
+┃                                      ┃│02:36: opus-4-1 200    1.370→1.351    │
+┃                                      ┃│02:36: sonnet-4 200    1.036→967      │
+┃                                      ┃│02:36: opus-4-1 200    1.370→1.351    │
+┃                                      ┃│02:36: sonnet-4 200    434→424        │
+┃                                      ┃│                                      │
+┃                                      ┃│                                      │
+┃                                      ┃│                                      │
+┃                                      ┃│                                      │
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛└──────────────────────────────────────┘
+┌ Economia ────────────────────────────────────────────────────────────────────┐
+│██▊                   corte do proxy: +196 tokens (3,5%)                      │
+│ a diferença entre os lados aparece quando os dois tiverem requisições contada│
+└──────────────────────────────────────────────────────────────────────────────┘
+ q sair · Tab ←→ lado · ↑↓ requisição · Enter hex (auditada ◆)
+### 03-tab
+
+ Mandrake  watch requisições ao vivo, relidas a cada 0,5 s
+┌ Sem Mandrake · pass ─────────────────┐┏ Com Mandrake · trim ━━━━━━━━━━━━━━━━━┓
+│ requisições 0                        │┃ requisições 6                        ┃
+│ tokens      sem contagem             │┃ tokens      5.680 → 5.484  (3,5%)    ┃
+│ bytes       0 B → 0 B                │┃ bytes       23,3 KB → 21,6 KB        ┃
+│ usage       entrada 0 · saída 0      │┃ usage       entrada 5.536 · saída 72 ┃
+│ cache       lido 0 · criado 0        │┃ cache       lido 0 · criado 0        ┃
+│                                      │┃hora U modelo   status tokens         ┃
+│ aguardando requisições em            │┃02:36: sonnet-4 200    1.036→967      ┃
+│ /tmp/mandrake-cli.Ct1P3L/mh/state/eve│┃02:36: sonnet-4 200    434→424        ┃
+│                                      │┃02:36: opus-4-1 200    1.370→1.351    ┃
+│                                      │┃02:36: sonnet-4 200    1.036→967      ┃
+│                                      │┃02:36: opus-4-1 200    1.370→1.351    ┃
+│                                      │┃02:36: sonnet-4 200    434→424        ┃
+│                                      │┃                                      ┃
+│                                      │┃                                      ┃
+│                                      │┃                                      ┃
+│                                      │┃                                      ┃
+└──────────────────────────────────────┘┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+┌ Economia ────────────────────────────────────────────────────────────────────┐
+│██▊                   corte do proxy: +196 tokens (3,5%)                      │
+│ a diferença entre os lados aparece quando os dois tiverem requisições contada│
+└──────────────────────────────────────────────────────────────────────────────┘
+ q sair · Tab ←→ lado · ↑↓ requisição · Enter hex (auditada ◆)
+### 04-row
+
+ Mandrake  watch requisições ao vivo, relidas a cada 0,5 s
+┏ Sem Mandrake · pass ━━━━━━━━━━━━━━━━━┓┌ Com Mandrake · trim ─────────────────┐
+┃ requisições 0                        ┃│ requisições 6                        │
+┃ tokens      sem contagem             ┃│ tokens      5.680 → 5.484  (3,5%)    │
+┃ bytes       0 B → 0 B                ┃│ bytes       23,3 KB → 21,6 KB        │
+┃ usage       entrada 0 · saída 0      ┃│ usage       entrada 5.536 · saída 72 │
+┃ cache       lido 0 · criado 0        ┃│ cache       lido 0 · criado 0        │
+┃                                      ┃│hora U modelo   status tokens         │
+┃ aguardando requisições em            ┃│02:36: sonnet-4 200    1.036→967      │
+┃ /tmp/mandrake-cli.Ct1P3L/mh/state/eve┃│02:36: sonnet-4 200    434→424        │
+┃                                      ┃│02:36: opus-4-1 200    1.370→1.351    │
+┃                                      ┃│02:36: sonnet-4 200    1.036→967      │
+┃                                      ┃│02:36: opus-4-1 200    1.370→1.351    │
+┃                                      ┃│02:36: sonnet-4 200    434→424        │
+┃                                      ┃│                                      │
+┃                                      ┃│                                      │
+┃                                      ┃│                                      │
+┃                                      ┃│                                      │
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛└──────────────────────────────────────┘
+┌ Economia ────────────────────────────────────────────────────────────────────┐
+│██▊                   corte do proxy: +196 tokens (3,5%)                      │
+│ a diferença entre os lados aparece quando os dois tiverem requisições contada│
+└──────────────────────────────────────────────────────────────────────────────┘
+ q sair · Tab ←→ lado · ↑↓ requisição · Enter hex (auditada ◆)
+### 05-hex
+
+ Mandrake  watch requisições ao vivo, relidas a cada 0,5 s
+┏ Sem Mandrake · pass ━━━━━━━━━━━━━━━━━┓┌ Com Mandrake · trim ─────────────────┐
+┃ requisições 0                        ┃│ requisições 6                        │
+┃ tokens      sem contagem             ┃│ tokens      5.680 → 5.484  (3,5%)    │
+┃ bytes       0 B → 0 B                ┃│ bytes       23,3 KB → 21,6 KB        │
+┃ usage       entrada 0 · saída 0      ┃│ usage       entrada 5.536 · saída 72 │
+┃ cache       lido 0 · criado 0        ┃│ cache       lido 0 · criado 0        │
+┃                                      ┃│hora U modelo   status tokens         │
+┃ aguardando requisições em            ┃│02:36: sonnet-4 200    1.036→967      │
+┃ /tmp/mandrake-cli.Ct1P3L/mh/state/eve┃│02:36: sonnet-4 200    434→424        │
+┃                                      ┃│02:36: opus-4-1 200    1.370→1.351    │
+┃                                      ┃│02:36: sonnet-4 200    1.036→967      │
+┃                                      ┃│02:36: opus-4-1 200    1.370→1.351    │
+┃                                      ┃│02:36: sonnet-4 200    434→424        │
+┃                                      ┃│                                      │
+┃                                      ┃│                                      │
+┃                                      ┃│                                      │
+┃                                      ┃│                                      │
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛└──────────────────────────────────────┘
+┌ Economia ────────────────────────────────────────────────────────────────────┐
+│██▊                   corte do proxy: +196 tokens (3,5%)                      │
+│ a diferença entre os lados aparece quando os dois tiverem requisições contada│
+└──────────────────────────────────────────────────────────────────────────────┘
+ q sair · Tab ←→ lado · ↑↓ requisição · Enter hex (auditada ◆)
