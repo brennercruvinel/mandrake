@@ -1,0 +1,15 @@
+# Changelog
+
+Notable changes to Mandrake. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow [SemVer](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+<!-- a change goes in docs/news/<issue>.<type>.md (CONTRIBUTING.md), never here -->
+
+<!-- towncrier: each release lands below this line -->
+
+## [0.1.0] - 2026-10-24
+
+### Added
+
+- The `mandrake` binary with setup, capture, link, proxy, watch, hex, bench, audit and doctor; the prompt-trim, fancy and tui-embed plugins; the core prompt and the example soul Rhizo (#1).

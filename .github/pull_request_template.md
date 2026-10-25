@@ -6,6 +6,8 @@ Closes #<sub-issue>. Part of #<epic>.
 
 [POCS] <!-- Where the change shows working. -->
 
+Changelog: `docs/news/<issue>.<type>.md`, or the `skip-news` label.
+
 ## Validation
 
 Tested commit: `<sha>`

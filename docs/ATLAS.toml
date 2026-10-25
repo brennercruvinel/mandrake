@@ -1,0 +1,64 @@
+# Mandrake architecture reference: what Mandrake is today, in one file.
+#
+# Current state only. History (what changed, when, why) goes in docs/CHANGELOG and the ADRs in
+# docs/adr/; a change updates the entry it touches instead of appending a dated paragraph. How to
+# use Mandrake is in docs/how-it-works.md and docs/setup.md.
+
+project = "mandrake"
+last-updated = "2026-10-25"
+domain = "architecture"
+summary = "Mandrake makes a Claude Code setup reproducible on macOS and Linux. It cuts what the CLI wraps around a prompt in two layers (the prompt-trim plugin inside Claude Code, and a local proxy that also measures), shows what that saves (watch, hex, bench), and rebuilds a ~/.claude arrangement from one profile (setup, capture, link, doctor). One Rust binary, `mandrake`, plus the plugins and files it installs."
+
+
+risks = [
+    "prompt-trim depends on the plugin API of the Claude Code version it was checked on (2.1.310); another version may not load it.",
+    "Only sessions opened from a shell with the Mandrake launcher go through the proxy; the app and IDEs get prompt-trim only.",
+    "The proxy's systemd service has been generated but never run on a real Linux login session.",
+    "cut_identity is off: in a long subscription session it made requests cost more (269,338 -> 291,637 tokens), cause not investigated.",
+    "The full-screen setup wizard has only been walked to the end in a simulated terminal; `setup --cli` is the tested path.",
+]
+
+# layers: one entry per crate, plugin and folder that ships.
+[[layers]]
+name = "rust/cli"
+role = "The `mandrake` binary: one clap subcommand per job (setup, capture, link, proxy, watch, hex, bench, audit, doctor). Thin: it parses, asks, and calls the crates below. ask.rs is the line-by-line setup (`--cli`), install.rs writes settings, shell block, plugins and skill, apps.rs installs and checks the --embed builds of abtop and gitlogue for tui-embed."
+
+[[layers]]
+name = "rust/home"
+role = "Where Mandrake lives on a machine (XDG config, data and state dirs, all movable by env, `MANDRAKE_HOME` for tests) and the profile `mandrake.toml` that describes one machine."
+
+[[layers]]
+name = "rust/layout"
+role = "Arranges ~/.claude from a profile and the catalog cfgs/setup/items.toml: plan (diff, nothing touched), apply (links and copies; what is in the way moves to state/backups/<stamp>/, each step is journaled as pending before it starts), rollback (replays the newest journal backwards), capture, settings.json merge (only Mandrake's keys), and the shell block. Nothing is ever deleted."
+
+[[layers]]
+name = "rust/proxy"
+role = "Local proxy on 127.0.0.1 between Claude Code and the API (hyper/tokio, streaming). Trims what the plugin cannot reach (reminder tags, the top-level fields in [proxy] strip_fields, default metadata), counts tokens before and after with count_tokens, reads usage from the SSE, optional audit of bodies (mode 600, redacted). Generates the launchd and systemd --user services from cfgs/proxy."
+
+[[layers]]
+name = "rust/meter"
+role = "The measurement contract: one Event per request, one JSON line in state/events.jsonl. The proxy writes it; watch, hex, bench and audit read it."
+
+[[layers]]
+name = "rust/tui"
+role = "The screens (ratatui): the setup wizard, watch (live split without/with Mandrake; --embed draws for a tui-embed pane), hex (one request before and after, side by side), bench --view. Each screen keeps state apart from the terminal so it renders in tests."
+
+[[layers]]
+name = "data/plugins/prompt-trim"
+role = "Claude Code plugin (JavaScript hooks), always installed (ADR-0003). Removes the default system prompt sections, about 75 reminder and attachment kinds, the tool descriptions and the subagent list, and puts the core prompt (data/prompt/cores) in their place in sessions without a soul."
+
+[[layers]]
+name = "data/plugins/fancy"
+role = "Optional plugin (TypeScript hooks, Go helper `tint`): themed markdown, marker badges, color swatches, status bar, tab color by session state."
+
+[[layers]]
+name = "data/plugins/tui-embed"
+role = "Optional plugin (TypeScript): terminal apps in a pane next to the conversation. /abtop and /gitlogue spawn the --embed builds from the forks tiamatio/abtop and tiamatio/gitlogue, which setup installs."
+
+[[layers]]
+name = "cfgs and data/prompt"
+role = "What the installer writes: the catalog of ~/.claude entries, trim rules and service templates, the shell launcher (claude, claude invoke <soul>), the core prompt and the example soul Rhizo, the optional invoke skill."
+
+[[layers]]
+name = "tool"
+role = "Tests outside cargo: tool/tests/e2e (setup in a throwaway HOME, the anina cases and tapes), tool/tests/fixtures (redacted request bodies), tool/relink.sh (puts ~/.claude links back by hand)."

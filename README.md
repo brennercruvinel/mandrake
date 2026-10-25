@@ -32,8 +32,13 @@ cfgs/    what the installer writes: setup/items.toml (the catalog), proxy/ (trim
          templates), shell/mandrake.sh (the launcher)
 data/    what gets installed: plugins/ (prompt-trim, fancy, tui-embed), prompt/cores, prompt/souls,
          skills/invoke
-docs/    how it works, setup, measure and audit, possibilities
-tests/   fixtures (request bodies) and e2e scripts
+docs/    how it works, setup, measure and audit; ATLAS.toml (architecture), adr/ (decisions),
+         TERMS.md (abbreviations), CHANGELOG and news/ (its fragments)
+tool/    tests outside cargo: e2e scripts and anina tapes, request fixtures
 ```
 
 Read [docs/how-it-works.md](docs/how-it-works.md) first.
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md).
