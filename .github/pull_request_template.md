@@ -1,4 +1,5 @@
 Closes #<sub-issue>. Part of #<epic>.
+<!-- One keyword per number: "Closes #25, closes #30". Labels: one type and every area (CONTRIBUTING.md, Labels and the board). -->
 
 ## Change
 

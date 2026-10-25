@@ -1,0 +1,28 @@
+# The repository's labels: tool/board.sh labels writes them to GitHub, tool/board.sh check reads them.
+# group	name	color	description
+# Type: exactly one per issue and pull request, the same word as the commit prefix.
+type	bug	d73a4a	fix: something does not work as it should
+type	enhancement	a2eeef	feat: a new command, screen or behavior
+type	documentation	0075ca	docs: README, guides, audits, ADRs and other records
+type	test	c2e0c6	test: e2e scripts, anina tapes and fixtures, with no change to the product
+type	refactor	d4c5f9	refactor: same behavior, a better shape
+type	ci	0e8a16	chore: the quality gate, repository hygiene and the board
+# Area: every part the change touches, by path.
+area	cli	1d76db	rust/cli, the mandrake binary and its commands
+area	tui	1d76db	rust/tui, the setup wizard and the watch, hex, bench and compare screens
+area	proxy	1d76db	rust/proxy, the local proxy that trims and measures
+area	meter	1d76db	rust/meter, the event log and token counts
+area	layout	1d76db	rust/layout and rust/home: links, backups, journal, rollback
+area	plugins	1d76db	data/plugins: prompt-trim, fancy, tui-embed
+area	shell	1d76db	cfgs/shell and install.sh: the launcher, env.sh and the PATH block
+# Meta: how the item is handled.
+meta	epic	3e4b9e	A larger goal, split into sub-issues
+meta	feedback	fbca04	Found while testing: bug, confusion, idea or question
+meta	skip-news	ededed	Pull request with nothing for the changelog
+meta	accessibility	f143ab	Barrier affecting people with disabilities
+meta	duplicate	cfd3d7	This issue or pull request already exists
+meta	good first issue	7057ff	Good for newcomers
+meta	help wanted	008672	Extra attention is needed
+meta	invalid	e4e669	This doesn't seem right
+meta	question	d876e3	Further information is requested
+meta	wontfix	ffffff	This will not be worked on

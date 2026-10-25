@@ -61,4 +61,4 @@ role = "What the installer writes: the catalog of ~/.claude entries, trim rules 
 
 [[layers]]
 name = "tool"
-role = "Tests outside cargo: tool/tests/e2e (setup in a throwaway HOME, the anina cases and tapes), tool/tests/fixtures (redacted request bodies), tool/relink.sh (puts ~/.claude links back by hand), tool/demo (the README recordings, `tool/demo/record.sh`)."
+role = "Tests outside cargo: tool/tests/e2e (setup in a throwaway HOME, the anina cases and tapes), tool/tests/fixtures (redacted request bodies), tool/relink.sh (puts ~/.claude links back by hand), tool/demo (the README recordings, `tool/demo/record.sh`), tool/board.sh (labels from .github/labels.tsv, the board and the linking check, with gh)."
