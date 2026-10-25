@@ -1,0 +1,64 @@
+
+$ a 640-line script and a CLAUDE.md, staged
+  640 tool/long-example.sh
+
+$ tool/fullcheck.sh files
+
+== files
+FAIL  line cap: tool/long-example.sh has 640 lines, over 639
+      tool/long-example.sh has 640 lines, over 639
+FAIL  agent files: CLAUDE.md is tracked; agent instruction files stay out of the repository
+      CLAUDE.md is tracked; agent instruction files stay out of the repository
+
+fullcheck: 2 failed
+  line cap: tool/long-example.sh has 640 lines, over 639
+  agent files: CLAUDE.md is tracked; agent instruction files stay out of the repository
+
+$ both taken back out
+
+$ tool/fullcheck.sh
+
+== rust
+ok    cargo fmt
+ok    cargo clippy
+ok    cargo test
+ok    cargo deny
+
+== ts
+ok    tsc fancy
+ok    tsc prompt-trim
+ok    tsc tui-embed
+
+== go
+ok    gofmt
+ok    go vet
+
+== shell
+ok    shellcheck
+
+== python
+ok    ruff check
+ok    ruff format
+
+== files
+ok    line cap
+ok    agent files
+
+== news
+skip  changelog: no towncrier.toml yet
+
+== workflows
+ok    actionlint
+ok    zizmor
+
+== e2e
+ok    cargo build
+ok    e2e cases
+ok    anina copy-fail
+ok    anina same-second
+ok    anina doctor-copy
+ok    anina eof
+
+fullcheck: everything passed
+
+verdict: GATE WORKS failed with the two files, passed without them
