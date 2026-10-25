@@ -51,6 +51,10 @@ check "env.sh points at the souls" "$(grep -c "MANDRAKE_SOULS='$t/dev/souls'" "$
 m setup --profile "$t/p.toml" --yes > "$t/setup2.log" 2>&1
 check "second setup changes no link" "$(grep -c 'ok   links: sem mudança' "$t/setup2.log")" 1
 check "second setup leaves one block" "$(grep -c '>>> mandrake >>>' "$t/home/.zshrc")" 1
+# `mandrake` alone: the next step spends nothing, and every command is listed (#32).
+alone="$(m 2>&1)"
+check "mandrake alone suggests compare, which spends nothing" "$(grep -c '`mandrake compare` mostra' <<< "$alone")" 1
+check "mandrake alone lists hex and capture too" "$(grep -c 'hex · audit · bench · link · proxy · capture' <<< "$alone")" 1
 m doctor > "$t/doctor.log" 2>&1
 check "the core goes into prompt-trim" "$(grep -c '# Core' "$t/mh/data/src/data/plugins/prompt-trim/hooks/core.js")" 1
 check "setup reports no errors" "$(grep -c 'Erros: nenhum' "$t/setup.log")" 1
@@ -69,9 +73,5 @@ check "the core goes before the soul" "$(grep -c -- '# Core' <<<"$call")" 1
 down="$(env -u ANTHROPIC_BASE_URL HOME="$t/home" MANDRAKE_HOME="$t/mh" MANDRAKE_PORT=1 PATH="$t/bin:$PATH" bash -c ". '$t/mh/data/shell/mandrake.sh'; claude --y; env | grep -c ANTHROPIC_BASE_URL" 2>&1)"
 check "proxy down: claude still starts" "$(grep -c -- '--y' <<<"$down")" 1
 check "proxy down: the session goes direct, and says so" "$(grep -c 'vai direto para a API' <<<"$down")" 1
-# `mandrake` alone: the next step spends nothing, and every command is listed (#32).
-alone="$(m 2>&1)"
-check "mandrake alone suggests compare, which spends nothing" "$(grep -c '`mandrake compare` mostra' <<< "$alone")" 1
-check "mandrake alone lists hex and capture too" "$(grep -c 'hex · audit · bench · link · proxy · capture' <<< "$alone")" 1
 if [ "$fails" -gt 0 ]; then echo "--- setup.log"; cat "$t/setup.log"; echo "--- doctor.log"; cat "$t/doctor.log"; fi
 exit "$fails"

@@ -39,6 +39,17 @@ pub fn same(from: &Path, to: &Path) -> bool {
     }
 }
 
+/// How many files `copy(from, _)` writes, following symlinks as it does.
+pub fn count_files(from: &Path) -> usize {
+    match std::fs::metadata(from) {
+        Ok(m) if m.is_file() => 1,
+        Ok(m) if m.is_dir() => std::fs::read_dir(from)
+            .map(|rd| rd.flatten().map(|e| count_files(&e.path())).sum())
+            .unwrap_or(0),
+        _ => 0,
+    }
+}
+
 fn names(dir: &Path) -> Option<BTreeSet<OsString>> {
     std::fs::read_dir(dir)
         .ok()?

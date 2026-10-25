@@ -136,18 +136,7 @@ fn links_step(dirs: &Dirs, catalog: &Catalog, profile: &Profile) -> Result<Vec<S
     let mut out: Vec<String> = steps
         .iter()
         .filter(|s| s.op.changes())
-        .map(|s| {
-            let to = s
-                .target
-                .as_ref()
-                .map(|t| t.display().to_string())
-                .unwrap_or_default();
-            format!(
-                "{:<11} {} -> {to}",
-                format!("{:?}", s.op).to_lowercase(),
-                s.path
-            )
-        })
+        .map(|s| s.say(dirs))
         .collect();
     if let Some(j) = links::apply(dirs, catalog, &steps)? {
         out.push(format!("journal {}", j.display()));
@@ -198,30 +187,20 @@ pub fn capture(dirs: &Dirs, out: Option<PathBuf>) -> Result<()> {
     Ok(())
 }
 
-fn print_steps(steps: &[links::Step]) {
+fn print_steps(dirs: &Dirs, steps: &[links::Step]) {
     let changing: Vec<_> = steps.iter().filter(|s| s.op.changes()).collect();
     if changing.is_empty() {
-        return println!("links: nothing to change");
+        return println!("links: nada muda");
     }
     for s in changing {
-        let to = s
-            .target
-            .as_ref()
-            .map(|t| t.display().to_string())
-            .unwrap_or_default();
-        println!(
-            "links: {:<11} {} -> {}",
-            format!("{:?}", s.op).to_lowercase(),
-            s.path,
-            to
-        );
+        println!("links: {}", s.say(dirs));
     }
 }
 
 pub fn link_plan(dirs: &Dirs) -> Result<()> {
     let p = Profile::load(&dirs.profile())
         .context("ainda não há perfil: rode mandrake setup, ou mandrake capture --out")?;
-    print_steps(&links::plan(dirs, &Catalog::builtin()?, &p)?);
+    print_steps(dirs, &links::plan(dirs, &Catalog::builtin()?, &p)?);
     Ok(())
 }
 
@@ -230,7 +209,7 @@ pub fn link_apply(dirs: &Dirs) -> Result<()> {
     let p = Profile::load(&dirs.profile())
         .context("ainda não há perfil: rode mandrake setup, ou mandrake capture --out")?;
     let steps = links::plan(dirs, &catalog, &p)?;
-    print_steps(&steps);
+    print_steps(dirs, &steps);
     if let Some(j) = links::apply(dirs, &catalog, &steps)? {
         println!("journal {}", j.display());
     }
@@ -238,8 +217,18 @@ pub fn link_apply(dirs: &Dirs) -> Result<()> {
 }
 
 pub fn link_rollback(dirs: &Dirs) -> Result<()> {
-    let n = links::rollback(dirs)?;
-    println!("rolled back {n} steps");
+    let r = links::rollback(dirs)?;
+    match r.steps {
+        1 => println!("desfeito: 1 passo"),
+        n => println!("desfeitos: {n} passos"),
+    }
+    for s in &r.aside {
+        println!(
+            "{}: o que estava lá desde a instalação foi guardado em {}",
+            dirs.tilde(&s.target),
+            dirs.tilde(&s.aside)
+        );
+    }
     Ok(())
 }
 

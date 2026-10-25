@@ -115,6 +115,15 @@ impl Dirs {
             _ => p,
         }
     }
+
+    /// A path for people to read: under the home it starts with `~`.
+    pub fn tilde(&self, path: &Path) -> String {
+        match path.strip_prefix(&self.home) {
+            Ok(rest) if rest.as_os_str().is_empty() => "~".into(),
+            Ok(rest) => format!("~/{}", rest.display()),
+            Err(_) => path.display().to_string(),
+        }
+    }
 }
 
 /// What to do with one entry of the Claude Code folder.
