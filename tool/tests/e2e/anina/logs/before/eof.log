@@ -1,0 +1,12 @@
+== 4. setup --cli with input closed
+
+$ mandrake setup --cli < /dev/null
+  wrote $T/mh/state/service/mandrake-proxy.service (MANDRAKE_HOME is set: not loaded)
+    ok   proxy: serviço escrito para 127.0.0.1:8787 (MANDRAKE_HOME: não carregado)
+  
+  Erros: nenhum
+  próximo passo: abra um shell novo e rode `mandrake doctor`
+  exit 0
+  written: profile settings.json shell-block
+
+verdict: BUG closed input exits 0 and wrote: profile settings.json shell-block

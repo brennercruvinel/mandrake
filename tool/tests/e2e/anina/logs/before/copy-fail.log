@@ -1,0 +1,21 @@
+== 1. a copy that fails midway, then rollback
+
+$ mandrake link apply
+  links: backupcopy  rules -> $T/does-not-exist
+  Error: copy source $T/does-not-exist
+  
+  Caused by:
+      No such file or directory (os error 2)
+  exit 1
+
+$ mandrake link rollback
+  rolled back 0 steps
+  exit 0
+
+$ ls ~/.claude/rules
+  ls: cannot access '$T/home/.claude/rules': No such file or directory
+
+$ find state/backups -type f
+  backups/20261025-011106/rules/original.txt
+
+verdict: BUG original.txt is not in ~/.claude/rules; it stays in the backup

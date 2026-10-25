@@ -1,0 +1,19 @@
+== 3. doctor on a correct copy, and a second setup
+
+$ mandrake setup --profile p.toml --yes
+    ok   links: copy        rules -> $T/src-rules
+    ok   links: journal $T/mh/state/journal/20261025-011114.json
+  Erros: nenhum
+
+$ diff -r src-rules ~/.claude/rules
+  same
+
+$ mandrake doctor | grep links
+  FAIL links: 0 as the profile says, differ: rules
+
+$ mandrake setup --profile p.toml --yes   # again
+    ok   links: backupcopy  rules -> $T/src-rules
+    ok   links: journal $T/mh/state/journal/20261025-011114.json
+  backup folders: 0 after the first setup, 1 after the second
+
+verdict: BUG doctor fails on an identical copy (1 FAIL) and setup made 1 new backup(s)
