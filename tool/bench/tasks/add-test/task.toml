@@ -1,0 +1,2 @@
+prompt = "Add tests for fizzbuzz in test_fizz.py: multiples of 3, of 5, of 15, and a plain number. Run them."
+allow = ["Read", "Edit", "Write", "Bash(python3:*)"]

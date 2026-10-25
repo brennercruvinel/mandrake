@@ -1,0 +1,2 @@
+prompt = "Move config.json to the version 2 format described in FORMAT.md, and update app.py to read it. python3 app.py must still print the same line."
+allow = ["Read", "Edit", "Write", "Bash(python3:*)"]

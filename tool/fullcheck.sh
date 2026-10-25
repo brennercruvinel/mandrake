@@ -110,8 +110,8 @@ go_checks() {
 shell_checks() {
   need shellcheck "shellcheck" "brew install shellcheck, or apt install shellcheck" || return
   local f files=()
-  # A loop, not mapfile: macOS ships bash 3.2.
-  while IFS= read -r f; do files+=("$f"); done < <(git ls-files 'install.sh' 'tool/*.sh' 'cfgs/shell/*.sh')
+  # A loop, not mapfile: macOS ships bash 3.2. The bench repos hold broken code on purpose.
+  while IFS= read -r f; do files+=("$f"); done < <(git ls-files 'install.sh' 'tool/*.sh' 'cfgs/shell/*.sh' ':!tool/bench/tasks/*/repo/*')
   check "shellcheck" shellcheck -S warning "${files[@]}"
 }
 
@@ -183,6 +183,7 @@ e2e_checks() {
   need cargo "e2e" "rustup.rs" || return
   check "cargo build" cargo build --workspace --locked
   check "e2e cases" tool/tests/e2e/anina/cases.sh all "$bin"
+  check "bench tasks verify" python3 tool/bench/tasks.py verify
   if ! has anina; then
     skip "anina tapes" "anina is not on PATH; the cases above ran without recording"
     return

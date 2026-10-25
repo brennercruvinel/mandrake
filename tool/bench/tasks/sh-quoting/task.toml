@@ -1,0 +1,2 @@
+prompt = "backup.sh breaks when a path has spaces. Fix it so ./backup.sh 'my src' 'my dst' copies every file."
+allow = ["Read", "Edit", "Write", "Bash(bash:*)", "Bash(./backup.sh:*)", "Bash(mkdir:*)", "Bash(touch:*)", "Bash(ls:*)"]
