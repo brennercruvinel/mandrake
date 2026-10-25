@@ -74,6 +74,21 @@ pub fn status(dirs: &Dirs, profile: &Profile) -> Result<String> {
     ))
 }
 
+/// Whether `MANDRAKE_HOME` isolates this run: the service file is written but never loaded.
+pub fn isolated() -> bool {
+    service::isolated()
+}
+
+/// The status line, and whether the service is loaded (or isolated) and the port answers.
+pub fn health(dirs: &Dirs, profile: &Profile) -> Result<(bool, String)> {
+    Ok(service::health(
+        dirs,
+        service::Os::current()?,
+        service::isolated(),
+        profile.proxy.port,
+    ))
+}
+
 /// Runs the fixtures in `fixtures` through the trim and `count_tokens`, writes `<out>.json` and `<out>.md`.
 pub fn bench(dirs: &Dirs, profile: &Profile, fixtures: &Path, out: &Path) -> Result<()> {
     let _ = dirs;
