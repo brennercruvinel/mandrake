@@ -1,0 +1,17 @@
+
+$ cargo build --workspace --locked
+
+$ tool/tests/e2e/anina/cases.sh all
+verdict: FIXED original.txt is back in ~/.claude/rules
+verdict: FIXED two journals, and two rollbacks bring the original folder back
+verdict: FIXED doctor passes on the copy and the second setup backs nothing up
+verdict: FIXED closed input exits 1 and applies nothing
+
+$ python3 -m py_compile tool/tests/e2e/pty-answer.py
+
+$ an editor opens the repo: .vscode .idea .zed .claude tmp .DS_Store scratch.log
+
+$ git status --short
+  (nothing)
+
+verdict: CLEAN build, e2e run and editor files are all ignored
