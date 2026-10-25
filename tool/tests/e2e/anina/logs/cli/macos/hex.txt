@@ -1,0 +1,82 @@
+hex
+===
+
+[0.0s]
+
+## mandrake audit · the ids hex needs
+
+[4.2s]
+    ~ $ mandrake audit
+    id                        quando            lado  status   bytes antes → depois
+     economia
+    1792913024679-ff90-0002   2026-10-25 07:23  com     200            4327 → 3904
+    69 tokens
+    1792913024672-ff90-0001   2026-10-25 07:23  com     200            5665 → 5437
+    19 tokens
+    1792913024656-ff90-0000   2026-10-25 07:23  com     200            1921 → 1732
+    10 tokens
+    
+    `mandrake hex` abre a mais recente; `mandrake hex <id>`, uma delas.
+    ~ $
+
+## mandrake hex · with no id, the newest one
+
+[7.7s]
+     Mandrake  hex requisição 1792913024679-ff90-0002
+    ┌──────────────────────────────────────────────────────────────────────────────┐
+    │antes 4,2 KB (4.327 B)  depois 3,8 KB (3.904 B)  −423 B +0 B  em 16 trechos   │
+    │tokens 1.036 → 967 (-69, 6,7%)  modelo sonnet-4-5  status 200  modo trim      │
+    │cortes 7 system-reminder(s) · campos metadata                                 │
+    └──────────────────────────────────────────────────────────────────────────────┘
+    ┏ antes · before.json  guia ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+    ┃000000 7b226d6f 64656c22 3a22636c 61756465 {"model":"claude                ┃ █◆
+    ┃000010 2d736f6e 6e65742d 342d3522 2c226d61 -sonnet-4-5","ma                ┃ ┃
+    ┃000020 785f746f 6b656e73 223a3332 3030302c x_tokens":32000,                ┃ ┃
+    ┃000030 22737472 65616d22 3a747275 652c226d "stream":true,"m                ┃ ┃
+    ┃000040 65746164 61746122 3a7b2275 7365725f etadata":{"user_                ┃ ┃◆
+    ┃000050 6964223a 22757365 725f3030 30303030 id":"user_000000                ┃ ┃◆
+    ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛ ┃◆
+    ┌ depois · after.json ──────────────────────────────────────────────────────┐ ┃
+    │000000 7b226d6f 64656c22 3a22636c 61756465 {"model":"claude                │ ┃◆
+    │000010 2d736f6e 6e65742d 342d3522 2c226d61 -sonnet-4-5","ma                │ ┃
+    │000020 785f746f 6b656e73 223a3332 3030302c x_tokens":32000,                │ ┃◆
+    │000030 22737472 65616d22 3a747275 652c2273 "stream":true,"s                │ ┃
+    │000040 79737465 6d223a5b 7b227479 7065223a ystem":[{"type":                │ ┃◆
+    │000050 22746578 74222c22 74657874 223a2259 "text","text":"Y                │ ┃◆
+    └───────────────────────────────────────────────────────────────────────────┘
+    trecho 0/16 offset 0x0 · q voltar · ↑↓ PgUp PgDn rolar · n p próximo/anterior
+    trecho · Tab guia antes/depois
+
+## n · next cut
+
+[9.2s]
+     Mandrake  hex requisição 1792913024679-ff90-0002
+    ┌──────────────────────────────────────────────────────────────────────────────┐
+    │antes 4,2 KB (4.327 B)  depois 3,8 KB (3.904 B)  −423 B +0 B  em 16 trechos   │
+    │tokens 1.036 → 967 (-69, 6,7%)  modelo sonnet-4-5  status 200  modo trim      │
+    │cortes 7 system-reminder(s) · campos metadata                                 │
+    └──────────────────────────────────────────────────────────────────────────────┘
+    ┏ antes · before.json  guia ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+    ┃000510 6572222c 22636f6e 74656e74 223a5b7b er","content":[{                ┃ │◆
+    ┃000520 22747970 65223a22 74657874 222c2274 "type":"text","t                ┃ │
+    ┃000530 65787422 3a223c73 79737465 6d2d7265 ext":"<system-re                ┃ │
+    ┃000540 6d696e64 65723e5c 6e417320 796f7520 minder>\nAs you                 ┃ │
+    ┃000550 616e7377 65722074 68652075 73657227 answer the user'                ┃ █◆
+    ┃000560 73207175 65737469 6f6e732c 20796f75 s questions, you                ┃ ┃◆
+    ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛ ┃◆
+    ┌ depois · after.json ──────────────────────────────────────────────────────┐ ┃
+    │000470 7b22726f 6c65223a 22757365 72222c22 {"role":"user","                │ ┃◆
+    │000480 636f6e74 656e7422 3a5b7b22 74797065 content":[{"type                │ ┃
+    │000490 223a2274 65787422 2c227465 7874223a ":"text","text":                │ ┃◆
+    │0004a0 22417320 796f7520 616e7377 65722074 "As you answer t                │ ┃
+    │0004b0 68652075 73657227 73207175 65737469 he user's questi                │ ┃◆
+    │0004c0 6f6e732c 20796f75 2063616e 20757365 ons, you can use                │ ┃◆
+    └───────────────────────────────────────────────────────────────────────────┘
+    trecho 2/16 offset 0x510 · q voltar · ↑↓ PgUp PgDn rolar · n p próximo/anterior
+    trecho · Tab guia antes/depois
+
+## Tab · guide on the other side
+
+[13.5s]
+    ~ $ exit
+    exit

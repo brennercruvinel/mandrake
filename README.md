@@ -39,9 +39,10 @@ Every request live as it goes through the proxy: without Mandrake on the left, w
 
 ![mandrake watch](docs/img/demo/watch.svg)
 
-### `mandrake hex <id>`
+### `mandrake hex`
 
-One request before and after the cut, byte by byte; ids come from `mandrake audit`.
+One request before and after the cut, byte by byte: the newest one, or `mandrake hex <id>` with an id
+from `mandrake audit`.
 
 ![mandrake hex](docs/img/demo/hex-wide.svg)
 

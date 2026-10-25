@@ -37,6 +37,13 @@ pub struct HexView {
     pub slider: Rect,
 }
 
+/// Whether `audit/<id>.before.json` and `.after.json` are both there.
+pub fn has_bodies(dirs: &Dirs, id: &str) -> bool {
+    ["before", "after"]
+        .iter()
+        .all(|s| dirs.audit().join(format!("{id}.{s}.json")).is_file())
+}
+
 impl HexView {
     pub fn new(
         id: &str,
@@ -60,14 +67,36 @@ impl HexView {
     }
 
     /// Reads `audit/<id>.before.json`, `.after.json` and the event with that id.
+    /// The newest audited request whose two bodies are still on disk.
+    pub fn latest(dirs: &Dirs) -> Result<String> {
+        mandrake_meter::read(&dirs.events())?
+            .into_iter()
+            .rev()
+            .find(|e| e.audited && has_bodies(dirs, &e.id))
+            .map(|e| e.id)
+            .with_context(|| {
+                format!(
+                    "nenhuma requisição auditada com corpo guardado; ligue [proxy] audit = true em {}, \
+                     ou rode `mandrake compare`",
+                    dirs.profile().display()
+                )
+            })
+    }
+
     pub fn load(dirs: &Dirs, id: &str) -> Result<Self> {
         if id.is_empty() || id.contains(['/', '\\']) || id.contains("..") {
             bail!("id inválido: {id:?}");
         }
         let read = |suffix: &str| {
             let path = dirs.audit().join(format!("{id}.{suffix}.json"));
-            std::fs::read(&path)
-                .with_context(|| format!("corpo de auditoria não encontrado: {}", path.display()))
+            std::fs::read(&path).map_err(|e| match e.kind() {
+                std::io::ErrorKind::NotFound => anyhow::anyhow!(
+                    "o corpo de {id} não está mais em {}: a auditoria apaga os corpos mais velhos que \
+                     audit_keep_days. `mandrake audit` lista os que existem",
+                    dirs.audit().display()
+                ),
+                _ => anyhow::anyhow!("não deu para ler {}: {e}", path.display()),
+            })
         };
         let (before, after) = (read("before")?, read("after")?);
         let event = mandrake_meter::read(&dirs.events())?

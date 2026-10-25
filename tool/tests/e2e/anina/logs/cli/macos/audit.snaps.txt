@@ -1,0 +1,28 @@
+
+### 01-list
+
+~ $ mandrake audit
+id                        quando            lado  status   bytes antes → depois  economia
+1792913003541-feb6-0002   2026-10-25 07:23  com     200            4327 → 3904  69 tokens
+1792913003533-feb6-0001   2026-10-25 07:23  com     200            5665 → 5437  19 tokens
+1792913003521-feb6-0000   2026-10-25 07:23  com     200            1921 → 1732  10 tokens
+
+`mandrake hex` abre a mais recente; `mandrake hex <id>`, uma delas.
+~ $
+### 02-last
+
+id                        quando            lado  status   bytes antes → depois  economia
+1792913003541-feb6-0002   2026-10-25 07:23  com     200            4327 → 3904  69 tokens
+
+`mandrake hex` abre a mais recente; `mandrake hex <id>`, uma delas.
+~ $
+### 03-bodies-gone
+
+3 requisição(ões) com o corpo já apagado (audit_keep_days) ficaram fora da lista.
+Error: o corpo de 1792913003521-feb6-0000 não está mais em $TMPDIR//mandrake-cli.lDJuH0/mh/state/aud
+it: a auditoria apaga os corpos mais velhos que audit_keep_days. `mandrake audit` lista os que exist
+em
+Error: nenhuma requisição auditada com corpo guardado; ligue [proxy] audit = true em $TMPDIR//mandra
+ke-cli.lDJuH0/mh/config/mandrake.toml, ou rode `mandrake compare`
+
+~ $

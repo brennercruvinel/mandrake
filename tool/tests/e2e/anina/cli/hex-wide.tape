@@ -8,8 +8,8 @@ Set Env CLI_SEED=traffic
 Spawn bash --rcfile "$CLI_ENV" -i
 Wait '/~ \$/'
 
-Caption "mandrake hex <id> at 160x40"
-Type "mandrake hex $(mandrake audit | head -1 | cut -f1)"
+Caption "mandrake hex at 160x40 · the newest request"
+Type "mandrake hex"
 Key Enter
 Wait "q voltar"
 Sleep 2

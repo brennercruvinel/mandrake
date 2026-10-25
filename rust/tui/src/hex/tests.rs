@@ -187,8 +187,44 @@ fn load_reads_audit_bodies_and_the_event() {
     assert_eq!(v.event.as_ref().unwrap().tokens_after, Some(80));
     assert_eq!(v.diff.hunks.len(), 1);
 
-    let err = HexView::load(&d, "nope").err().unwrap().to_string();
-    assert!(err.contains("nope.before.json"), "{err}");
+    // A missing body is one line that says why and what to run, with no os error chain.
+    let err = HexView::load(&d, "nope").err().unwrap();
+    assert_eq!(err.chain().count(), 1, "{err:#}");
+    let err = err.to_string();
+    assert!(err.starts_with("o corpo de nope não está mais em"), "{err}");
+    assert!(
+        err.ends_with("`mandrake audit` lista os que existem"),
+        "{err}"
+    );
+    assert!(!err.contains("os error"), "{err}");
+
+    // Without an id, the newest audited request whose bodies are still there.
+    let audited = |id: &str| mandrake_meter::Event {
+        audited: true,
+        ..ev(id, Mode::Trim, 90, 80)
+    };
+    assert!(
+        HexView::latest(&d).is_err(),
+        "r7's event says it was not audited"
+    );
+    mandrake_meter::append(&d.events(), &audited("r7")).unwrap();
+    mandrake_meter::append(&d.events(), &audited("gone")).unwrap();
+    assert_eq!(HexView::latest(&d).unwrap(), "r7", "the newest has no body");
+    std::fs::write(d.audit().join("r8.before.json"), &before).unwrap();
+    std::fs::write(d.audit().join("r8.after.json"), &after).unwrap();
+    mandrake_meter::append(&d.events(), &audited("r8")).unwrap();
+    assert_eq!(HexView::latest(&d).unwrap(), "r8");
     assert!(HexView::load(&d, "../r7").is_err());
     assert!(HexView::load(&d, "").is_err());
+}
+
+#[test]
+fn the_footer_keeps_the_position_at_80x24() {
+    let mut v = view();
+    let screen = text(&draw(80, 24, |f| render(f, &mut v)));
+    assert!(screen.contains("trecho 0/1"), "{screen}");
+    assert!(
+        screen.contains("guia antes/depois"),
+        "the keys wrap, not cut:\n{screen}"
+    );
 }

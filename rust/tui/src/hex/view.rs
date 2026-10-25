@@ -29,11 +29,27 @@ impl Density {
 const RAIL: u16 = 3;
 
 pub fn render(f: &mut Frame, v: &mut HexView) {
+    // Where you are comes first, then the keys; on a narrow terminal the line takes two rows.
+    let at = v.row * ROW;
+    let place = format!("trecho {}/{}", v.current_hunk(), v.diff.hunks.len());
+    let offset = format!("offset {at:#x}");
+    let help_line = theme::help(&[
+        (place.as_str(), offset.as_str()),
+        ("q", "voltar"),
+        ("↑↓ PgUp PgDn", "rolar"),
+        ("n p", "próximo/anterior trecho"),
+        ("Tab", "guia antes/depois"),
+    ]);
+    let help_rows = if help_line.width() > usize::from(f.area().width) {
+        2
+    } else {
+        1
+    };
     let [title, head, main, help] = Layout::vertical([
         Constraint::Length(1),
         Constraint::Length(5),
         Constraint::Min(6),
-        Constraint::Length(1),
+        Constraint::Length(help_rows),
     ])
     .areas(f.area());
     f.render_widget(theme::title("hex", &format!("requisição {}", v.id)), title);
@@ -80,18 +96,8 @@ pub fn render(f: &mut Frame, v: &mut HexView) {
     v.slider = Rect { width: 1, ..bar };
     slider(f, bar, v);
 
-    let at = v.row * ROW;
     f.render_widget(
-        Paragraph::new(theme::help(&[
-            ("q", "voltar"),
-            ("↑↓ PgUp PgDn", "rolar"),
-            ("n p", "próximo/anterior trecho"),
-            ("Tab", "guia antes/depois"),
-            (
-                &format!("trecho {}/{}", v.current_hunk(), v.diff.hunks.len()),
-                &format!("offset {at:#x}"),
-            ),
-        ])),
+        Paragraph::new(help_line).wrap(ratatui::widgets::Wrap { trim: true }),
         help,
     );
 }

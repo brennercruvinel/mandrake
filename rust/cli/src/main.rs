@@ -76,8 +76,8 @@ enum Cmd {
     },
     /// Uma requisição antes e depois do corte, lado a lado em hex (precisa de auditoria ligada)
     Hex {
-        /// O id, de `mandrake audit`
-        id: String,
+        /// O id, de `mandrake audit`; sem ele, a requisição mais recente
+        id: Option<String>,
         #[arg(long)]
         snapshot: Option<String>,
         #[arg(long, default_value_t = 0)]
@@ -204,8 +204,8 @@ fn main() -> anyhow::Result<()> {
             id,
             snapshot: Some(s),
             hunk,
-        } => print(mandrake_tui::hex_snapshot(&dirs, &id, &s, hunk)),
-        Cmd::Hex { id, .. } => mandrake_tui::hex(&dirs, &id),
+        } => print(mandrake_tui::hex_snapshot(&dirs, id.as_deref(), &s, hunk)),
+        Cmd::Hex { id, .. } => mandrake_tui::hex(&dirs, id.as_deref()),
         Cmd::Bench {
             fixtures,
             out,
