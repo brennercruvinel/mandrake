@@ -14,8 +14,8 @@ exec $SHELL            # loads Mandrake in this terminal
 mandrake doctor        # checks everything
 ```
 
-Needs Rust ([rustup.rs](https://rustup.rs)) and Claude Code. If `mandrake` is not found, add
-`~/.local/bin` to your `PATH`. Then use `claude` as always.
+Needs Rust ([rustup.rs](https://rustup.rs)) and Claude Code. The shell block setup writes also puts
+`~/.local/bin` on `PATH`, so `mandrake` is found once `exec $SHELL` loads it. Then use `claude` as always.
 
 ### `mandrake setup`
 

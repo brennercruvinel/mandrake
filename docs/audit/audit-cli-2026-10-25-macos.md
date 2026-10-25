@@ -1,7 +1,7 @@
 # Auditoria visual da CLI e da TUI, macOS, 2026-10-25
 
 Escrita pela Quimera, a pedido do Brenner na #3 (01:56 e 02:08), em par com a auditoria do Linux
-(`docs/audit-cli-2026-10-25-linux.md`). Cada bloco separa o que foi visto do que é sugestão.
+(`docs/audit/audit-cli-2026-10-25-linux.md`). Cada bloco separa o que foi visto do que é sugestão.
 
 Ambiente: macOS 27.0.1 arm64, `/bin/bash` 3.2.57, zsh como shell do usuário, rustc 1.99.0, `main`
 em `7b82f23`, binário de debug. Terminal de 100x30 e 120x30, e 80x24 onde a tela muda. Tudo numa
