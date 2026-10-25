@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# The whole quality gate in one script. CI runs this same file, so green here is green there.
+# The whole quality gate in one script, run locally before pushing. There is no CI for now: this
+# script is the gate, as in urna's tool/tasks/fullcheck.sh.
 #
 #   tool/fullcheck.sh                every check
-#   tool/fullcheck.sh rust shell     only those groups: rust test ts go shell python files news
-#                                    workflows e2e
+#   tool/fullcheck.sh rust shell     only those groups: rust test ts go shell python files news e2e
 #
 # Each check prints "ok" or "FAIL <check>: <why>" with the tail of its output; the run ends with
 # one line per failure and exits 1 when there is any. A missing tool is a failure that says how to
@@ -11,7 +11,7 @@
 #
 # Env:
 #   FULLCHECK_BASE         the ref the changelog check compares with (default origin/main)
-#   FULLCHECK_SKIP_NEWS=1  no changelog fragment needed (CI sets it from the skip-news label)
+#   FULLCHECK_SKIP_NEWS=1  no changelog fragment needed (a change with the skip-news label)
 #   MANDRAKE_PLUGIN_TYPES  a folder with Claude Code's plugin types (claude-code, claude-code-tools,
 #                          claude-code-mcp), for a plugin that has none in .claude-plugin/types
 set -uo pipefail
@@ -195,16 +195,7 @@ e2e_checks() {
   done
 }
 
-workflow_checks() {
-  if need actionlint "actionlint" "go install github.com/rhysd/actionlint/cmd/actionlint@latest"; then
-    check "actionlint" actionlint
-  fi
-  if need zizmor "zizmor" "uv tool install zizmor"; then
-    check "zizmor" zizmor --offline .github/workflows
-  fi
-}
-
-all_groups=(rust ts go shell python files news workflows e2e)
+all_groups=(rust ts go shell python files news e2e)
 groups=("$@")
 [ "${#groups[@]}" -gt 0 ] || groups=("${all_groups[@]}")
 for g in "${groups[@]}"; do
@@ -218,9 +209,8 @@ for g in "${groups[@]}"; do
     python) py_checks ;;
     files) file_checks ;;
     news) news_check ;;
-    workflows) workflow_checks ;;
     e2e) e2e_checks ;;
-    *) fail "fullcheck" "unknown group $g (rust test ts go shell python files news workflows e2e)" ;;
+    *) fail "fullcheck" "unknown group $g (rust test ts go shell python files news e2e)" ;;
   esac
 done
 
