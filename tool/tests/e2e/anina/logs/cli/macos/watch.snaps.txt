@@ -1,0 +1,157 @@
+
+### 01-open
+
+ Mandrake  watch requisições ao vivo, relidas a cada 0,5 s
+┌ Sem Mandrake · pass ─────────────────┐┏ Com Mandrake · trim ━━━━━━━━━━━━━━━━━┓
+│ requisições 0                        │┃ requisições 3                        ┃
+│ tokens      sem contagem             │┃ tokens      2.840 → 2.742  (3,5%)    ┃
+│ bytes       0 B → 0 B                │┃ bytes       11,6 KB → 10,8 KB        ┃
+│ usage       entrada 0 · saída 0      │┃ usage       entrada 2.768 · saída 36 ┃
+│ cache       lido 0 · criado 0        │┃ cache       lido 0 · criado 0        ┃
+│vazio: este lado mostra o Claude Code │┃hora UTC status tokens             aud┃
+│sem o Mandrake e só enche com         │┃07:31:07 200    1.036→967           ◆ ┃
+│`mandrake proxy run --pass` (como, em │┃07:31:07 200    1.370→1.351         ◆ ┃
+│docs/guide/measure.md)                │┃07:31:07 200    434→424             ◆ ┃
+│                                      │┃                                      ┃
+│lendo                                 │┃                                      ┃
+│/var/folders/mj/0tkdbz3x7qx4f8r3vpczfp│┃                                      ┃
+│hr0000gn/T//mandrake-cli.QC4Zyt/mh/sta│┃                                      ┃
+│te/events.jsonl                       │┃                                      ┃
+└──────────────────────────────────────┘┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+┌ Economia ────────────────────────────────────────────────────────────────────┐
+│ o proxy economizou 98 tokens (3,5%)                                          │
+│ ██───────────────────────────────────────────────────────────────────────────│
+│ a diferença entre os lados aparece quando os dois                            │
+│ tiverem requisições contadas                                                 │
+└──────────────────────────────────────────────────────────────────────────────┘
+ q sair · Tab ←→ lado · ↑↓ requisição · Enter hex (auditada ◆)
+### 02-live
+
+ Mandrake  watch requisições ao vivo, relidas a cada 0,5 s
+┌ Sem Mandrake · pass ─────────────────┐┏ Com Mandrake · trim ━━━━━━━━━━━━━━━━━┓
+│ requisições 0                        │┃ requisições 6                        ┃
+│ tokens      sem contagem             │┃ tokens      5.680 → 5.484  (3,5%)    ┃
+│ bytes       0 B → 0 B                │┃ bytes       23,3 KB → 21,6 KB        ┃
+│ usage       entrada 0 · saída 0      │┃ usage       entrada 5.536 · saída 72 ┃
+│ cache       lido 0 · criado 0        │┃ cache       lido 0 · criado 0        ┃
+│vazio: este lado mostra o Claude Code │┃hora UTC status tokens             aud┃
+│sem o Mandrake e só enche com         │┃07:31:15 200    1.036→967           ◆ ┃
+│`mandrake proxy run --pass` (como, em │┃07:31:14 200    434→424             ◆ ┃
+│docs/guide/measure.md)                │┃07:31:13 200    1.370→1.351         ◆ ┃
+│                                      │┃07:31:07 200    1.036→967           ◆ ┃
+│lendo                                 │┃07:31:07 200    1.370→1.351         ◆ ┃
+│/var/folders/mj/0tkdbz3x7qx4f8r3vpczfp│┃07:31:07 200    434→424             ◆ ┃
+│hr0000gn/T//mandrake-cli.QC4Zyt/mh/sta│┃                                      ┃
+│te/events.jsonl                       │┃                                      ┃
+└──────────────────────────────────────┘┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+┌ Economia ────────────────────────────────────────────────────────────────────┐
+│ o proxy economizou 196 tokens (3,5%)                                         │
+│ ██───────────────────────────────────────────────────────────────────────────│
+│ a diferença entre os lados aparece quando os dois                            │
+│ tiverem requisições contadas                                                 │
+└──────────────────────────────────────────────────────────────────────────────┘
+ q sair · Tab ←→ lado · ↑↓ requisição · Enter hex (auditada ◆)
+### 02b-enter-hex
+
+ Mandrake  hex requisição 1792913475985-11345-0005
+┌──────────────────────────────────────────────────────────────────────────────┐
+│antes 4,2 KB (4.327 B)  depois 3,8 KB (3.904 B)  −423 B +0 B  em 16 trechos   │
+│tokens 1.036 → 967 (-69, 6,7%)  modelo sonnet-4-5  status 200  modo trim      │
+│cortes 7 system-reminder(s) · campos metadata                                 │
+└──────────────────────────────────────────────────────────────────────────────┘
+┏ antes · before.json  guia ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃000000 7b226d6f 64656c22 3a22636c 61756465 {"model":"claude                ┃ █◆
+┃000010 2d736f6e 6e65742d 342d3522 2c226d61 -sonnet-4-5","ma                ┃ ┃
+┃000020 785f746f 6b656e73 223a3332 3030302c x_tokens":32000,                ┃ ┃
+┃000030 22737472 65616d22 3a747275 652c226d "stream":true,"m                ┃ ┃
+┃000040 65746164 61746122 3a7b2275 7365725f etadata":{"user_                ┃ ┃◆
+┃000050 6964223a 22757365 725f3030 30303030 id":"user_000000                ┃ ┃
+┃000060 30303030 30303030 30303030 30303030 0000000000000000                ┃ ┃◆
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛ ┃◆
+┌ depois · after.json ──────────────────────────────────────────────────────┐ ┃◆
+│000000 7b226d6f 64656c22 3a22636c 61756465 {"model":"claude                │ ┃◆
+│000010 2d736f6e 6e65742d 342d3522 2c226d61 -sonnet-4-5","ma                │ ┃◆
+│000020 785f746f 6b656e73 223a3332 3030302c x_tokens":32000,                │ ┃◆
+│000030 22737472 65616d22 3a747275 652c2273 "stream":true,"s                │ ┃
+│000040 79737465 6d223a5b 7b227479 7065223a ystem":[{"type":                │ ┃◆
+│000050 22746578 74222c22 74657874 223a2259 "text","text":"Y                │ ┃◆
+└───────────────────────────────────────────────────────────────────────────┘
+ q voltar · ↑↓ PgUp PgDn rolar · n p próximo/anterior trecho · Tab guia antes/de
+### 03-tab
+
+ Mandrake  watch requisições ao vivo, relidas a cada 0,5 s
+┏ Sem Mandrake · pass ━━━━━━━━━━━━━━━━━┓┌ Com Mandrake · trim ─────────────────┐
+┃ requisições 0                        ┃│ requisições 6                        │
+┃ tokens      sem contagem             ┃│ tokens      5.680 → 5.484  (3,5%)    │
+┃ bytes       0 B → 0 B                ┃│ bytes       23,3 KB → 21,6 KB        │
+┃ usage       entrada 0 · saída 0      ┃│ usage       entrada 5.536 · saída 72 │
+┃ cache       lido 0 · criado 0        ┃│ cache       lido 0 · criado 0        │
+┃vazio: este lado mostra o Claude Code ┃│hora UTC status tokens             aud│
+┃sem o Mandrake e só enche com         ┃│07:31:15 200    1.036→967           ◆ │
+┃`mandrake proxy run --pass` (como, em ┃│07:31:14 200    434→424             ◆ │
+┃docs/guide/measure.md)                ┃│07:31:13 200    1.370→1.351         ◆ │
+┃                                      ┃│07:31:07 200    1.036→967           ◆ │
+┃lendo                                 ┃│07:31:07 200    1.370→1.351         ◆ │
+┃/var/folders/mj/0tkdbz3x7qx4f8r3vpczfp┃│07:31:07 200    434→424             ◆ │
+┃hr0000gn/T//mandrake-cli.QC4Zyt/mh/sta┃│                                      │
+┃te/events.jsonl                       ┃│                                      │
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛└──────────────────────────────────────┘
+┌ Economia ────────────────────────────────────────────────────────────────────┐
+│ o proxy economizou 196 tokens (3,5%)                                         │
+│ ██───────────────────────────────────────────────────────────────────────────│
+│ a diferença entre os lados aparece quando os dois                            │
+│ tiverem requisições contadas                                                 │
+└──────────────────────────────────────────────────────────────────────────────┘
+ q sair · Tab ←→ lado · ↑↓ requisição · Enter hex (auditada ◆)
+### 04-row
+
+ Mandrake  watch requisições ao vivo, relidas a cada 0,5 s
+┌ Sem Mandrake · pass ─────────────────┐┏ Com Mandrake · trim ━━━━━━━━━━━━━━━━━┓
+│ requisições 0                        │┃ requisições 6                        ┃
+│ tokens      sem contagem             │┃ tokens      5.680 → 5.484  (3,5%)    ┃
+│ bytes       0 B → 0 B                │┃ bytes       23,3 KB → 21,6 KB        ┃
+│ usage       entrada 0 · saída 0      │┃ usage       entrada 5.536 · saída 72 ┃
+│ cache       lido 0 · criado 0        │┃ cache       lido 0 · criado 0        ┃
+│vazio: este lado mostra o Claude Code │┃hora UTC status tokens             aud┃
+│sem o Mandrake e só enche com         │┃07:31:15 200    1.036→967           ◆ ┃
+│`mandrake proxy run --pass` (como, em │┃07:31:14 200    434→424             ◆ ┃
+│docs/guide/measure.md)                │┃07:31:13 200    1.370→1.351         ◆ ┃
+│                                      │┃07:31:07 200    1.036→967           ◆ ┃
+│lendo                                 │┃07:31:07 200    1.370→1.351         ◆ ┃
+│/var/folders/mj/0tkdbz3x7qx4f8r3vpczfp│┃07:31:07 200    434→424             ◆ ┃
+│hr0000gn/T//mandrake-cli.QC4Zyt/mh/sta│┃                                      ┃
+│te/events.jsonl                       │┃                                      ┃
+└──────────────────────────────────────┘┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+┌ Economia ────────────────────────────────────────────────────────────────────┐
+│ o proxy economizou 196 tokens (3,5%)                                         │
+│ ██───────────────────────────────────────────────────────────────────────────│
+│ a diferença entre os lados aparece quando os dois                            │
+│ tiverem requisições contadas                                                 │
+└──────────────────────────────────────────────────────────────────────────────┘
+ q sair · Tab ←→ lado · ↑↓ requisição · Enter hex (auditada ◆)
+### 05-hex
+
+ Mandrake  hex requisição 1792913473941-11345-0003
+┌──────────────────────────────────────────────────────────────────────────────┐
+│antes 5,5 KB (5.665 B)  depois 5,3 KB (5.437 B)  −228 B +0 B  em 6 trechos    │
+│tokens 1.370 → 1.351 (-19, 1,4%)  modelo opus-4-1  status 200  modo trim      │
+│cortes 2 system-reminder(s) · campos metadata                                 │
+└──────────────────────────────────────────────────────────────────────────────┘
+┏ antes · before.json  guia ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃000000 7b226d6f 64656c22 3a22636c 61756465 {"model":"claude                ┃ █◆
+┃000010 2d6f7075 732d342d 31222c22 6d61785f -opus-4-1","max_                ┃ ┃
+┃000020 746f6b65 6e73223a 33323030 302c2273 tokens":32000,"s                ┃ ┃
+┃000030 74726561 6d223a74 7275652c 226d6574 tream":true,"met                ┃ ┃
+┃000040 61646174 61223a7b 22757365 725f6964 adata":{"user_id                ┃ ┃
+┃000050 223a2275 7365725f 30303030 30303030 ":"user_00000000                ┃ ┃
+┃000060 30303030 30303030 30303030 30303030 0000000000000000                ┃ ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛ ┃
+┌ depois · after.json ──────────────────────────────────────────────────────┐ ┃
+│000000 7b226d6f 64656c22 3a22636c 61756465 {"model":"claude                │ ┃◆
+│000010 2d6f7075 732d342d 31222c22 6d61785f -opus-4-1","max_                │ ┃◆
+│000020 746f6b65 6e73223a 33323030 302c2273 tokens":32000,"s                │ ┃
+│000030 74726561 6d223a74 7275652c 22746869 tream":true,"thi                │ ┃◆
+│000040 6e6b696e 67223a7b 22747970 65223a22 nking":{"type":"                │ ┃◆
+│000050 656e6162 6c656422 2c226275 64676574 enabled","budget                │ ┃◆
+└───────────────────────────────────────────────────────────────────────────┘
+ q voltar · ↑↓ PgUp PgDn rolar · n p próximo/anterior trecho · Tab guia antes/de

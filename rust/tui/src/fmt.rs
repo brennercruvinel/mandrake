@@ -70,6 +70,14 @@ pub fn model(name: Option<&str>) -> String {
     }
 }
 
+/// A path for the screen: under the home it starts with `~`, so it fits a narrow column.
+pub fn home_path(path: &std::path::Path, home: &std::path::Path) -> String {
+    match path.strip_prefix(home) {
+        Ok(rest) => format!("~/{}", rest.display()),
+        Err(_) => path.display().to_string(),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -20,7 +20,7 @@ pub const TICK: Duration = Duration::from_millis(500);
 
 pub fn run(dirs: &Dirs, embed: bool) -> Result<()> {
     let mut tail = Tail::new(dirs.events());
-    let mut state = WatchState::new(tail.path().display().to_string());
+    let mut state = WatchState::new(crate::fmt::home_path(tail.path(), &dirs.home));
     let polled = tail.poll()?;
     state.ingest(polled.reset, polled.events);
     let opts = if embed { Opts::EMBED } else { Opts::FULL };

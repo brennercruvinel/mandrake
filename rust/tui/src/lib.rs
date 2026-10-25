@@ -86,7 +86,7 @@ pub fn setup_wizard(dirs: &Dirs, catalog: &Catalog, current: &Profile) -> Result
 pub fn watch_snapshot(dirs: &Dirs, size: &str) -> Result<String> {
     let (w, h) = snap::size(size)?;
     let mut tail = watch::Tail::new(dirs.events());
-    let mut state = watch::WatchState::new(tail.path().display().to_string());
+    let mut state = watch::WatchState::new(crate::fmt::home_path(tail.path(), &dirs.home));
     let polled = tail.poll()?;
     state.ingest(polled.reset, polled.events);
     Ok(snap::text(&snap::draw(w, h, |f| watch::render(f, &state))))

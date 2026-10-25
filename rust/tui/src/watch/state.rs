@@ -81,6 +81,8 @@ pub struct WatchState {
     pub pass: Side,
     pub trim: Side,
     pub focus: Focus,
+    /// Set once the person picks a side; until then focus follows the side that has requests.
+    pub chosen: bool,
     /// Shown in the footer until the next key.
     pub notice: Option<String>,
     /// Where the events come from, for the empty state.
@@ -107,6 +109,17 @@ impl WatchState {
         let (pass, trim): (Vec<_>, Vec<_>) = events.into_iter().partition(|e| e.mode == Mode::Pass);
         self.pass.push(pass);
         self.trim.push(trim);
+        // ↓ and Enter act on the focused side: start where the requests are (the side without
+        // Mandrake is empty unless a pass proxy runs), until the person picks one.
+        if !self.chosen && self.side(self.focus).events.is_empty() {
+            let other = match self.focus {
+                Focus::Pass => Focus::Trim,
+                Focus::Trim => Focus::Pass,
+            };
+            if !self.side(other).events.is_empty() {
+                self.focus = other;
+            }
+        }
     }
 
     pub fn side(&self, focus: Focus) -> &Side {
@@ -144,6 +157,7 @@ impl WatchState {
                     MouseEventKind::ScrollDown => self.focused_mut().step(1),
                     MouseEventKind::ScrollUp => self.focused_mut().step(-1),
                     MouseEventKind::Down(_) => {
+                        self.chosen = true;
                         self.focus = if m.column < width / 2 {
                             Focus::Pass
                         } else {
@@ -166,13 +180,14 @@ impl WatchState {
         match code {
             KeyCode::Char('q') | KeyCode::Esc => return Action::Quit,
             KeyCode::Tab | KeyCode::BackTab => {
+                self.chosen = true;
                 self.focus = match self.focus {
                     Focus::Pass => Focus::Trim,
                     Focus::Trim => Focus::Pass,
                 }
             }
-            KeyCode::Left => self.focus = Focus::Pass,
-            KeyCode::Right => self.focus = Focus::Trim,
+            KeyCode::Left => (self.chosen, self.focus) = (true, Focus::Pass),
+            KeyCode::Right => (self.chosen, self.focus) = (true, Focus::Trim),
             KeyCode::Up | KeyCode::Char('k') => self.focused_mut().step(-1),
             KeyCode::Down | KeyCode::Char('j') => self.focused_mut().step(1),
             KeyCode::PageUp => self.focused_mut().step(-PAGE),

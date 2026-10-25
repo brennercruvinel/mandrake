@@ -18,6 +18,13 @@ Sleep 4
 Poster
 Snap 02-live
 
+Caption "Enter · the newest request in hex: focus starts on the side that has requests"
+Key Enter
+Sleep 2
+Snap 02b-enter-hex
+Key q
+Sleep 0.8
+
 Caption "Tab · the other side; up/down · a request"
 Key Tab
 Sleep 1
