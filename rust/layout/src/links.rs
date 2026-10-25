@@ -225,6 +225,19 @@ pub fn apply(dirs: &Dirs, catalog: &Catalog, steps: &[Step]) -> Result<Option<Pa
     if todo.is_empty() {
         return Ok(None);
     }
+    // A copy with no source would move the entry to the backup and then stop: refuse it first.
+    if let Some(s) = todo.iter().find(|s| {
+        s.action == Action::Copy
+            && s.target
+                .as_deref()
+                .is_none_or(|t| std::fs::metadata(t).is_err())
+    }) {
+        bail!(
+            "links.{}: a cópia vem de {}, que não existe; nada foi mudado",
+            s.path,
+            s.target.as_deref().unwrap_or(Path::new("-")).display()
+        );
+    }
     let (stamp, jpath) = reserve(dirs)?;
     let mut journal = Journal {
         stamp,
