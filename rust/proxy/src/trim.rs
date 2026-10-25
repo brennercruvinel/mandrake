@@ -17,6 +17,10 @@ pub struct Rules {
 const TRIM_TOML: &str = include_str!("../../../cfgs/proxy/trim.toml");
 
 /// The built-in rules, parsed once.
+#[allow(
+    clippy::expect_used,
+    reason = "the rules are compiled in and a test parses them, so a bad file never ships"
+)]
 pub fn rules() -> &'static Rules {
     static RULES: OnceLock<Rules> = OnceLock::new();
     RULES.get_or_init(|| toml::from_str(TRIM_TOML).expect("cfgs/proxy/trim.toml is valid"))
@@ -78,8 +82,11 @@ pub fn trim(body: &[u8], rules: &Rules, strip: &[String]) -> (Vec<u8>, Cuts) {
     if cuts == Cuts::default() {
         return (body.to_vec(), cuts);
     }
-    let out = serde_json::to_vec(&Value::Object(root)).expect("a JSON value always serializes");
-    (out, cuts)
+    // A JSON value always serializes; if that ever failed, the body goes through untouched.
+    match serde_json::to_vec(&Value::Object(root)) {
+        Ok(out) => (out, cuts),
+        Err(_) => (body.to_vec(), Cuts::default()),
+    }
 }
 
 fn drop_identities(root: &mut Map<String, Value>, rules: &Rules) -> u32 {

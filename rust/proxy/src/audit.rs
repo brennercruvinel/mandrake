@@ -10,6 +10,10 @@ use std::time::{Duration, SystemTime};
 
 /// Values that look like a credential. The private key pattern runs to the matching `END` line, or to
 /// the end of the JSON string when there is none, so no key body is left behind.
+#[allow(
+    clippy::expect_used,
+    reason = "a fixed pattern that the tests compile, so it cannot fail at run time"
+)]
 fn secrets() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| {

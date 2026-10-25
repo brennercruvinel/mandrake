@@ -42,12 +42,19 @@ pub fn read(path: &Path) -> Result<Value> {
 }
 
 /// Sets the keys in `env`; returns the ones that changed, as (key, old, new).
-pub fn merge(doc: &mut Value, keys: &[(&str, String)]) -> Vec<(String, Option<String>, String)> {
-    let root = doc.as_object_mut().expect("settings.json is an object");
+pub fn merge(
+    doc: &mut Value,
+    keys: &[(&str, String)],
+) -> Result<Vec<(String, Option<String>, String)>> {
+    let Some(root) = doc.as_object_mut() else {
+        anyhow::bail!("settings.json is not a JSON object");
+    };
     let env = root
         .entry("env")
         .or_insert_with(|| Value::Object(Map::new()));
-    let env = env.as_object_mut().expect("settings.env is an object");
+    let Some(env) = env.as_object_mut() else {
+        anyhow::bail!("settings.json: `env` is not an object");
+    };
     let mut changed = vec![];
     for (k, v) in keys {
         let old = env.get(*k).and_then(Value::as_str).map(str::to_owned);
@@ -56,7 +63,7 @@ pub fn merge(doc: &mut Value, keys: &[(&str, String)]) -> Vec<(String, Option<St
             changed.push(((*k).to_owned(), old, v.clone()));
         }
     }
-    changed
+    Ok(changed)
 }
 
 /// Reads, merges and writes back when something changed; the old text goes to `backup_dir`.
@@ -66,10 +73,8 @@ pub fn apply(
     backup_dir: &Path,
 ) -> Result<Vec<(String, Option<String>, String)>> {
     let mut doc = read(path)?;
-    if !doc.is_object() {
-        anyhow::bail!("{} is not a JSON object", path.display());
-    }
-    let mut changed = merge(&mut doc, keys);
+    let mut changed =
+        merge(&mut doc, keys).with_context(|| format!("merging into {}", path.display()))?;
     changed.extend(drop_local_base_url(&mut doc));
     if changed.is_empty() {
         return Ok(changed);
@@ -108,6 +113,15 @@ pub fn plugin_enabled(doc: &Value, name: &str) -> Option<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_settings_file_of_the_wrong_shape_is_an_error_not_a_panic() {
+        let keys = [("K", "v".to_string())];
+        assert!(merge(&mut serde_json::json!([1, 2]), &keys).is_err());
+        assert!(merge(&mut serde_json::json!({"env": "x"}), &keys).is_err());
+        let mut ok = serde_json::json!({"env": {}});
+        assert_eq!(merge(&mut ok, &keys).unwrap().len(), 1);
+    }
 
     #[test]
     fn merges_keeps_order_and_follows_the_link() {

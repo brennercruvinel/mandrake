@@ -36,3 +36,9 @@ drop the `MANDRAKE_*` variables a shell with Mandrake installed exports, except 
 editor and a scratch session leave (`.vscode/`, `.idea/`, `.zed/`, `.claude/`, `tmp/`, `.DS_Store`,
 a `.log`), then ends with `verdict: CLEAN` when `git status --short` shows nothing, or `verdict:
 DIRTY` with the paths. It removes only what it created. `hygiene.tape` records it with anina.
+
+## Quality gate (#15)
+
+`gate.sh` stages a 640-line script and a `CLAUDE.md`, runs `tool/fullcheck.sh files` (it fails on
+both), takes them back out and runs the whole gate, ending with `verdict: GATE WORKS` when the
+first run failed and the second passed. `gate.tape` records it with anina.

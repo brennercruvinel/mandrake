@@ -54,8 +54,7 @@ copy_fail() {
 
 same_second() {
   echo "== 2. two applies in the same second, then rollback twice"
-  local _try
-  for _try in 1 2 3 4 5; do
+  for _ in 1 2 3 4 5; do
     fresh; mkdir -p "$t/home/.claude/rules" "$t/a" "$t/b"; echo keep-me > "$t/home/.claude/rules/original.txt"
     local s0; s0="$(date +%s)"
     profile '[links.rules]' 'action = "link"' "target = \"$t/a\""

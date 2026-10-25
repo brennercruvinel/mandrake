@@ -121,6 +121,7 @@ const COMPOSED = new Set([
 ])
 
 // Fixed English wording Claude Code wraps around the kept attachments.
+/** @type {Record<string, Array<[string | RegExp, string]>>} */
 const REWRITE = {
   instructions: [
     ['Codebase and user instructions are shown below. Be sure to adhere to these instructions. IMPORTANT: These instructions OVERRIDE any default behavior and you MUST follow them exactly as written.', ''],
@@ -152,6 +153,7 @@ const REWRITE = {
   task_status: [[/^Task "(.*?)" \((.*?)\) was stopped by the user\./, 'Tarefa "$1" ($2) parada.']],
 }
 
+/** @param {string} type @param {unknown} text */
 const rewrite = (type, text) =>
   (REWRITE[type] ?? []).reduce((t, [from, to]) => t.replace(from, to), String(text)).replace(/^\s+/, '')
 
@@ -166,6 +168,7 @@ const TOOL_DESCRIPTIONS = false
 // empty system prompt. A soul session already carries the core in its --system-prompt-file.
 import { CORE } from './core.js'
 
+/** @param {import('claude-code').On} on */
 export function register(on) {
   on('prompt.attachment', async ($, e, next) => {
     if (ATTACHMENTS.has(e.type)) return { text: null }
@@ -173,11 +176,11 @@ export function register(on) {
     return r?.text == null || !REWRITE[e.type] ? r : { ...r, text: rewrite(e.type, r.text) }
   })
   on('prompt.section', async ($, e, next) =>
-    SECTIONS.has(String(e.name).split(':')[0]) ? { text: null } : next(e))
+    SECTIONS.has(String(e.name).split(':')[0] ?? '') ? { text: null } : next(e))
   on('prompt.compose', async ($, e, next) => {
     const r = await next(e)
     const kept = r.sections.filter(s => !COMPOSED.has(s.id))
-    if (!CORE || globalThis.process?.env?.MANDRAKE_SOUL) return { ...r, sections: kept }
+    if (!CORE || /** @type {{ process?: { env?: Record<string, string | undefined> } }} */ (globalThis).process?.env?.MANDRAKE_SOUL) return { ...r, sections: kept }
     return { ...r, sections: [...kept, { id: 'prompt-trim:core', text: CORE, scope: 'session' }] }
   })
   on('agent.offer', async ($, e, next) =>

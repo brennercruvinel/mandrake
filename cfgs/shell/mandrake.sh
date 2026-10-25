@@ -2,8 +2,10 @@
 # `claude [flags] invoke <soul>` opens a soul: the core prompt and its own as the whole system prompt, its settings,
 # its own gh login when ~/.config/gh-<soul> exists, and /invoke first when that skill is installed.
 # Any other call is plain Claude Code.
+# shellcheck shell=bash
 _mandrake_env="${XDG_DATA_HOME:-$HOME/.local/share}/mandrake/shell/env.sh"
 [ -n "${MANDRAKE_HOME:-}" ] && _mandrake_env="$MANDRAKE_HOME/data/shell/env.sh"
+# shellcheck source=/dev/null
 [ -f "$_mandrake_env" ] && . "$_mandrake_env"
 
 # The proxy is used per session, and only when it answers: a proxy that is down sends the session
