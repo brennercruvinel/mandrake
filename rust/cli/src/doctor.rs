@@ -149,9 +149,15 @@ pub fn checks(dirs: &Dirs) -> Result<Vec<Check>> {
         format!("souls {}", souls.display()),
         SETUP,
     ));
+    // Under MANDRAKE_HOME the service is written but never loaded, so only `proxy run` can fix it.
+    let proxy_fix = if mandrake_proxy::isolated() {
+        "mandrake proxy run (com MANDRAKE_HOME o serviço não é carregado)"
+    } else {
+        "mandrake proxy install"
+    };
     out.push(match mandrake_proxy::health(dirs, &p) {
-        Ok((ok, line)) => Check::ok(ok, line, "mandrake proxy install"),
-        Err(e) => Check::ok(false, format!("proxy: {e:#}"), "mandrake proxy install"),
+        Ok((ok, line)) => Check::ok(ok, line, proxy_fix),
+        Err(e) => Check::ok(false, format!("proxy: {e:#}"), proxy_fix),
     });
     let v = std::process::Command::new("claude")
         .arg("--version")
@@ -187,7 +193,7 @@ fn links_checks(dirs: &Dirs, p: &Profile, out: &mut Vec<Check>) -> Result<()> {
                 format!("; diferem: {}", off.join(", "))
             }
         ),
-        "mandrake link apply",
+        &links_fix(dirs, &steps),
     ));
     let dangling: Vec<_> = steps
         .iter()
@@ -205,6 +211,29 @@ fn links_checks(dirs: &Dirs, p: &Profile, out: &mut Vec<Check>) -> Result<()> {
         });
     }
     Ok(())
+}
+
+/// `link apply` moves a real folder to the backup before linking; when the target does not exist
+/// yet, the entry would come back empty (#27). Then the fix starts by filling the target.
+fn links_fix(dirs: &Dirs, steps: &[links::Step]) -> String {
+    let fill: Vec<String> = steps
+        .iter()
+        .filter(|s| s.op == links::Op::BackupLink && s.found == links::Found::Dir)
+        .filter_map(|s| {
+            let t = s.target.as_ref().filter(|t| !t.exists())?;
+            let q =
+                |p: &std::path::Path| mandrake_layout::shell::sh_quote(&p.display().to_string());
+            Some(format!("cp -R {} {}", q(&dirs.claude.join(&s.path)), q(t)))
+        })
+        .collect();
+    if fill.is_empty() {
+        "mandrake link apply".into()
+    } else {
+        format!(
+            "{} (o destino ainda não existe), depois mandrake link apply",
+            fill.join(" && ")
+        )
+    }
 }
 
 #[cfg(test)]
@@ -260,6 +289,37 @@ mod tests {
             text.contains("FAIL proxy: serviço não instalado; 127.0.0.1:1 não responde"),
             "{text}"
         );
+    }
+
+    #[test]
+    fn a_folder_linked_to_a_missing_target_is_copied_there_first() {
+        let tmp = tempfile::tempdir().unwrap();
+        let d = dirs(tmp.path());
+        std::fs::create_dir_all(d.claude.join("agents")).unwrap();
+        std::fs::write(d.claude.join("agents/reviewer.md"), "r").unwrap();
+        let target = tmp.path().join("dev/agents");
+        let mut p = Profile::default();
+        p.links.insert(
+            "agents".into(),
+            mandrake_home::LinkSpec {
+                action: Action::Link,
+                target: Some(target.display().to_string()),
+            },
+        );
+        let steps = links::plan(&d, &Catalog::builtin().unwrap(), &p).unwrap();
+        let fix = links_fix(&d, &steps);
+        assert!(
+            fix.starts_with(&format!(
+                "cp -R '{}' '{}'",
+                d.claude.join("agents").display(),
+                target.display()
+            )),
+            "{fix}"
+        );
+        assert!(fix.ends_with("depois mandrake link apply"), "{fix}");
+        std::fs::create_dir_all(&target).unwrap();
+        let steps = links::plan(&d, &Catalog::builtin().unwrap(), &p).unwrap();
+        assert_eq!(links_fix(&d, &steps), "mandrake link apply");
     }
 
     #[test]

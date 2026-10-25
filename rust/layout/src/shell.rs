@@ -80,7 +80,7 @@ pub fn env_file(vars: &[(&str, String)]) -> String {
 }
 
 /// Single-quoted for sh.
-fn sh_quote(v: &str) -> String {
+pub fn sh_quote(v: &str) -> String {
     format!("'{}'", v.replace('\'', "'\\''"))
 }
 

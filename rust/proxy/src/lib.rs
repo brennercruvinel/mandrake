@@ -71,7 +71,12 @@ pub fn status(dirs: &Dirs, profile: &Profile) -> Result<String> {
     ))
 }
 
-/// The status line, and whether the service is loaded and the port answers.
+/// Whether `MANDRAKE_HOME` isolates this run: the service file is written but never loaded.
+pub fn isolated() -> bool {
+    service::isolated()
+}
+
+/// The status line, and whether the service is loaded (or isolated) and the port answers.
 pub fn health(dirs: &Dirs, profile: &Profile) -> Result<(bool, String)> {
     Ok(service::health(
         dirs,

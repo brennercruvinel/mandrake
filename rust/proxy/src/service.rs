@@ -222,8 +222,9 @@ pub fn health(dirs: &Dirs, os: Os, isolated: bool, port: u16) -> (bool, String) 
     } else {
         "não responde"
     };
+    // Isolated, nothing is ever loaded: a proxy answering on the port (`proxy run`) is the healthy state.
     (
-        loaded && answering,
+        (loaded || isolated) && answering,
         format!("proxy: {service}; 127.0.0.1:{port} {port_state}"),
     )
 }
@@ -368,6 +369,12 @@ mod tests {
             assert!(
                 !health(&d, os, true, 1).0,
                 "an isolated service is never loaded"
+            );
+            let up = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+            let port = up.local_addr().unwrap().port();
+            assert!(
+                health(&d, os, true, port).0,
+                "isolated, a proxy answering the port is healthy"
             );
             assert!(uninstall(&d, os, true).unwrap().starts_with("removed"));
             assert!(
