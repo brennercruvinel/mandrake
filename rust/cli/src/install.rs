@@ -150,12 +150,13 @@ pub fn shell(dirs: &Dirs, profile: &Profile, root: &Path) -> Result<Vec<String>>
         ),
     ];
     // Where install.sh and tui-embed put binaries; macOS leaves it off PATH, so the shell file adds it.
+    // The prefix goes in too: a later `mandrake setup` from a new shell then keeps a custom
+    // MANDRAKE_PREFIX instead of falling back to ~/.local and losing the binary from PATH.
+    let prefix = crate::apps::prefix(dirs);
+    vars.push(("MANDRAKE_PREFIX", prefix.to_string_lossy().into_owned()));
     vars.push((
         "MANDRAKE_BIN_DIR",
-        crate::apps::prefix(dirs)
-            .join("bin")
-            .to_string_lossy()
-            .into_owned(),
+        prefix.join("bin").to_string_lossy().into_owned(),
     ));
     if let Some(m) = &profile.skills.memory_cmd {
         vars.push((

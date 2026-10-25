@@ -110,7 +110,7 @@ whatever was written through the link is kept.
 
 | Where | What |
 | - | - |
-| `~/.zshrc` (or `.bashrc`, `.bash_profile`) | one block between `# >>> mandrake >>>` and `# <<< mandrake <<<`, replaced on every run |
+| `~/.zshrc`; for bash `.bashrc`, or on macOS the login file bash already reads (`.bash_profile`, `.bash_login` or `.profile`, a new `.bash_profile` only when none exists) | one block between `# >>> mandrake >>>` and `# <<< mandrake <<<`, replaced on every run |
 | `settings.json` (through its link) | prompt-trim's folder joins `env.CLAUDE_CODE_PLUGIN_DIRS`, and an `env.ANTHROPIC_BASE_URL` that an older Mandrake wrote goes away; nothing else, and the old file goes to the backup |
 | `~/Library/LaunchAgents/dev.mandrake.proxy.plist` or `~/.config/systemd/user/mandrake-proxy.service` | the proxy service |
 | `~/.local/share/mandrake/` | the installed copy of `data/` and `cfgs/`, and the shell files |

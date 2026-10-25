@@ -59,6 +59,16 @@ m doctor > "$t/doctor.log" 2>&1
 check "the core goes into prompt-trim" "$(grep -c '# Core' "$t/mh/data/src/data/plugins/prompt-trim/hooks/core.js")" 1
 check "setup reports no errors" "$(grep -c 'Erros: nenhum' "$t/setup.log")" 1
 check "doctor fails only on the proxy" "$(grep FAIL "$t/doctor.log" | grep -vc 'proxy')" 0
+# bash on macOS reads the first of .bash_profile, .bash_login and .profile: with only a .profile,
+# the block goes there, so no new .bash_profile hides it (second review of #35).
+b="$t/bashhome"; mkdir -p "$b/.claude"; echo 'export FROM_PROFILE=1' > "$b/.profile"
+env HOME="$b" MANDRAKE_HOME="$b/mh" CLAUDE_CONFIG_DIR="$b/.claude" SHELL=/bin/bash MANDRAKE_PREFIX="$b/pfx" "$bin" setup --profile "$t/p.toml" --yes > "$b/setup.log" 2>&1
+if [ "$(uname)" = Darwin ]; then
+  check "bash on macOS: the block goes into the existing .profile" "$(grep -c '>>> mandrake >>>' "$b/.profile")$([ -e "$b/.bash_profile" ] && echo ' and a .bash_profile')" 1
+else
+  check "bash on Linux: the block goes into .bashrc" "$(grep -c '>>> mandrake >>>' "$b/.bashrc")" 1
+fi
+check "env.sh keeps a custom MANDRAKE_PREFIX" "$(grep -c "MANDRAKE_PREFIX='$b/pfx'" "$b/mh/data/shell/env.sh")" 1
 # The launcher finds the soul and builds the claude call (claude stubbed).
 mkdir -p "$t/bin"; cat > "$t/bin/claude" <<'STUB'
 #!/bin/sh

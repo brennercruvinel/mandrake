@@ -178,7 +178,7 @@ pub fn checks(dirs: &Dirs) -> Result<Vec<Check>> {
         format!(
             "claude {}",
             v.map(|o| String::from_utf8_lossy(&o.stdout).trim().to_owned())
-                .unwrap_or_else(|e| e.to_string())
+                .unwrap_or_else(|_| "não encontrado no PATH".into())
         ),
         "instale o Claude Code: https://docs.claude.com/claude-code",
     ));
