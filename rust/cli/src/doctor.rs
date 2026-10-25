@@ -223,7 +223,13 @@ fn links_fix(dirs: &Dirs, steps: &[links::Step]) -> String {
             let t = s.target.as_ref().filter(|t| !t.exists())?;
             let q =
                 |p: &std::path::Path| mandrake_layout::shell::sh_quote(&p.display().to_string());
-            Some(format!("cp -R {} {}", q(&dirs.claude.join(&s.path)), q(t)))
+            let parent = t.parent().unwrap_or(t);
+            Some(format!(
+                "mkdir -p {} && cp -R {} {}",
+                q(parent),
+                q(&dirs.claude.join(&s.path)),
+                q(t)
+            ))
         })
         .collect();
     if fill.is_empty() {
@@ -310,7 +316,8 @@ mod tests {
         let fix = links_fix(&d, &steps);
         assert!(
             fix.starts_with(&format!(
-                "cp -R '{}' '{}'",
+                "mkdir -p '{}' && cp -R '{}' '{}'",
+                tmp.path().join("dev").display(),
                 d.claude.join("agents").display(),
                 target.display()
             )),
