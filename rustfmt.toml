@@ -1,0 +1,14 @@
+# Stable-channel defaults written out, so a rustfmt release that changes a default cannot
+# reformat the tree on its own. Run `cargo fmt --all`; the gate runs `cargo fmt --check`.
+# Nightly-only options stay out, so the same command works on stable.
+edition = "2024"
+hard_tabs = false
+tab_spaces = 4
+max_width = 100
+newline_style = "Unix"
+use_small_heuristics = "Default"
+reorder_imports = true
+reorder_modules = true
+remove_nested_parens = true
+match_block_trailing_comma = false
+use_field_init_shorthand = true

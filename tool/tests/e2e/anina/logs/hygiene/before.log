@@ -1,0 +1,25 @@
+
+$ cargo build --workspace --locked
+
+$ tool/tests/e2e/anina/cases.sh all
+verdict: FIXED original.txt is back in ~/.claude/rules
+verdict: FIXED two journals, and two rollbacks bring the original folder back
+verdict: FIXED doctor passes on the copy and the second setup backs nothing up
+verdict: FIXED closed input exits 1 and applies nothing
+
+$ python3 -m py_compile tool/tests/e2e/pty-answer.py
+
+$ an editor opens the repo: .vscode .idea .zed .claude tmp .DS_Store scratch.log
+
+$ git status --short
+  ?? .claude/
+  ?? .idea/
+  ?? .vscode/
+  ?? .zed/
+  ?? scratch.log
+  ?? tmp/
+  ?? tool/tests/e2e/__pycache__/pty-answer.cpython-314.pyc
+  ?? tool/tests/e2e/anina/hygiene.sh
+  ?? tool/tests/e2e/anina/hygiene.tape
+
+verdict: DIRTY 9 path(s) show up in git status

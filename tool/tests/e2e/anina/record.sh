@@ -21,7 +21,8 @@ fails=0
 for c in copy-fail same-second doctor-copy eof; do
   "$here/cases.sh" "$c" "$MANDRAKE_BIN" > "$logs/$c.log" 2>&1 || fails=$((fails + 1))
   echo "$c: $(grep '^verdict:' "$logs/$c.log")"
-  if ! anina record "$here/$c.tape" -o "$out/$c" > "$logs/$c.anina.log" 2>&1; then
+  # The temp folder is per user on macOS (/var/folders/…); the log keeps it as $OUT.
+  if ! anina record "$here/$c.tape" -o "$out/$c" 2>&1 | sed "s#$out#\$OUT#g" > "$logs/$c.anina.log"; then
     echo "  anina record failed, see $logs/$c.anina.log"
     continue
   fi

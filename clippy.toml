@@ -1,0 +1,23 @@
+# Clippy thresholds written out, so a clippy release that moves a default cannot flag or
+# unflag code here on its own. The gate runs
+#
+#   cargo clippy --workspace --all-targets -- -D warnings
+#
+# so every lint is an error, and a new lint from an upgrade blocks until someone reviews it.
+# The MSRV comes from `rust-version` in the workspace Cargo.toml, not from here.
+
+# Clippy's default is 25. Mandrake's functions are small; 15 trips a growing function before
+# the 639-line file cap does.
+cognitive-complexity-threshold = 15
+
+# Clippy's default, written out.
+type-complexity-threshold = 250
+
+# Clippy's default. A function that needs more takes a struct, or an `allow` at the function
+# with the reason next to it.
+too-many-arguments-threshold = 7
+
+# Tests may print, unwrap and expect: a failing test is the point there.
+allow-print-in-tests = true
+allow-unwrap-in-tests = true
+allow-expect-in-tests = true
