@@ -1,3 +1,4 @@
+# shellcheck shell=bash
 # The shell every CLI tape types into: a throwaway HOME, a stub `claude`, `mandrake` on PATH.
 # Used as `bash --rcfile env.sh -i` from a tape, or sourced by hand to try a command the same way:
 #   MANDRAKE_BIN=target/debug/mandrake MANDRAKE_REPO=. CLI_SEED=installed . tool/tests/e2e/anina/cli/env.sh
