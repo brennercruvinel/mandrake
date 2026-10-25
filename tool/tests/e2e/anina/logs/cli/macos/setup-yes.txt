@@ -1,0 +1,64 @@
+setup-yes
+=========
+
+[0.0s]
+
+## a profile from another machine: two links
+
+[4.9s]
+    ~ $ cat mandrake-profile.toml | grep -v '^$' | head -12
+    dev_root = "$TMPDIR//mandrake-cli.ub3emS/work"
+    [links.agents]
+    action = "link"
+    target = "claude/agents"
+    [links.commands]
+    action = "link"
+    target = "claude/commands"
+    [proxy]
+    port = 61108
+    upstream = "https://api.anthropic.com"
+    strip_fields = ["metadata"]
+    audit = false
+    ~ $
+
+## mandrake setup --profile mandrake-profile.toml --yes
+
+[10.8s]
+    
+    Instalando
+      ok   perfil: $TMPDIR//mandrake-cli.ub3emS/mh/config/mandr
+    ake.toml
+      ok   dados: $TMPDIR//mandrake-cli.ub3emS/mh/data/src
+      ok   core: 4251 caracteres nas sessões sem soul e antes de cada soul
+      ok   links: agents: 1 arquivo vai para $TMPDIR//mandrake-
+    cli.ub3emS/work/claude/agents, e o backup guarda uma cópia
+      ok   links: commands: link para $TMPDIR//mandrake-cli.ub3
+    emS/work/claude/commands
+      ok   links: journal $TMPDIR//mandrake-cli.ub3emS/mh/state
+    /journal/20261025-061027-001.json
+      ok   settings: settings env.CLAUDE_CODE_PLUGIN_DIRS: unset -> $TMPDIR//mandrake-cli.ub3emS/mh/data
+    /src/data/plugins/prompt-trim
+      ok   shell: shell: block added to $TMPDIR//mandrake-cli.u
+    b3emS/home/.bash_profile
+      ok   plugins: sem mudança
+      ok   skill: sem mudança
+    wrote $TMPDIR//mandrake-cli.ub3emS/mh/state/service/dev.man
+    drake.proxy.plist (MANDRAKE_HOME is set: not loaded)
+      ok   proxy: serviço escrito para 127.0.0.1:61108 (MANDRAKE_HOME: não carregado)
+    
+    Erros: nenhum
+    próximo passo: abra um shell novo e rode `mandrake doctor`
+    ~ $
+
+## the same command again: nothing should change
+
+[20.4s]
+    total 16
+    -rw-r--r--@ 1 use staff   11 Oct 25 03:10 CLAUDE.md
+    lrwxr-xr-x@ 1 use staff   88 Oct 25 03:10 agents -> $TMPDIR
+    //mandrake-cli.ub3emS/work/claude/agents
+    lrwxr-xr-x@ 1 use staff   90 Oct 25 03:10 commands -> $TMPDIR//mandrake-cli.ub3emS/work/claude/comma
+    nds
+    -rw-r--r--@ 1 use staff  159 Oct 25 03:10 settings.json
+    ~ $ exit
+    exit

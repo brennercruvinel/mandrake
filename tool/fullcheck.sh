@@ -183,7 +183,9 @@ e2e_checks() {
   need cargo "e2e" "rustup.rs" || return
   check "cargo build" cargo build --workspace --locked
   check "e2e cases" tool/tests/e2e/anina/cases.sh all "$bin"
+  check "e2e setup" tool/tests/e2e/setup.sh "$bin"
   check "bench tasks verify" python3 tool/bench/tasks.py verify
+  check "e2e integrity" tool/tests/e2e/integrity.sh "$bin"
   if ! has anina; then
     skip "anina tapes" "anina is not on PATH; the cases above ran without recording"
     return

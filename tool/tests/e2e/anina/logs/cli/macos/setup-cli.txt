@@ -1,0 +1,165 @@
+setup-cli
+=========
+
+[0.0s]
+
+## mandrake setup --cli · step 1, the development folder
+
+[3.0s]
+    ~ $ mandrake setup --cli
+    Mandrake setup. Enter aceita o valor entre colchetes.
+    
+    1. Pasta de desenvolvimento: a raiz dos destinos relativos.
+       pasta [~/dev]:
+    
+    2. Itens de $TMPDIR//mandrake-cli.TZJ7g2/home/.claude (23 i
+    tens): manter (m), linkar (l) ou copiar (c).
+    
+       [1/23] CLAUDE.md: Instructions read at the start of every session
+             hoje: arquivo
+             ação [m]:
+
+## step 2 · 23 entries of ~/.claude, one question each
+
+[5.0s]
+    ~ $ mandrake setup --cli
+    Mandrake setup. Enter aceita o valor entre colchetes.
+    
+    1. Pasta de desenvolvimento: a raiz dos destinos relativos.
+       pasta [~/dev]:
+    
+    2. Itens de $TMPDIR//mandrake-cli.TZJ7g2/home/.claude (23 i
+    tens): manter (m), linkar (l) ou copiar (c).
+    
+       [1/23] CLAUDE.md: Instructions read at the start of every session
+             hoje: arquivo
+             ação [m]:
+    
+       [2/23] settings.json: Global settings; Mandrake only writes ANTHROPIC_BASE_URL and CLAUDE_CODE_PL
+    UGIN_DIRS in it
+             hoje: não existe
+             ação [m]:
+    
+       [3/23] statusline.sh: Status line command
+             hoje: não existe
+             ação [m]:
+    
+       [4/23] agents: Subagent definitions
+             hoje: pasta
+             ação [m]:
+
+## agents: l links it to a folder under the development folder
+
+[6.5s]
+    ~ $ mandrake setup --cli
+    Mandrake setup. Enter aceita o valor entre colchetes.
+    
+    1. Pasta de desenvolvimento: a raiz dos destinos relativos.
+       pasta [~/dev]:
+    
+    2. Itens de $TMPDIR//mandrake-cli.TZJ7g2/home/.claude (23 i
+    tens): manter (m), linkar (l) ou copiar (c).
+    
+       [1/23] CLAUDE.md: Instructions read at the start of every session
+             hoje: arquivo
+             ação [m]:
+    
+       [2/23] settings.json: Global settings; Mandrake only writes ANTHROPIC_BASE_URL and CLAUDE_CODE_PL
+    UGIN_DIRS in it
+             hoje: não existe
+             ação [m]:
+    
+       [3/23] statusline.sh: Status line command
+             hoje: não existe
+             ação [m]:
+    
+       [4/23] agents: Subagent definitions
+             hoje: pasta
+             ação [m]: l
+             destino [claude/agents]:
+    
+       [5/23] commands: Slash commands
+             hoje: não existe
+             ação [m]:
+
+## the other 19 entries, plugins, proxy and prompts: Enter takes the default each time
+
+[15.5s]
+             ação [m]:
+    
+       [23/23] dev-mods: Plugin module build cache
+             hoje: não existe
+             ação [m]:
+    
+    3. Plugins. prompt-trim é obrigatório e vai sempre.
+       fancy (markdown com tema, badges, barra de status) [n]:
+       tui-embed (apps de terminal em painéis) [n]:
+    
+    4. Proxy local.
+       porta [8787]:
+       safeguards alimenta o classificador de segurança da API; tirá-lo é escolha consciente.
+       remover safeguards [n]:
+       auditoria (guarda os corpos antes e depois, local, 600) [n]:
+    
+    5. Prompts.
+       core (padrao, none ou um caminho) [padrao]:
+       pasta de souls (padrao = os do Mandrake) [padrao]:
+       skill invoke (abre a sessão com a memória) [n]:
+    
+    6. Resumo
+       pasta ~/dev
+       1 link no perfil; 1 muda agora:
+         agents: 1 arquivo vai para ~/dev/claude/agents, e o backup guarda uma cópia
+       plugins: prompt-trim
+       proxy 127.0.0.1:8787 removendo metadata, auditoria desligada
+       core padrão, souls do Mandrake
+    
+       aplicar [s]:
+
+## aplicar [s] · Enter applies
+
+[17.7s]
+       pasta ~/dev
+       1 link no perfil; 1 muda agora:
+         agents: 1 arquivo vai para ~/dev/claude/agents, e o backup guarda uma cópia
+       plugins: prompt-trim
+       proxy 127.0.0.1:8787 removendo metadata, auditoria desligada
+       core padrão, souls do Mandrake
+    
+       aplicar [s]:
+    
+    Instalando
+      ok   perfil: $TMPDIR//mandrake-cli.TZJ7g2/mh/config/mandr
+    ake.toml
+      ok   dados: $TMPDIR//mandrake-cli.TZJ7g2/mh/data/src
+      ok   core: 4251 caracteres nas sessões sem soul e antes de cada soul
+      ok   links: agents: 1 arquivo vai para ~/dev/claude/agents, e o backup guarda uma cópia
+      ok   links: journal $TMPDIR//mandrake-cli.TZJ7g2/mh/state
+    /journal/20261025-060950-001.json
+      ok   settings: settings env.CLAUDE_CODE_PLUGIN_DIRS: unset -> $TMPDIR//mandrake-cli.TZJ7g2/mh/data
+    /src/data/plugins/prompt-trim
+      ok   shell: shell: block added to $TMPDIR//mandrake-cli.T
+    ZJ7g2/home/.bash_profile
+      ok   plugins: sem mudança
+      ok   skill: sem mudança
+    wrote $TMPDIR//mandrake-cli.TZJ7g2/mh/state/service/dev.man
+    drake.proxy.plist (MANDRAKE_HOME is set: not loaded)
+      ok   proxy: serviço escrito para 127.0.0.1:8787 (MANDRAKE_HOME: não carregado)
+    
+    Erros: nenhum
+    próximo passo: abra um shell novo e rode `mandrake doctor`
+    ~ $
+
+## where did reviewer.md, the agent that was in ~/.claude/agents, go?
+
+[25.3s]
+    total 16
+    -rw-r--r--@ 1 use staff   11 Oct 25 03:09 CLAUDE.md
+    lrwxr-xr-x@ 1 use staff   92 Oct 25 03:09 agents -> $TMPDIR
+    //mandrake-cli.TZJ7g2/home/dev/claude/agents
+    -rw-r--r--@ 1 use staff  159 Oct 25 03:09 settings.json
+    reviewer.md
+    $TMPDIR//mandrake-cli.TZJ7g2/home/../mh/state/backups/20261
+    025-060950-001/agents/reviewer.md
+    ~ $ exit
+    exit
