@@ -1,0 +1,89 @@
+help
+====
+
+[0.0s]
+
+## mandrake --help · two groups: to start, and the rest
+
+[3.1s]
+    ~ $ mandrake --help
+    Mandrake corta o que o Claude Code coloca em volta do seu prompt, mede quanto isso economiza
+    e refaz a sua pasta ~/.claude em qualquer máquina a partir de um perfil.
+    
+    Sem argumentos, mostra o estado desta máquina. Comece por `mandrake setup`, confira com
+    `mandrake doctor` e veja o corte com `mandrake compare`, que não gasta nada.
+    
+    Uso: mandrake [COMANDO]
+    
+    Para começar:
+      setup    Instala ou ajusta, item por item (--cli em linhas; --profile f --yes sem perguntar)
+      doctor   Confere tudo: links, settings, plugins, shell, proxy e Claude Code
+      compare  O que o Claude Code envia sem e com o Mandrake, lado a lado (não gasta nada)
+      watch    Tela ao vivo das requisições: sem Mandrake à esquerda, com Mandrake à direita
+    
+    Avançado:
+      hex      Uma requisição antes e depois do corte, lado a lado em hex (precisa de auditoria ligada)
+      audit    Lista as requisições cujo corpo foi guardado (com [proxy] audit = true no perfil)
+      bench    Mede de verdade pelo claude -p, sem e com Mandrake (gasta 2 requisições por prompt)
+      link     Links da pasta ~/.claude: plan mostra, apply aplica, rollback desfaz
+      proxy    O proxy local: run, install, uninstall, status
+      capture  Escreve a pasta ~/.claude atual como perfil, para levar a outra máquina
+    
+    Opções:
+      -h, --help
+              Mostra esta ajuda
+    
+      -V, --version
+              Mostra a versão
+    
+    Ajuda de um comando: mandrake <comando> --help
+    ~ $
+
+## mandrake link --help
+
+[6.7s]
+    Links da pasta ~/.claude: plan mostra, apply aplica, rollback desfaz
+    
+    Uso: mandrake link <COMANDO>
+    
+    Comandos:
+      plan      Mostra o que mudaria, sem tocar em nada
+      apply     Aplica; o que estiver no caminho vai para o backup
+      rollback  Desfaz o último apply
+    
+    Opções:
+      -h, --help  Mostra esta ajuda
+    ~ $
+
+## mandrake proxy --help
+
+[10.1s]
+    O proxy local: run, install, uninstall, status
+    
+    Uso: mandrake proxy <COMANDO>
+    
+    Comandos:
+      run        Roda em primeiro plano
+      install    Instala como serviço do usuário (launchd ou systemd)
+      uninstall  Remove o serviço
+      status     Diz se está no ar
+    
+    Opções:
+      -h, --help  Mostra esta ajuda
+    ~ $
+
+## mandrake bench --help · does it say it spends requests?
+
+[14.2s]
+    Mede de verdade pelo claude -p, sem e com Mandrake (gasta 2 requisições por prompt)
+    
+    Uso: mandrake bench [OPÇÕES]
+    
+    Opções:
+          --fixtures <FIXTURES>  Mede só o corte do proxy sobre corpos de requisição desta pasta (sem ro
+    dar o Claude Code)
+          --view                 Mostra o último relatório em vez de medir
+          --snapshot <SNAPSHOT>  Com --view: imprime a tela como texto, LARGURAxALTURA
+      -h, --help                 Mostra esta ajuda
+    ~ $ exit
+    exit

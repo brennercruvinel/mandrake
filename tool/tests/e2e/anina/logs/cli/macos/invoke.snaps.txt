@@ -1,0 +1,23 @@
+
+### 01-function
+
+~ $ source ~/.bashrc; type claude | head -3
+bash: $TMPDIR//mandrake-cli.tps4i7/home/.bashrc: No such fi
+le or directory
+claude is $TMPDIR//mandrake-cli.tps4i7/bin/claude
+~ $
+### 02-rhizo
+
+[claude stub] claude invoke rhizo
+~ $
+### 03-errors
+
+[claude stub] claude invoke
+exit 0
+[claude stub] claude invoke nobody
+exit 0
+~ $
+### 04-plain
+
+[claude stub] claude
+~ $

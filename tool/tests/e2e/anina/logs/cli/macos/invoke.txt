@@ -1,0 +1,35 @@
+invoke
+======
+
+[0.0s]
+
+## a new shell loads the block setup wrote in ~/.bashrc
+
+[4.2s]
+    ~ $ source ~/.bashrc; type claude | head -3
+    bash: $TMPDIR//mandrake-cli.tps4i7/home/.bashrc: No such fi
+    le or directory
+    claude is $TMPDIR//mandrake-cli.tps4i7/bin/claude
+    ~ $
+
+## claude invoke rhizo · the example soul
+
+[8.3s]
+    [claude stub] claude invoke rhizo
+    ~ $
+
+## claude invoke with no soul, and with one that does not exist
+
+[15.3s]
+    [claude stub] claude invoke
+    exit 0
+    [claude stub] claude invoke nobody
+    exit 0
+    ~ $
+
+## plain claude: the core prompt, no soul
+
+[18.9s]
+    [claude stub] claude
+    ~ $ exit
+    exit

@@ -35,7 +35,7 @@ impl Os {
         match std::env::consts::OS {
             "macos" => Ok(Os::Mac),
             "linux" => Ok(Os::Linux),
-            other => bail!("proxy service: {other} is not supported (macOS and Linux only)"),
+            other => bail!("serviço do proxy: {other} não é suportado (só macOS e Linux)"),
         }
     }
 }
@@ -119,14 +119,14 @@ pub fn install(
 ) -> Result<String> {
     let path = unit_path(dirs, os, isolated);
     if let Some(dir) = path.parent() {
-        std::fs::create_dir_all(dir).with_context(|| format!("creating {}", dir.display()))?;
+        std::fs::create_dir_all(dir).with_context(|| format!("criando {}", dir.display()))?;
     }
     std::fs::create_dir_all(dirs.logs())?;
     std::fs::write(&path, render(dirs, os, exe, env))
-        .with_context(|| format!("writing {}", path.display()))?;
+        .with_context(|| format!("escrevendo {}", path.display()))?;
     if isolated {
         return Ok(format!(
-            "wrote {} (MANDRAKE_HOME is set: not loaded)",
+            "escrito em {} (MANDRAKE_HOME definido: não carregado)",
             path.display()
         ));
     }
@@ -146,7 +146,7 @@ pub fn install(
             run("systemctl", &["--user", "restart", UNIT])?;
         }
     }
-    Ok(format!("wrote and loaded {}", path.display()))
+    Ok(format!("escrito e carregado: {}", path.display()))
 }
 
 pub fn uninstall(dirs: &Dirs, os: Os, isolated: bool) -> Result<String> {
@@ -167,15 +167,15 @@ pub fn uninstall(dirs: &Dirs, os: Os, isolated: bool) -> Result<String> {
     let existed = match std::fs::remove_file(&path) {
         Ok(()) => true,
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => false,
-        Err(e) => return Err(e).with_context(|| format!("removing {}", path.display())),
+        Err(e) => return Err(e).with_context(|| format!("removendo {}", path.display())),
     };
     if !isolated && os == Os::Linux {
         let _ = quiet("systemctl", &["--user", "daemon-reload"]);
     }
     Ok(if existed {
-        format!("removed {}", path.display())
+        format!("removido: {}", path.display())
     } else {
-        format!("{} was not there", path.display())
+        format!("{} não existia", path.display())
     })
 }
 
@@ -241,10 +241,10 @@ fn gui_domain() -> Result<String> {
     let out = Command::new("id")
         .arg("-u")
         .output()
-        .context("running id -u")?;
+        .context("rodando id -u")?;
     let uid = String::from_utf8_lossy(&out.stdout).trim().to_string();
     if !out.status.success() || uid.is_empty() {
-        bail!("could not read the user id");
+        bail!("não deu para ler o id do usuário");
     }
     Ok(format!("gui/{uid}"))
 }
@@ -358,7 +358,7 @@ mod tests {
         let d = dirs(tmp.path());
         for os in [Os::Mac, Os::Linux] {
             let msg = install(&d, os, Path::new("/bin/mandrake"), true, &[]).unwrap();
-            assert!(msg.contains("not loaded"), "{msg}");
+            assert!(msg.contains("não carregado"), "{msg}");
             let path = unit_path(&d, os, true);
             assert!(
                 std::fs::read_to_string(&path)
@@ -376,7 +376,7 @@ mod tests {
                 health(&d, os, true, port).0,
                 "isolated, a proxy answering the port is healthy"
             );
-            assert!(uninstall(&d, os, true).unwrap().starts_with("removed"));
+            assert!(uninstall(&d, os, true).unwrap().starts_with("removido"));
             assert!(
                 status(&d, os, true, 1)
                     .starts_with("proxy: serviço não instalado; 127.0.0.1:1 não responde")

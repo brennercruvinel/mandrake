@@ -1,0 +1,79 @@
+
+### 01-status
+
+~ $ mandrake proxy status
+proxy: serviço escrito em $TMPDIR//mandrake-cli.tKenBN/mh/s
+tate/service/dev.mandrake.proxy.plist (MANDRAKE_HOME definido: não carregado); 127.0.0.1:49340 não r
+esponde
+~ $
+### 02-run
+
+[2] 76322
+~ $ mandrake proxy on http://127.0.0.1:49340 -> http://127.0.0.1:49341 (trim)
+### 03-status-up
+
+[2] 76322
+~ $ mandrake proxy on http://127.0.0.1:49340 -> http://127.0.0.1:49341 (trim)
+mandrake proxy status
+proxy: serviço escrito em $TMPDIR//mandrake-cli.tKenBN/mh/s
+tate/service/dev.mandrake.proxy.plist (MANDRAKE_HOME definido: não carregado); 127.0.0.1:49340 respo
+ndendo
+~ $
+### 04-one-request
+
+[2] 76322
+~ $ mandrake proxy on http://127.0.0.1:49340 -> http://127.0.0.1:49341 (trim)
+mandrake proxy status
+proxy: serviço escrito em $TMPDIR//mandrake-cli.tKenBN/mh/s
+tate/service/dev.mandrake.proxy.plist (MANDRAKE_HOME definido: não carregado); 127.0.0.1:49340 respo
+ndendo
+~ $ send short; mandrake
+Mandrake: corta o que o Claude Code coloca em volta do seu prompt e mede a economia.
+
+Como funciona, em duas camadas:
+  1. prompt-trim (dentro do Claude Code) ........ ligado
+     tira o prompt padrão, os lembretes, data, pasta e as descrições longas das tools,
+     e põe no lugar o core (data/prompt/cores/coding.md) nas sessões sem soul
+  2. proxy local 127.0.0.1:49340 (entre o Claude Code e a API) ... ligado
+     tira as tags <system-reminder> e os campos metadata; mede tokens antes e depois
+     sessões abertas por um shell com o Mandrake usam o proxy quando ele responde;
+     se ele estiver fora, vão direto para a API, sem quebrar
+
+Pelo proxy passaram 1 requisições. Última: 424 tokens enviados.
+Para ver o corte: `mandrake compare` mostra o que o Claude Code envia sem e com o Mandrake,
+sem gastar nada. `mandrake bench` mede de verdade, com 2 requisições por prompt.
+
+Para começar: setup · doctor · compare · watch
+Avançado: hex · audit · bench · link · proxy · capture
+(mandrake <comando> --help)
+~ $
+### 05-stopped
+
+[2] 76322
+~ $ mandrake proxy on http://127.0.0.1:49340 -> http://127.0.0.1:49341 (trim)
+mandrake proxy status
+proxy: serviço escrito em $TMPDIR//mandrake-cli.tKenBN/mh/s
+tate/service/dev.mandrake.proxy.plist (MANDRAKE_HOME definido: não carregado); 127.0.0.1:49340 respo
+ndendo
+~ $ send short; mandrake
+Mandrake: corta o que o Claude Code coloca em volta do seu prompt e mede a economia.
+
+Como funciona, em duas camadas:
+  1. prompt-trim (dentro do Claude Code) ........ ligado
+     tira o prompt padrão, os lembretes, data, pasta e as descrições longas das tools,
+     e põe no lugar o core (data/prompt/cores/coding.md) nas sessões sem soul
+  2. proxy local 127.0.0.1:49340 (entre o Claude Code e a API) ... ligado
+     tira as tags <system-reminder> e os campos metadata; mede tokens antes e depois
+     sessões abertas por um shell com o Mandrake usam o proxy quando ele responde;
+     se ele estiver fora, vão direto para a API, sem quebrar
+
+Pelo proxy passaram 1 requisições. Última: 424 tokens enviados.
+Para ver o corte: `mandrake compare` mostra o que o Claude Code envia sem e com o Mandrake,
+sem gastar nada. `mandrake bench` mede de verdade, com 2 requisições por prompt.
+
+Para começar: setup · doctor · compare · watch
+Avançado: hex · audit · bench · link · proxy · capture
+(mandrake <comando> --help)
+~ $ clear; kill $!; sleep 0.5; mandrake proxy status
+bash: !: event not found
+~ $

@@ -25,7 +25,7 @@ Snap 02-setup-yes
 Caption "mandrake · the same command, now installed"
 Type "clear; mandrake"
 Key Enter
-Wait "Comandos"
+Wait "Para começar"
 Sleep 2
 Poster
 Snap 03-installed

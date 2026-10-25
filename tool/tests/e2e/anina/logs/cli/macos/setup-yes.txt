@@ -1,0 +1,64 @@
+setup-yes
+=========
+
+[0.0s]
+
+## a profile from another machine: two links
+
+[4.9s]
+    ~ $ cat mandrake-profile.toml | grep -v '^$' | head -12
+    dev_root = "$TMPDIR//mandrake-cli.HPlPBS/work"
+    [links.agents]
+    action = "link"
+    target = "claude/agents"
+    [links.commands]
+    action = "link"
+    target = "claude/commands"
+    [proxy]
+    port = 49302
+    upstream = "https://api.anthropic.com"
+    strip_fields = ["metadata"]
+    audit = false
+    ~ $
+
+## mandrake setup --profile mandrake-profile.toml --yes
+
+[10.9s]
+    
+    Instalando
+      ok   perfil: $TMPDIR//mandrake-cli.HPlPBS/mh/config/mandr
+    ake.toml
+      ok   dados: $TMPDIR//mandrake-cli.HPlPBS/mh/data/src
+      ok   core: 4251 caracteres nas sessões sem soul e antes de cada soul
+      ok   links: backuplink  agents -> $TMPDIR//mandrake-cli.H
+    PlPBS/work/claude/agents
+      ok   links: link        commands -> $TMPDIR//mandrake-cli
+    .HPlPBS/work/claude/commands
+      ok   links: journal $TMPDIR//mandrake-cli.HPlPBS/mh/state
+    /journal/20261025-073840-001.json
+      ok   settings: settings env.CLAUDE_CODE_PLUGIN_DIRS: vazio → $TMPDIR//mandrake-cli.HPlPBS/mh/data/
+    src/data/plugins/prompt-trim
+      ok   shell: shell: bloco acrescentado em $TMPDIR//mandrak
+    e-cli.HPlPBS/home/.bash_profile
+      ok   plugins: sem mudança
+      ok   skill: sem mudança
+    escrito em $TMPDIR//mandrake-cli.HPlPBS/mh/state/service/de
+    v.mandrake.proxy.plist (MANDRAKE_HOME definido: não carregado)
+      ok   proxy: serviço escrito para 127.0.0.1:49302 (MANDRAKE_HOME: não carregado)
+    
+    Erros: nenhum
+    próximo passo: abra um shell novo e rode `mandrake doctor`
+    ~ $
+
+## the same command again: nothing should change
+
+[20.5s]
+    total 16
+    -rw-r--r--@ 1 use staff   11 Oct 25 04:38 CLAUDE.md
+    lrwxr-xr-x@ 1 use staff   88 Oct 25 04:38 agents -> $TMPDIR
+    //mandrake-cli.HPlPBS/work/claude/agents
+    lrwxr-xr-x@ 1 use staff   90 Oct 25 04:38 commands -> $TMPDIR//mandrake-cli.HPlPBS/work/claude/comma
+    nds
+    -rw-r--r--@ 1 use staff  159 Oct 25 04:38 settings.json
+    ~ $ exit
+    exit

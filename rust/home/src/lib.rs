@@ -36,7 +36,7 @@ impl Dirs {
 
     /// Resolves from any lookup, so tests never read the real environment.
     pub fn resolve(var: impl Fn(&str) -> Option<PathBuf>) -> Result<Self> {
-        let home = var("HOME").context("HOME is not set")?;
+        let home = var("HOME").context("HOME não está definido")?;
         let claude = var("CLAUDE_CONFIG_DIR").unwrap_or_else(|| home.join(".claude"));
         if let Some(root) = var("MANDRAKE_HOME") {
             return Ok(Self {

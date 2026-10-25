@@ -6,15 +6,18 @@ mod ask;
 mod cmd;
 mod compare;
 mod doctor;
+mod help;
 mod install;
 
-use clap::{Parser, Subcommand};
+use clap::{CommandFactory, FromArgMatches, Parser, Subcommand};
 use std::path::PathBuf;
 
-const ABOUT: &str = "Mandrake corta o que o Claude Code coloca em volta do seu prompt, mede quanto isso economiza
+const ABOUT: &str =
+    "Mandrake corta o que o Claude Code coloca em volta do seu prompt, mede quanto isso economiza
 e refaz a sua pasta ~/.claude em qualquer máquina a partir de um perfil.
 
-Sem argumentos, mostra o estado desta máquina. Comece por `mandrake setup` e confira com `mandrake doctor`.";
+Sem argumentos, mostra o estado desta máquina. Comece por `mandrake setup`, confira com
+`mandrake doctor` e veja o corte com `mandrake compare`, que não gasta nada.";
 
 #[derive(Parser)]
 #[command(name = "mandrake", version, about = "Corta, mede e reproduz o harness do Claude Code", long_about = ABOUT)]
@@ -25,7 +28,7 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Cmd {
-    /// Instala ou ajusta: pergunta item por item e aplica (--cli em linhas, --profile f --yes sem perguntar)
+    /// Instala ou ajusta, item por item (--cli em linhas; --profile f --yes sem perguntar)
     Setup {
         /// Começa deste perfil em vez do salvo
         #[arg(long)]
@@ -39,7 +42,7 @@ enum Cmd {
     },
     /// Confere tudo: links, settings, plugins, shell, proxy e Claude Code
     Doctor,
-    /// Mede de verdade: os mesmos prompts pelo claude -p sem e com Mandrake (gasta 2 requisições curtas por prompt)
+    /// Mede de verdade pelo claude -p, sem e com Mandrake (gasta 2 requisições por prompt)
     Bench {
         /// Mede só o corte do proxy sobre corpos de requisição desta pasta (sem rodar o Claude Code)
         #[arg(long)]
@@ -53,7 +56,7 @@ enum Cmd {
         #[arg(long)]
         snapshot: Option<String>,
     },
-    /// Mostra lado a lado o que o Claude Code envia sem e com o Mandrake, parte por parte (não gasta nada: a resposta é local)
+    /// O que o Claude Code envia sem e com o Mandrake, lado a lado (não gasta nada)
     Compare {
         /// O prompt enviado nos dois lados
         #[arg(default_value = compare::PROMPT)]
@@ -122,7 +125,8 @@ enum ProxyOp {
         /// Só mede, não corta
         #[arg(long)]
         pass: bool,
-        #[arg(long)]
+        /// A porta (padrão: a do perfil)
+        #[arg(long, value_name = "PORTA")]
         port: Option<u16>,
     },
     /// Instala como serviço do usuário (launchd ou systemd)
@@ -138,8 +142,26 @@ fn print(text: anyhow::Result<String>) -> anyhow::Result<()> {
     Ok(())
 }
 
-fn main() -> anyhow::Result<()> {
-    let cli = Cli::parse();
+/// Errors in one line, in Portuguese, with what caused them after a colon.
+fn main() -> std::process::ExitCode {
+    match run() {
+        Ok(()) => std::process::ExitCode::SUCCESS,
+        Err(e) => {
+            eprintln!("erro: {e:#}");
+            std::process::ExitCode::FAILURE
+        }
+    }
+}
+
+fn run() -> anyhow::Result<()> {
+    let matches = match help::localize(Cli::command()).try_get_matches() {
+        Ok(m) => m,
+        Err(e) => match help::error_line(&e) {
+            Some(line) => anyhow::bail!(line),
+            None => e.exit(),
+        },
+    };
+    let cli = Cli::from_arg_matches(&matches)?;
     let dirs = mandrake_home::Dirs::from_env()?;
     let Some(command) = cli.cmd else {
         return cmd::status(&dirs);
