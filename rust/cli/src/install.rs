@@ -147,6 +147,14 @@ pub fn shell(dirs: &Dirs, profile: &Profile, root: &Path) -> Result<Vec<String>>
                 .unwrap_or_default(),
         ),
     ];
+    // Where install.sh and tui-embed put binaries; macOS leaves it off PATH, so the shell file adds it.
+    vars.push((
+        "MANDRAKE_BIN_DIR",
+        crate::apps::prefix(dirs)
+            .join("bin")
+            .to_string_lossy()
+            .into_owned(),
+    ));
     if let Some(m) = &profile.skills.memory_cmd {
         vars.push((
             "MANDRAKE_MEMORY_CMD",

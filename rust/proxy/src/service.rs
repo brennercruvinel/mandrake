@@ -181,13 +181,21 @@ pub fn uninstall(dirs: &Dirs, os: Os, isolated: bool) -> Result<String> {
 
 /// One line: whether the service is installed and loaded, and whether the port takes a TCP connect.
 pub fn status(dirs: &Dirs, os: Os, isolated: bool, port: u16) -> String {
+    health(dirs, os, isolated, port).1
+}
+
+/// The status line, and whether all is well: the service loaded and the port answering.
+pub fn health(dirs: &Dirs, os: Os, isolated: bool, port: u16) -> (bool, String) {
     let path = unit_path(dirs, os, isolated);
-    let service = if !path.exists() {
-        "service not installed".to_string()
+    let (loaded, service) = if !path.exists() {
+        (false, "serviço não instalado".to_string())
     } else if isolated {
-        format!(
-            "service file at {} (MANDRAKE_HOME is set: not loaded)",
-            path.display()
+        (
+            false,
+            format!(
+                "serviço escrito em {} (MANDRAKE_HOME definido: não carregado)",
+                path.display()
+            ),
         )
     } else {
         let (kind, up) = match os {
@@ -201,21 +209,24 @@ pub fn status(dirs: &Dirs, os: Os, isolated: bool, port: u16) -> String {
             ),
         };
         let name = if os == Os::Mac { LABEL } else { UNIT };
-        format!(
-            "{kind} {name} {}",
-            if up {
-                "loaded"
-            } else {
-                "installed, not loaded"
-            }
-        )
+        let state = if up {
+            "carregado"
+        } else {
+            "instalado, não carregado"
+        };
+        (up, format!("{kind} {name} {state}"))
     };
-    let port_state = if answers(port) {
-        "answering"
+    let answering = answers(port);
+    let port_state = if answering {
+        "respondendo"
     } else {
-        "not answering"
+        "não responde"
     };
-    format!("proxy: {service}; 127.0.0.1:{port} {port_state}")
+    // Isolated, nothing is ever loaded: a proxy answering on the port (`proxy run`) is the healthy state.
+    (
+        (loaded || isolated) && answering,
+        format!("proxy: {service}; 127.0.0.1:{port} {port_state}"),
+    )
 }
 
 pub fn answers(port: u16) -> bool {
@@ -354,11 +365,21 @@ mod tests {
                     .unwrap()
                     .contains("/bin/mandrake")
             );
-            assert!(status(&d, os, true, 1).contains("MANDRAKE_HOME is set"));
+            assert!(status(&d, os, true, 1).contains("MANDRAKE_HOME definido"));
+            assert!(
+                !health(&d, os, true, 1).0,
+                "an isolated service is never loaded"
+            );
+            let up = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+            let port = up.local_addr().unwrap().port();
+            assert!(
+                health(&d, os, true, port).0,
+                "isolated, a proxy answering the port is healthy"
+            );
             assert!(uninstall(&d, os, true).unwrap().starts_with("removed"));
             assert!(
                 status(&d, os, true, 1)
-                    .starts_with("proxy: service not installed; 127.0.0.1:1 not answering")
+                    .starts_with("proxy: serviço não instalado; 127.0.0.1:1 não responde")
             );
         }
         assert!(!tmp.path().join("home").exists());

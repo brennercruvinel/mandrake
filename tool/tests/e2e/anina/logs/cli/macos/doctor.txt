@@ -1,0 +1,58 @@
+doctor
+======
+
+[0.0s]
+
+## mandrake doctor · right after setup (here MANDRAKE_HOME isolates it: the service is not loaded)
+
+[3.3s]
+    ~ $ mandrake doctor
+    ok   perfil $TMPDIR//mandrake-cli.lvNXDM/mh/config/mandrake
+    .toml
+    ok   links: 2 como o perfil diz
+    ok   settings env.CLAUDE_CODE_PLUGIN_DIRS = $TMPDIR//mandra
+    ke-cli.lvNXDM/mh/data/src/data/plugins/prompt-trim
+    ok   settings sem ANTHROPIC_BASE_URL local (com ele, proxy fora derruba todas as sessões)
+    ok   plugin prompt-trim instalado
+    ok   bloco do shell em $TMPDIR//mandrake-cli.lvNXDM/home/.b
+    ash_profile
+    ok   souls $TMPDIR//mandrake-cli.lvNXDM/mh/data/src/data/pr
+    ompt/souls
+    FAIL proxy: serviço escrito em $TMPDIR//mandrake-cli.lvNXDM
+    /mh/state/service/dev.mandrake.proxy.plist (MANDRAKE_HOME definido: não carregado); 127.0.0.1:50152
+    não responde · conserte com: mandrake proxy install
+    ok   claude [claude stub] claude --version
+    ~ $
+
+## a link lost and the shell block deleted from ~/.bashrc
+
+[13.2s]
+    ok   perfil $TMPDIR//mandrake-cli.lvNXDM/mh/config/mandrake
+    .toml
+    FAIL links: 1 como o perfil diz; diferem: agents · conserte com: mandrake link apply
+    ok   settings env.CLAUDE_CODE_PLUGIN_DIRS = $TMPDIR//mandra
+    ke-cli.lvNXDM/mh/data/src/data/plugins/prompt-trim
+    ok   settings sem ANTHROPIC_BASE_URL local (com ele, proxy fora derruba todas as sessões)
+    ok   plugin prompt-trim instalado
+    FAIL bloco do shell em $TMPDIR//mandrake-cli.lvNXDM/home/.b
+    ash_profile · conserte com: mandrake setup --yes, depois abra um shell novo
+    ok   souls $TMPDIR//mandrake-cli.lvNXDM/mh/data/src/data/pr
+    ompt/souls
+    FAIL proxy: serviço escrito em $TMPDIR//mandrake-cli.lvNXDM
+    /mh/state/service/dev.mandrake.proxy.plist (MANDRAKE_HOME definido: não carregado); 127.0.0.1:50152
+    não responde · conserte com: mandrake proxy install
+    ok   claude [claude stub] claude --version
+    ~ $
+
+## does it say how to fix it? the setup again
+
+[22.5s]
+      ok   proxy: serviço escrito para 127.0.0.1:50152 (MANDRAKE_HOME: não carregado)
+    
+    Erros: nenhum
+    próximo passo: abra um shell novo e rode `mandrake doctor`
+    FAIL proxy: serviço escrito em $TMPDIR//mandrake-cli.lvNXDM
+    /mh/state/service/dev.mandrake.proxy.plist (MANDRAKE_HOME definido: não carregado); 127.0.0.1:50152
+    não responde · conserte com: mandrake proxy install
+    ~ $ exit
+    exit

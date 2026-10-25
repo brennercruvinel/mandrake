@@ -1,0 +1,50 @@
+install
+=======
+
+[0.0s]
+
+## install · a new machine, as #3 says
+
+[26.4s]
+       remover safeguards [n]:
+       auditoria (guarda os corpos antes e depois, local, 600) [n]:
+    
+    5. Prompts.
+       core (padrao, none ou um caminho) [padrao]:
+       pasta de souls (padrao = os do Mandrake) [padrao]:
+       skill invoke (abre a sessão com a memória) [n]:
+    
+    6. Resumo
+       pasta ~/dev
+       0 links no perfil, 0 mudam agora
+       plugins: prompt-trim
+       proxy 127.0.0.1:18787 removendo metadata, auditoria desligada
+       core padrão, souls do Mandrake
+    
+       aplicar [s]:
+    
+    Instalando
+      ok   perfil: $T/home/.mandrake/config/mandrake.toml
+      ok   dados: $T/home/.mandrake/data/src
+      ok   core: 4251 caracteres nas sessões sem soul e antes de cada soul
+      ok   links: sem mudança
+      ok   settings: settings env.CLAUDE_CODE_PLUGIN_DIRS: unset -> $T/home/.mandrake/da
+    ta/src/data/plugins/prompt-trim
+      ok   shell: shell: block added to $T/home/.zshrc
+      ok   plugins: sem mudança
+      ok   skill: sem mudança
+    wrote $T/home/.mandrake/state/service/dev.mandrake.proxy.plist (MANDRAKE_HOME is set
+    : not loaded)
+      ok   proxy: serviço escrito para 127.0.0.1:18787 (MANDRAKE_HOME: não carregado)
+    
+    Erros: nenhum
+    próximo passo: abra um shell novo e rode `mandrake doctor`
+    $ exec /bin/zsh
+    $ mandrake
+    zsh: command not found: mandrake
+    $ mandrake doctor
+    zsh: command not found: mandrake
+    $ command -v mandrake >/dev/null && echo 'verdict: FIXED mandrake is on PATH in a new shell' || echo 'verdict:
+     BUG command not found after a clean install'
+    verdict: BUG command not found after a clean install
+    $

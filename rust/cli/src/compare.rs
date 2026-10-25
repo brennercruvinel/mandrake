@@ -11,6 +11,9 @@ use std::path::Path;
 
 pub const PROMPT: &str = "Responda só: ok";
 
+/// A compare run keeps the two whole bodies for a day, then the next compare removes the folder.
+const KEEP_DAYS: u32 = 1;
+
 /// How the result is shown.
 pub enum Shown {
     /// The side-by-side screen, or the table when stdout is not a terminal.
@@ -40,10 +43,9 @@ pub fn run(
             plugin_dir.display()
         );
     }
-    let run = dirs
-        .state
-        .join("compare")
-        .join(format!("run-{}", dirs.fresh_stamp()));
+    let runs = dirs.state.join("compare");
+    ab::sweep_runs(&runs, KEEP_DAYS);
+    let run = runs.join(format!("run-{}", dirs.fresh_stamp()));
     let api = ab::free_port()?;
     std::thread::spawn(move || mandrake_proxy::serve_capture(api));
     if !ab::wait_port(api) {
@@ -53,7 +55,7 @@ pub fn run(
     p.proxy.upstream = format!("http://127.0.0.1:{api}");
     p.proxy.count_tokens = false;
     p.proxy.audit = true;
-    p.proxy.audit_keep_days = 1;
+    p.proxy.audit_keep_days = KEEP_DAYS;
     p.save(&run.join("config/mandrake.toml"))?;
     let (kids, pass_port, trim_port) = ab::proxies(&run)?;
     let events = run.join("state/events.jsonl");

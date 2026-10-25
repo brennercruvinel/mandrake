@@ -1,0 +1,50 @@
+install
+=======
+
+[0.0s]
+
+## install · a new machine, as #3 says
+
+[29.5s]
+      ok   shell: shell: block added to $T/home/.zshrc
+      ok   plugins: sem mudança
+      ok   skill: sem mudança
+    wrote $T/home/.mandrake/state/service/dev.mandrake.proxy.plist (MANDRAKE_HOME is set
+    : not loaded)
+      ok   proxy: serviço escrito para 127.0.0.1:18787 (MANDRAKE_HOME: não carregado)
+    
+    Erros: nenhum
+    próximo passo: abra um shell novo e rode `mandrake doctor`
+    $ exec /bin/zsh
+    $ mandrake
+    Mandrake: corta o que o Claude Code coloca em volta do seu prompt e mede a economia.
+    
+    Como funciona, em duas camadas:
+      1. prompt-trim (dentro do Claude Code) ........ ligado
+         tira o prompt padrão, os lembretes, data, pasta e as descrições longas das tools,
+         e põe no lugar o core (data/prompt/cores/coding.md) nas sessões sem soul
+      2. proxy local 127.0.0.1:18787 (entre o Claude Code e a API) ... DESLIGADO
+         tira as tags <system-reminder> e os campos metadata; mede tokens antes e depois
+         sessões abertas por um shell com o Mandrake usam o proxy quando ele responde;
+         se ele estiver fora, vão direto para a API, sem quebrar
+    
+    Pelo proxy passaram 0 requisições.
+    Ainda não mediu: rode `mandrake bench` (2 requisições curtas por prompt, pela sua sessão).
+    
+    Comandos: setup · doctor · bench · watch · audit · capture · link · proxy   (mandrake <comando> --help)
+    $ mandrake doctor
+    ok   profile $T/home/.mandrake/config/mandrake.toml
+    ok   links: 0 as the profile says
+    ok   settings env.CLAUDE_CODE_PLUGIN_DIRS = $T/home/.mandrake/data/src/data/plugins/
+    prompt-trim
+    ok   settings sem ANTHROPIC_BASE_URL local (com ele, proxy fora derruba todas as sessões)
+    ok   plugin prompt-trim installed
+    ok   shell block in $T/home/.zshrc
+    ok   souls $T/home/.mandrake/data/src/data/prompt/souls
+    FAIL proxy: service file at $T/home/.mandrake/state/service/dev.mandrake.proxy.plist
+     (MANDRAKE_HOME is set: not loaded); 127.0.0.1:18787 not answering
+    ok   claude 2.1.0 (Claude Code, stub)
+    $ command -v mandrake >/dev/null && echo 'verdict: FIXED mandrake is on PATH in a new shell' || echo 'verdict:
+     BUG command not found after a clean install'
+    verdict: FIXED mandrake is on PATH in a new shell
+    $

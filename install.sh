@@ -17,7 +17,7 @@ export CARGO_TARGET_DIR="${CARGO_TARGET_DIR:-$src/target}"
 cargo install --quiet --locked --force --path "$src/rust/cli" --root "${MANDRAKE_PREFIX:-$HOME/.local}"
 bin="${MANDRAKE_PREFIX:-$HOME/.local}/bin/mandrake"
 echo "installed $bin"
-case ":$PATH:" in *":$(dirname "$bin"):"*) ;; *) echo "note: add $(dirname "$bin") to PATH" ;; esac
+case ":$PATH:" in *":$(dirname "$bin"):"*) ;; *) echo "note: $(dirname "$bin") is not on PATH yet; the shell block setup writes adds it in a new shell" ;; esac
 
 case "${1:-}" in
   --profile) MANDRAKE_SRC="$src" "$bin" setup --profile "${2:?--profile needs a file}" --yes ;;

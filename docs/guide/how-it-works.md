@@ -48,7 +48,7 @@ mas continuam com o prompt-trim.
 
 ## Ver o corte
 
-`mandrake compare` roda um prompt pelo seu Claude Code duas vezes, sem e com o Mandrake, e mostra lado a lado o que cada um enviaria: o system prompt, as ferramentas e as mensagens, com o tamanho de cada parte. As duas requisições vão para uma API falsa local, que responde na hora: nada chega à Anthropic e nada é gasto. `--print` imprime a tabela.
+`mandrake compare` roda um prompt pelo seu Claude Code duas vezes, sem e com o Mandrake, e mostra lado a lado o que cada um enviaria: o system prompt, as ferramentas e as mensagens, com o tamanho de cada parte. As duas requisições vão para uma API falsa local, que responde na hora: nada chega à Anthropic e nada é gasto. `--print` imprime a tabela. Os dois corpos ficam em `state/compare/run-<data>` por um dia; o compare seguinte apaga as pastas mais velhas (as do bench, em `state/bench`, ficam sete dias).
 
 ## Quanto economiza, medido
 
