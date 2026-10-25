@@ -141,7 +141,7 @@ fn links_step(dirs: &Dirs, catalog: &Catalog, profile: &Profile) -> Result<Vec<S
             )
         })
         .collect();
-    if let Some(j) = links::apply(dirs, catalog, &steps, &mandrake_home::stamp())? {
+    if let Some(j) = links::apply(dirs, catalog, &steps)? {
         out.push(format!("journal {}", j.display()));
     }
     Ok(out)
@@ -223,7 +223,7 @@ pub fn link_apply(dirs: &Dirs) -> Result<()> {
         .context("no profile yet: run mandrake setup or mandrake capture --out")?;
     let steps = links::plan(dirs, &catalog, &p)?;
     print_steps(&steps);
-    if let Some(j) = links::apply(dirs, &catalog, &steps, &mandrake_home::stamp())? {
+    if let Some(j) = links::apply(dirs, &catalog, &steps)? {
         println!("journal {}", j.display());
     }
     Ok(())

@@ -1,23 +1,24 @@
 //! `mandrake setup --cli`: the setup as plain questions, one per line, for any terminal and for
 //! scripts. Enter takes the value in brackets. Prints every answer back, so a log shows each item.
+//! Input that ends before the last answer stops the setup: only an answer given applies anything.
 
-use anyhow::Result;
+use anyhow::{Result, bail};
 use mandrake_home::{Action, Dirs, LinkSpec, Profile};
 use mandrake_layout::{Catalog, links};
 use std::io::{BufRead, IsTerminal, Write};
 
 struct Ask<'a> {
     input: Box<dyn BufRead + 'a>,
-    eof: bool,
 }
 
 impl Ask<'_> {
-    fn line(&mut self, q: &str, default: &str) -> String {
+    fn line(&mut self, q: &str, default: &str) -> Result<String> {
         print!("{q} [{default}]: ");
         let _ = std::io::stdout().flush();
         let mut s = String::new();
-        if !self.eof && self.input.read_line(&mut s).unwrap_or(0) == 0 {
-            self.eof = true;
+        if self.input.read_line(&mut s)? == 0 {
+            println!();
+            bail!("a entrada terminou antes das respostas; nada foi aplicado");
         }
         let s = s.trim();
         let v = if s.is_empty() {
@@ -29,15 +30,17 @@ impl Ask<'_> {
         if !std::io::stdin().is_terminal() {
             println!("{v}");
         }
-        v
+        Ok(v)
     }
 
-    fn yes(&mut self, q: &str, default: bool) -> bool {
+    fn yes(&mut self, q: &str, default: bool) -> Result<bool> {
         loop {
-            let a = self.line(q, if default { "s" } else { "n" }).to_lowercase();
+            let a = self
+                .line(q, if default { "s" } else { "n" })?
+                .to_lowercase();
             match a.as_str() {
-                "s" | "sim" | "y" | "yes" => return true,
-                "n" | "nao" | "não" | "no" => return false,
+                "s" | "sim" | "y" | "yes" => return Ok(true),
+                "n" | "nao" | "não" | "no" => return Ok(false),
                 _ => println!("  responda s ou n"),
             }
         }
@@ -62,12 +65,11 @@ pub fn run(
 ) -> Result<Option<Profile>> {
     let mut a = Ask {
         input: Box::new(input),
-        eof: false,
     };
     let mut p = start.clone();
     println!("Mandrake setup. Enter aceita o valor entre colchetes.\n");
     println!("1. Pasta de desenvolvimento: a raiz dos destinos relativos.");
-    let dev = a.line("   pasta", p.dev_root.as_deref().unwrap_or("~/dev"));
+    let dev = a.line("   pasta", p.dev_root.as_deref().unwrap_or("~/dev"))?;
     p.dev_root = Some(dev);
 
     let mut keys: Vec<(String, String, bool)> = catalog
@@ -104,7 +106,7 @@ pub fn run(
             Action::Copy => "c",
         };
         let action = loop {
-            match a.line("         ação", def).to_lowercase().as_str() {
+            match a.line("         ação", def)?.to_lowercase().as_str() {
                 "m" | "manter" => break Action::Keep,
                 "l" | "linkar" => break Action::Link,
                 "c" | "copiar" => break Action::Copy,
@@ -118,7 +120,7 @@ pub fn run(
         let target = a.line(
             "         destino",
             cur.target.as_deref().unwrap_or(&format!("claude/{key}")),
-        );
+        )?;
         p.links.insert(
             key.clone(),
             LinkSpec {
@@ -132,15 +134,15 @@ pub fn run(
     p.plugins.fancy = a.yes(
         "   fancy (markdown com tema, badges, barra de status)",
         p.plugins.fancy,
-    );
+    )?;
     p.plugins.tui_embed = a.yes(
         "   tui-embed (apps de terminal em painéis)",
         p.plugins.tui_embed,
-    );
+    )?;
 
     println!("\n4. Proxy local.");
     p.proxy.port = loop {
-        match a.line("   porta", &p.proxy.port.to_string()).parse() {
+        match a.line("   porta", &p.proxy.port.to_string())?.parse() {
             Ok(v) => break v,
             Err(_) => println!("   um número de porta"),
         }
@@ -149,7 +151,7 @@ pub fn run(
     println!(
         "   safeguards alimenta o classificador de segurança da API; tirá-lo é escolha consciente."
     );
-    let strip = a.yes("   remover safeguards", had);
+    let strip = a.yes("   remover safeguards", had)?;
     p.proxy.strip_fields.retain(|f| f != "safeguards");
     if strip {
         p.proxy.strip_fields.push("safeguards".into());
@@ -157,28 +159,28 @@ pub fn run(
     p.proxy.audit = a.yes(
         "   auditoria (guarda os corpos antes e depois, local, 600)",
         p.proxy.audit,
-    );
+    )?;
 
     println!("\n5. Prompts.");
     let core = a.line(
         "   core (padrao, none ou um caminho)",
         p.souls.core.as_deref().unwrap_or("padrao"),
-    );
+    )?;
     p.souls.core = if core == "padrao" { None } else { Some(core) };
     let souls = a.line(
         "   pasta de souls (padrao = os do Mandrake)",
         p.souls.dir.as_deref().unwrap_or("padrao"),
-    );
+    )?;
     p.souls.dir = if souls == "padrao" { None } else { Some(souls) };
     p.skills.invoke = a.yes(
         "   skill invoke (abre a sessão com a memória)",
         p.skills.invoke,
-    );
+    )?;
     if p.skills.invoke {
         let m = a.line(
             "   comando de memória (vazio = nenhum)",
             p.skills.memory_cmd.as_deref().unwrap_or("nenhum"),
-        );
+        )?;
         p.skills.memory_cmd = if m == "nenhum" || m.is_empty() {
             None
         } else {
@@ -222,7 +224,7 @@ pub fn run(
         p.souls.core.as_deref().unwrap_or("padrão"),
         p.souls.dir.as_deref().unwrap_or("do Mandrake")
     );
-    if a.yes("\n   aplicar", true) {
+    if a.yes("\n   aplicar", true)? {
         Ok(Some(p))
     } else {
         Ok(None)
