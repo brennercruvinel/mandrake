@@ -111,6 +111,19 @@ mandrake link rollback    # undo the last apply from its journal
 | `~/.local/share/mandrake/` | the installed copy of `data/` and `cfgs/`, and the shell files |
 | `~/.local/bin/abtop`, `~/.local/bin/gitlogue` | the `--embed` builds, with tui-embed only, unless ones with `--embed` are already on `PATH` |
 
+## Claude Code versions
+
+prompt-trim hooks into Claude Code's plugin API, which can change between releases. CI runs the whole
+gate on each of these:
+
+| Version | Where |
+| - | - |
+| 2.1.287 | Linux |
+| 2.1.310 | Linux and macOS |
+| the newest on npm | Linux; a failure there is a warning, the sign to check a new release |
+
+To add a version, add it to the `claude` matrix in `.github/workflows/ci.yml` and to this table.
+
 ## Souls
 
 `claude invoke <soul>` opens a soul: the core prompt and the soul's prompt become the whole system
