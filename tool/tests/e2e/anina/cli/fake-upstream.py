@@ -16,7 +16,9 @@ def tokens(body: bytes) -> int:
 
 
 class Handler(BaseHTTPRequestHandler):
-    def log_message(self, *args):  # quiet: the recording shows mandrake, not this server
+    def log_message(
+        self, *args
+    ):  # quiet: the recording shows mandrake, not this server
         pass
 
     def reply(self, payload: dict, status: int = 200) -> None:
@@ -27,13 +29,15 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(data)
 
-    def do_POST(self):  # noqa: N802 (http.server names it)
+    def do_POST(self):  # http.server calls it by this name
         body = self.rfile.read(int(self.headers.get("content-length", 0)))
         path = self.path.split("?")[0]
         if path.endswith("/count_tokens"):
             return self.reply({"input_tokens": tokens(body)})
         if not path.endswith("/v1/messages"):
-            return self.reply({"type": "error", "error": {"type": "not_found_error"}}, 404)
+            return self.reply(
+                {"type": "error", "error": {"type": "not_found_error"}}, 404
+            )
         usage = {
             "input_tokens": tokens(body),
             "output_tokens": 12,
@@ -62,12 +66,27 @@ class Handler(BaseHTTPRequestHandler):
         text = {"type": "text", "text": ""}
         events = [
             ("message_start", {"type": "message_start", "message": start}),
-            ("content_block_start", {"type": "content_block_start", "index": 0, "content_block": text}),
-            ("content_block_delta", {"type": "content_block_delta", "index": 0,
-                                     "delta": {"type": "text_delta", "text": "ok"}}),
+            (
+                "content_block_start",
+                {"type": "content_block_start", "index": 0, "content_block": text},
+            ),
+            (
+                "content_block_delta",
+                {
+                    "type": "content_block_delta",
+                    "index": 0,
+                    "delta": {"type": "text_delta", "text": "ok"},
+                },
+            ),
             ("content_block_stop", {"type": "content_block_stop", "index": 0}),
-            ("message_delta", {"type": "message_delta", "delta": {"stop_reason": "end_turn"},
-                               "usage": {"output_tokens": 12}}),
+            (
+                "message_delta",
+                {
+                    "type": "message_delta",
+                    "delta": {"stop_reason": "end_turn"},
+                    "usage": {"output_tokens": 12},
+                },
+            ),
             ("message_stop", {"type": "message_stop"}),
         ]
         for name, data in events:
