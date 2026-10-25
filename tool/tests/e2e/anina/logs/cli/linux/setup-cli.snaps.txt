@@ -14,7 +14,7 @@ Mandrake setup. Enter aceita o valor entre colchetes.
 1. Pasta de desenvolvimento: a raiz dos destinos relativos.
    pasta [~/dev]:
 
-2. Itens de /tmp/mandrake-cli.SIUHZ8/home/.claude (23 itens): manter (m), linkar (l) ou copiar (c).
+2. Itens de /tmp/mandrake-cli.F6Clem/home/.claude (23 itens): manter (m), linkar (l) ou copiar (c).
 
    [1/23] CLAUDE.md: Instructions read at the start of every session
          hoje: arquivo
@@ -40,7 +40,7 @@ Mandrake setup. Enter aceita o valor entre colchetes.
 1. Pasta de desenvolvimento: a raiz dos destinos relativos.
    pasta [~/dev]:
 
-2. Itens de /tmp/mandrake-cli.SIUHZ8/home/.claude (23 itens): manter (m), linkar (l) ou copiar (c).
+2. Itens de /tmp/mandrake-cli.F6Clem/home/.claude (23 itens): manter (m), linkar (l) ou copiar (c).
 
    [1/23] CLAUDE.md: Instructions read at the start of every session
          hoje: arquivo
@@ -84,8 +84,8 @@ UGIN_DIRS in it
 
 6. Resumo
    pasta ~/dev
-   1 links no perfil, 1 mudam agora
-     backuplink  agents
+   1 link no perfil; 1 muda agora:
+     agents: 1 arquivo vai para ~/dev/claude/agents, e o backup guarda uma cópia
    plugins: prompt-trim
    proxy 127.0.0.1:8787 removendo metadata, auditoria desligada
    core padrão, souls do Mandrake
@@ -97,8 +97,8 @@ UGIN_DIRS in it
 
 6. Resumo
    pasta ~/dev
-   1 links no perfil, 1 mudam agora
-     backuplink  agents
+   1 link no perfil; 1 muda agora:
+     agents: 1 arquivo vai para ~/dev/claude/agents, e o backup guarda uma cópia
    plugins: prompt-trim
    proxy 127.0.0.1:8787 removendo metadata, auditoria desligada
    core padrão, souls do Mandrake
@@ -106,17 +106,17 @@ UGIN_DIRS in it
    aplicar [s]:
 
 Instalando
-  ok   perfil: /tmp/mandrake-cli.SIUHZ8/mh/config/mandrake.toml
-  ok   dados: /tmp/mandrake-cli.SIUHZ8/mh/data/src
+  ok   perfil: /tmp/mandrake-cli.F6Clem/mh/config/mandrake.toml
+  ok   dados: /tmp/mandrake-cli.F6Clem/mh/data/src
   ok   core: 4251 caracteres nas sessões sem soul e antes de cada soul
-  ok   links: backuplink  agents -> /tmp/mandrake-cli.SIUHZ8/home/dev/claude/agents
-  ok   links: journal /tmp/mandrake-cli.SIUHZ8/mh/state/journal/20261025-022800-001.json
-  ok   settings: settings env.CLAUDE_CODE_PLUGIN_DIRS: unset -> /tmp/mandrake-cli.SIUHZ8/mh/data/src
+  ok   links: agents: 1 arquivo vai para ~/dev/claude/agents, e o backup guarda uma cópia
+  ok   links: journal /tmp/mandrake-cli.F6Clem/mh/state/journal/20261025-062721-001.json
+  ok   settings: settings env.CLAUDE_CODE_PLUGIN_DIRS: unset -> /tmp/mandrake-cli.F6Clem/mh/data/src
 /data/plugins/prompt-trim
-  ok   shell: shell: block added to /tmp/mandrake-cli.SIUHZ8/home/.bashrc
+  ok   shell: shell: block added to /tmp/mandrake-cli.F6Clem/home/.bashrc
   ok   plugins: sem mudança
   ok   skill: sem mudança
-wrote /tmp/mandrake-cli.SIUHZ8/mh/state/service/mandrake-proxy.service (MANDRAKE_HOME is set: not lo
+wrote /tmp/mandrake-cli.F6Clem/mh/state/service/mandrake-proxy.service (MANDRAKE_HOME is set: not lo
 aded)
   ok   proxy: serviço escrito para 127.0.0.1:8787 (MANDRAKE_HOME: não carregado)
 
@@ -126,7 +126,9 @@ próximo passo: abra um shell novo e rode `mandrake doctor`
 ### 06-result
 
 total 8
--rw-rw-r-- 1 use user 11 Oct 24 22:27 CLAUDE.md
-lrwxrwxrwx 1 use user 47 Oct 24 22:28 agents -> /tmp/mandrake-cli.SIUHZ8/home/dev/claude/agents
--rw-rw-r-- 1 user user 114 Oct 24 22:28 settings.json
+-rw-rw-r-- 1 use user 11 Oct 25 02:27 CLAUDE.md
+lrwxrwxrwx 1 use user 47 Oct 25 02:27 agents -> /tmp/mandrake-cli.F6Clem/home/dev/claude/agents
+-rw-rw-r-- 1 user user 114 Oct 25 02:27 settings.json
+reviewer.md
+/tmp/mandrake-cli.F6Clem/home/../mh/state/backups/20261025-062721-001/agents/reviewer.md
 ~ $
