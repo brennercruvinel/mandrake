@@ -373,6 +373,7 @@ fn confirming_returns_the_profile_and_quitting_returns_nothing() {
     assert_eq!(p.skills.memory_cmd.as_deref(), Some("mem.sh find"));
 
     let (_t, mut w) = setup();
+    w.first = false; // a machine that already has a saved profile
     go_to(&mut w, Step::Summary);
     assert!(text(&draw(120, 20, |f| render(f, &w))).contains("Nenhuma mudança"));
     assert_eq!(key(&mut w, KeyCode::Char('q')), Outcome::Quit);
@@ -415,4 +416,18 @@ fn print_screens() {
         w.step = step;
         println!("{}\n", text(&draw(120, 22, |f| render(f, &w))));
     }
+}
+
+#[test]
+fn a_first_setup_lists_what_it_writes_instead_of_no_change() {
+    let (_t, mut w) = setup();
+    assert!(w.first, "no saved profile in the fixture");
+    go_to(&mut w, Step::Summary);
+    let screen = text(&draw(120, 20, |f| render(f, &w)));
+    assert!(screen.contains("Primeira instalação"), "{screen}");
+    assert!(!screen.contains("Nenhuma mudança"), "{screen}");
+    assert!(
+        screen.contains("settings.json") && screen.contains("127.0.0.1:"),
+        "{screen}"
+    );
 }

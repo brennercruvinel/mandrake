@@ -398,7 +398,9 @@ fn summary(f: &mut Frame, area: Rect, w: &Wizard) {
         return;
     }
     let changes = w.changes();
-    let head = if changes.is_empty() {
+    let head = if w.first {
+        "Primeira instalação. Enter confirma, e o setup escreve:".to_string()
+    } else if changes.is_empty() {
         "Nenhuma mudança em relação ao perfil atual.".to_string()
     } else {
         format!(
@@ -414,6 +416,9 @@ fn summary(f: &mut Frame, area: Rect, w: &Wizard) {
         ]),
         Line::from(""),
     ];
+    if w.first {
+        lines.extend(first_install(w));
+    }
     for c in changes.iter().skip(w.summary_scroll) {
         let mut spans = vec![
             Span::styled(format!("{:<26}", c.what), theme::label()),
@@ -427,4 +432,30 @@ fn summary(f: &mut Frame, area: Rect, w: &Wizard) {
         lines.push(Line::from(spans));
     }
     f.render_widget(Paragraph::new(lines), area);
+}
+
+/// What a first setup writes besides the changes: shown so the summary never reads as "nothing".
+fn first_install(w: &Wizard) -> Vec<Line<'static>> {
+    let port = w.port.value().trim();
+    [
+        ("perfil", w.dirs.profile().display().to_string()),
+        (
+            "settings.json",
+            "CLAUDE_CODE_PLUGIN_DIRS com o prompt-trim".to_string(),
+        ),
+        (
+            "shell",
+            "um bloco no .zshrc ou .bashrc: Mandrake e PATH".to_string(),
+        ),
+        ("proxy", format!("serviço do usuário em 127.0.0.1:{port}")),
+    ]
+    .into_iter()
+    .map(|(what, after)| {
+        Line::from(vec![
+            Span::styled(format!("{what:<26}"), theme::label()),
+            Span::styled(after, Style::new().add_modifier(Modifier::BOLD)),
+        ])
+    })
+    .chain([Line::from("")])
+    .collect()
 }
