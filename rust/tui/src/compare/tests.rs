@@ -67,3 +67,13 @@ fn summary_has_a_row_per_part_and_the_total() {
     assert_eq!(change(100, 75), "-25,0%");
     assert_eq!(change(100, 110), "+10,0%");
 }
+
+#[test]
+fn a_larger_request_with_mandrake_is_not_called_the_same_size() {
+    let mut bigger = CompareView::new(WITH, WITHOUT, "ok");
+    let s = draw(&mut bigger, 120, 20);
+    assert!(s.contains("Com o Mandrake o pedido fica"), "{s}");
+    assert!(!s.contains("mesmo tamanho"), "{s}");
+    let mut same = CompareView::new(WITH, WITH, "ok");
+    assert!(draw(&mut same, 120, 20).contains("mesmo tamanho"));
+}

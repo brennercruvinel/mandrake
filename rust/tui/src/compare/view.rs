@@ -98,13 +98,18 @@ fn total_lines(v: &CompareView) -> Vec<Line<'static>> {
         format!("   {}", change(a, b)),
         theme::accent(),
     ));
-    let second = if a > b {
-        format!(
+    let second = match a.cmp(&b) {
+        std::cmp::Ordering::Greater => format!(
             " O Mandrake corta {} de cada mensagem enviada · tokens estimados: bytes ÷ 4",
             fmt::bytes(a - b)
-        )
-    } else {
-        " Os dois pedidos têm o mesmo tamanho: o prompt-trim não cortou nada.".to_string()
+        ),
+        std::cmp::Ordering::Less => format!(
+            " Com o Mandrake o pedido fica {} maior: o core pesa mais que os cortes.",
+            fmt::bytes(b - a)
+        ),
+        std::cmp::Ordering::Equal => {
+            " Os dois pedidos têm o mesmo tamanho: o prompt-trim não cortou nada.".to_string()
+        }
     };
     vec![Line::from(first), Line::styled(second, theme::dim())]
 }

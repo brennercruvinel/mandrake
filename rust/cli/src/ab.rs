@@ -21,6 +21,9 @@ pub const PROMPTS: [(&str, &str); 3] = [
     ),
 ];
 
+/// How long a bench run keeps its bodies, for `mandrake hex` on them.
+const BENCH_KEEP_DAYS: u32 = 7;
+
 pub(crate) struct Proxies(Vec<Child>);
 impl Drop for Proxies {
     fn drop(&mut self) {
@@ -57,6 +60,9 @@ pub(crate) fn claude(cwd: &Path, port: u16, plugin_dir: &str, prompt: &str) -> R
         .current_dir(cwd)
         .env("MANDRAKE_PROXY", "0")
         .env_remove("ANTHROPIC_BASE_URL")
+        // Inside a soul session prompt-trim would skip the core, and gh would answer as the soul.
+        .env_remove("MANDRAKE_SOUL")
+        .env_remove("GH_CONFIG_DIR")
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .spawn()
@@ -86,16 +92,49 @@ pub(crate) fn claude(cwd: &Path, port: u16, plugin_dir: &str, prompt: &str) -> R
     Ok(text.trim().lines().last().unwrap_or("").to_string())
 }
 
-/// The events written since `seen`, waiting for their token counts to land.
+/// The events written since `seen`, once the log has been quiet for a while: the proxy writes an
+/// event only when its stream ends, so a small side request (title, quota) can land before the
+/// conversation, and `claude -p` can exit before either is written.
 pub(crate) fn new_events(path: &Path, seen: usize) -> Vec<Event> {
-    let end = Instant::now() + Duration::from_secs(40);
+    settle(
+        path,
+        seen,
+        Duration::from_millis(1500),
+        Duration::from_secs(40),
+    )
+}
+
+fn settle(path: &Path, seen: usize, quiet: Duration, ceiling: Duration) -> Vec<Event> {
+    let end = Instant::now() + ceiling;
+    let (mut count, mut since) = (seen, Instant::now());
     loop {
         let all = mandrake_meter::read(path).unwrap_or_default();
-        if all.len() > seen || Instant::now() > end {
+        if all.len() != count {
+            (count, since) = (all.len(), Instant::now());
+        }
+        if (count > seen && since.elapsed() >= quiet) || Instant::now() > end {
             return all.into_iter().skip(seen).collect();
         }
-        std::thread::sleep(Duration::from_millis(300));
+        std::thread::sleep(Duration::from_millis(100));
     }
+}
+
+/// Removes the `run-*` folders in `parent` older than `keep_days`. Each run keeps whole request
+/// bodies under its own MANDRAKE_HOME, which no later run reopens, so its own sweep never comes.
+pub(crate) fn sweep_runs(parent: &Path, keep_days: u32) -> usize {
+    let Ok(entries) = std::fs::read_dir(parent) else {
+        return 0;
+    };
+    let cutoff = std::time::SystemTime::now() - Duration::from_secs(u64::from(keep_days) * 86_400);
+    entries
+        .flatten()
+        .filter(|e| e.file_name().to_string_lossy().starts_with("run-"))
+        .filter(|e| {
+            std::fs::symlink_metadata(e.path())
+                .is_ok_and(|m| m.is_dir() && m.modified().is_ok_and(|t| t < cutoff))
+        })
+        .filter(|e| std::fs::remove_dir_all(e.path()).is_ok())
+        .count()
 }
 
 fn sum(evs: &[Event], f: impl Fn(&Event) -> Option<u64>) -> Option<u64> {
@@ -137,14 +176,13 @@ pub fn run(dirs: &Dirs, profile: &Profile, plugin_dir: &Path, out: &Path) -> Res
             plugin_dir.display()
         );
     }
-    let run = dirs
-        .state
-        .join("bench")
-        .join(format!("run-{}", mandrake_home::stamp()));
+    let runs = dirs.state.join("bench");
+    sweep_runs(&runs, BENCH_KEEP_DAYS);
+    let run = runs.join(format!("run-{}", mandrake_home::stamp()));
     let mut p = profile.clone();
     p.proxy.count_tokens = true;
     p.proxy.audit = true;
-    p.proxy.audit_keep_days = 7;
+    p.proxy.audit_keep_days = BENCH_KEEP_DAYS;
     p.save(&run.join("config/mandrake.toml"))?;
     let (kids, pass_port, trim_port) = proxies(&run)?;
     let events = run.join("state/events.jsonl");
@@ -204,4 +242,71 @@ pub fn run(dirs: &Dirs, profile: &Profile, plugin_dir: &Path, out: &Path) -> Res
     );
     println!("ver: mandrake bench --view");
     Ok(report)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn ev(id: &str, bytes: u64) -> Event {
+        Event {
+            id: id.into(),
+            ts: String::new(),
+            mode: Mode::Pass,
+            path: "/v1/messages".into(),
+            model: None,
+            status: 200,
+            ms: 0,
+            bytes_before: bytes,
+            bytes_after: bytes,
+            tokens_before: None,
+            tokens_after: None,
+            usage: None,
+            cuts: Default::default(),
+            audited: true,
+            error: None,
+        }
+    }
+
+    #[test]
+    fn a_side_request_first_does_not_end_the_wait() {
+        let tmp = tempfile::tempdir().unwrap();
+        let log = tmp.path().join("events.jsonl");
+        mandrake_meter::append(&log, &ev("old", 1)).unwrap();
+        mandrake_meter::append(&log, &ev("title", 900)).unwrap();
+        let writer = {
+            let log = log.clone();
+            std::thread::spawn(move || {
+                std::thread::sleep(Duration::from_millis(300));
+                mandrake_meter::append(&log, &ev("conversation", 90_000)).unwrap();
+            })
+        };
+        let evs = settle(&log, 1, Duration::from_millis(800), Duration::from_secs(10));
+        writer.join().unwrap();
+        let ids: Vec<_> = evs.iter().map(|e| e.id.as_str()).collect();
+        assert_eq!(ids, ["title", "conversation"]);
+    }
+
+    #[test]
+    fn old_runs_are_swept_and_fresh_ones_kept() {
+        let tmp = tempfile::tempdir().unwrap();
+        let (old, fresh, other) = (
+            tmp.path().join("run-old"),
+            tmp.path().join("run-new"),
+            tmp.path().join("keep-me"),
+        );
+        for d in [&old, &fresh, &other] {
+            std::fs::create_dir_all(d.join("state/audit")).unwrap();
+        }
+        let two_days = std::time::SystemTime::now() - Duration::from_secs(2 * 86_400);
+        for d in [&old, &other] {
+            std::fs::File::open(d)
+                .unwrap()
+                .set_modified(two_days)
+                .unwrap();
+        }
+        assert_eq!(sweep_runs(tmp.path(), 1), 1);
+        assert!(!old.exists() && fresh.exists() && other.exists());
+        assert_eq!(sweep_runs(&tmp.path().join("none"), 1), 0);
+    }
 }
