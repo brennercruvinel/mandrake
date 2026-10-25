@@ -83,17 +83,18 @@ pub fn checks(dirs: &Dirs) -> Result<Vec<Check>> {
     let doc = settings::read(&dirs.claude.join("settings.json"))?;
     for (k, v) in settings::wanted(p.proxy.port, &install::prompt_trim(&root)) {
         let have = doc["env"][k].as_str().unwrap_or("vazio");
-        out.push(Check::ok(
-            have == v,
-            format!("settings env.{k} = {have}"),
-            SETUP,
-        ));
+        let ok = if k == settings::PLUGIN_DIRS {
+            settings::has_plugin_dir(&doc, &v)
+        } else {
+            have == v
+        };
+        out.push(Check::ok(ok, format!("settings env.{k} = {have}"), SETUP));
     }
     let base = doc["env"][settings::BASE_URL].as_str().unwrap_or("");
     out.push(Check::ok(
-        !base.starts_with("http://127.0.0.1") && !base.starts_with("http://localhost"),
+        !settings::is_ours(base, p.proxy.port),
         format!(
-            "settings sem ANTHROPIC_BASE_URL local (com ele, proxy fora derruba todas as sessões){}",
+            "settings sem ANTHROPIC_BASE_URL do Mandrake (com ele, proxy fora derruba todas as sessões){}",
             if base.is_empty() {
                 String::new()
             } else {
@@ -106,6 +107,15 @@ pub fn checks(dirs: &Dirs) -> Result<Vec<Check>> {
             dirs.claude.join("settings.json").display()
         ),
     ));
+    if !base.is_empty() && !settings::is_ours(base, p.proxy.port) {
+        out.push(Check {
+            mark: Mark::Note,
+            what: format!(
+                "settings manda as sessões para outro endereço ({base}): o proxy do Mandrake fica de fora, o prompt-trim continua; para passar pelos dois, ponha upstream = \"{base}\" em [proxy] no perfil"
+            ),
+            fix: None,
+        });
+    }
     out.push(Check::ok(
         install::prompt_trim(&root)
             .join("hooks/register.js")

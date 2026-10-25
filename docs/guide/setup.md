@@ -106,10 +106,23 @@ mandrake link rollback    # undo the last apply from its journal
 | Where | What |
 | - | - |
 | `~/.zshrc` (or `.bashrc`, `.bash_profile`) | one block between `# >>> mandrake >>>` and `# <<< mandrake <<<`, replaced on every run |
-| `settings.json` (through its link) | `env.ANTHROPIC_BASE_URL` and `env.CLAUDE_CODE_PLUGIN_DIRS`, nothing else; the old file goes to the backup |
+| `settings.json` (through its link) | prompt-trim's folder joins `env.CLAUDE_CODE_PLUGIN_DIRS`, and an `env.ANTHROPIC_BASE_URL` that an older Mandrake wrote goes away; nothing else, and the old file goes to the backup |
 | `~/Library/LaunchAgents/dev.mandrake.proxy.plist` or `~/.config/systemd/user/mandrake-proxy.service` | the proxy service |
 | `~/.local/share/mandrake/` | the installed copy of `data/` and `cfgs/`, and the shell files |
 | `~/.local/bin/abtop`, `~/.local/bin/gitlogue` | the `--embed` builds, with tui-embed only, unless ones with `--embed` are already on `PATH` |
+
+## Next to other plugins and proxies
+
+- `CLAUDE_CODE_PLUGIN_DIRS` is a list (Claude Code splits it on `:`). Setup puts prompt-trim's folder
+  first and keeps the others in order; a prompt-trim from an older install is replaced.
+- An `ANTHROPIC_BASE_URL` in `settings.json` that is not Mandrake's own port (LiteLLM, a router, a
+  gateway) stays. doctor notes that those sessions skip Mandrake's proxy, and prompt-trim still runs.
+  To go through both, set `upstream` in `[proxy]` to that address.
+- The launcher sends a session to `127.0.0.1:<port>` only when what answers there is Mandrake's proxy
+  (`GET /_mandrake` says `mandrake`); another program on the port gets nothing, and the session goes
+  straight to the API with a line that says why. An `ANTHROPIC_BASE_URL` already in the shell is left
+  alone.
+- Plugins already on from another marketplace (`fancy@someone`) are not installed twice.
 
 ## Souls
 
