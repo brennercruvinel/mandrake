@@ -1,0 +1,57 @@
+setup-yes
+=========
+
+[0.0s]
+
+## a profile from another machine: two links
+
+[4.8s]
+    ~ $ cat mandrake-profile.toml | grep -v '^$' | head -12
+    dev_root = "/tmp/mandrake-cli.2JQ8Lp/work"
+    [links.agents]
+    action = "link"
+    target = "claude/agents"
+    [links.commands]
+    action = "link"
+    target = "claude/commands"
+    [proxy]
+    port = 39585
+    upstream = "https://api.anthropic.com"
+    strip_fields = ["metadata"]
+    audit = false
+    ~ $
+
+## mandrake setup --profile mandrake-profile.toml --yes
+
+[10.5s]
+    
+    Instalando
+      ok   perfil: /tmp/mandrake-cli.2JQ8Lp/mh/config/mandrake.toml
+      ok   dados: /tmp/mandrake-cli.2JQ8Lp/mh/data/src
+      ok   core: 4251 caracteres nas sessões sem soul e antes de cada soul
+      ok   links: backuplink  agents -> /tmp/mandrake-cli.2JQ8Lp/work/claude/agents
+      ok   links: link        commands -> /tmp/mandrake-cli.2JQ8Lp/work/claude/commands
+      ok   links: journal /tmp/mandrake-cli.2JQ8Lp/mh/state/journal/20261025-022842-001.json
+      ok   settings: settings env.CLAUDE_CODE_PLUGIN_DIRS: unset -> /tmp/mandrake-cli.2JQ8Lp/mh/data/src
+    /data/plugins/prompt-trim
+      ok   shell: shell: block added to /tmp/mandrake-cli.2JQ8Lp/home/.bashrc
+      ok   plugins: sem mudança
+      ok   skill: sem mudança
+    wrote /tmp/mandrake-cli.2JQ8Lp/mh/state/service/mandrake-proxy.service (MANDRAKE_HOME is set: not lo
+    aded)
+      ok   proxy: serviço escrito para 127.0.0.1:39585 (MANDRAKE_HOME: não carregado)
+    
+    Erros: nenhum
+    próximo passo: abra um shell novo e rode `mandrake doctor`
+    ~ $
+
+## the same command again: nothing should change
+
+[19.9s]
+    total 8
+    -rw-rw-r-- 1 use user 11 Oct 24 22:28 CLAUDE.md
+    lrwxrwxrwx 1 use user 43 Oct 24 22:28 agents -> /tmp/mandrake-cli.2JQ8Lp/work/claude/agents
+    lrwxrwxrwx 1 use user 45 Oct 24 22:28 commands -> /tmp/mandrake-cli.2JQ8Lp/work/claude/commands
+    -rw-rw-r-- 1 user user 114 Oct 24 22:28 settings.json
+    ~ $ exit
+    exit

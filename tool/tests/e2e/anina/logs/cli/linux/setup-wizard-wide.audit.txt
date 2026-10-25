@@ -1,0 +1,20 @@
+anina: [1/4] 120x40-truecolor       ok       11.4s
+anina: [2/4] 60x20-truecolor        ok       11.3s
+anina: [3/4] 120x40-nocolor         ok       11.4s
+anina: [4/4] 120x40-16              ok       11.4s
+
+  category        score
+  stability         100   the journey ran to the end in all 4 terminals
+  responsiveness    100   first screen after 53 ms
+  readability       100   text: 0 of 1968 cells below 4.5:1 (0 below 3:1)
+  compatibility     100   all 5 checks passed
+  hygiene           100   all 9 checks passed
+
+  terminal               status      first      p50/p95 ms   text<AA  colors
+  120x40-truecolor       ok           53ms           15/17      0.0%  
+  60x20-truecolor        ok           48ms           16/20      0.0%  
+  120x40-nocolor         ok           52ms           16/18      0.0%  ok
+  120x40-16              ok           53ms           16/17      0.0%  ok
+
+anina: report -> /tmp/aud-setup-wizard-wide/report.html
+anina check: nothing to hide (18 files checked, 4 PNG read through their screen text)

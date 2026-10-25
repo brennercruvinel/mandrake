@@ -1,0 +1,85 @@
+
+### 01-live
+
+ Mandrake  watch requisições ao vivo, relidas a cada 0,5 s
+┏ Sem Mandrake · pass ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓┌ Com Mandrake · trim ───────────────────────────────────────────────┐
+┃ requisições 0                                                      ┃│ requisições 5                                                      │
+┃ tokens      sem contagem                                           ┃│ tokens      4.644 → 4.517  (2,7%)                                  │
+┃ bytes       0 B → 0 B                                              ┃│ bytes       19,0 KB → 17,8 KB                                      │
+┃ usage       entrada 0 · saída 0                                    ┃│ usage       entrada 4.560 · saída 60                               │
+┃ cache       lido 0 · criado 0                                      ┃│ cache       lido 0 · criado 0                                      │
+┃                                                                    ┃│hora UTC modelo               status tokens              ms      aud│
+┃ aguardando requisições em                                          ┃│02:36:29 sonnet-4-5           200    434→424                   2  ◆ │
+┃ /tmp/mandrake-cli.LBzu2T/mh/state/events.jsonl                     ┃│02:36:28 opus-4-1             200    1.370→1.351               2  ◆ │
+┃                                                                    ┃│02:36:22 sonnet-4-5           200    1.036→967                 1  ◆ │
+┃                                                                    ┃│02:36:22 opus-4-1             200    1.370→1.351               2  ◆ │
+┃                                                                    ┃│02:36:22 sonnet-4-5           200    434→424                   5  ◆ │
+┃                                                                    ┃│                                                                    │
+┃                                                                    ┃│                                                                    │
+┃                                                                    ┃│                                                                    │
+┃                                                                    ┃│                                                                    │
+┃                                                                    ┃│                                                                    │
+┃                                                                    ┃│                                                                    │
+┃                                                                    ┃│                                                                    │
+┃                                                                    ┃│                                                                    │
+┃                                                                    ┃│                                                                    │
+┃                                                                    ┃│                                                                    │
+┃                                                                    ┃│                                                                    │
+┃                                                                    ┃│                                                                    │
+┃                                                                    ┃│                                                                    │
+┃                                                                    ┃│                                                                    │
+┃                                                                    ┃│                                                                    │
+┃                                                                    ┃│                                                                    │
+┃                                                                    ┃│                                                                    │
+┃                                                                    ┃│                                                                    │
+┃                                                                    ┃│                                                                    │
+┃                                                                    ┃│                                                                    │
+┃                                                                    ┃│                                                                    │
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛└────────────────────────────────────────────────────────────────────┘
+┌ Economia ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│███▊                                                corte do proxy: +127 tokens (2,7%)                                                    │
+│ a diferença entre os lados aparece quando os dois tiverem requisições contadas                                                           │
+└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+ q sair · Tab ←→ lado · ↑↓ requisição · Enter hex (auditada ◆)
+### 02-hex
+
+ Mandrake  watch requisições ao vivo, relidas a cada 0,5 s
+┏ Sem Mandrake · pass ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓┌ Com Mandrake · trim ───────────────────────────────────────────────┐
+┃ requisições 0                                                      ┃│ requisições 6                                                      │
+┃ tokens      sem contagem                                           ┃│ tokens      5.680 → 5.484  (3,5%)                                  │
+┃ bytes       0 B → 0 B                                              ┃│ bytes       23,3 KB → 21,6 KB                                      │
+┃ usage       entrada 0 · saída 0                                    ┃│ usage       entrada 5.536 · saída 72                               │
+┃ cache       lido 0 · criado 0                                      ┃│ cache       lido 0 · criado 0                                      │
+┃                                                                    ┃│hora UTC modelo               status tokens              ms      aud│
+┃ aguardando requisições em                                          ┃│02:36:30 sonnet-4-5           200    1.036→967                 2  ◆ │
+┃ /tmp/mandrake-cli.LBzu2T/mh/state/events.jsonl                     ┃│02:36:29 sonnet-4-5           200    434→424                   2  ◆ │
+┃                                                                    ┃│02:36:28 opus-4-1             200    1.370→1.351               2  ◆ │
+┃                                                                    ┃│02:36:22 sonnet-4-5           200    1.036→967                 1  ◆ │
+┃                                                                    ┃│02:36:22 opus-4-1             200    1.370→1.351               2  ◆ │
+┃                                                                    ┃│02:36:22 sonnet-4-5           200    434→424                   5  ◆ │
+┃                                                                    ┃│                                                                    │
+┃                                                                    ┃│                                                                    │
+┃                                                                    ┃│                                                                    │
+┃                                                                    ┃│                                                                    │
+┃                                                                    ┃│                                                                    │
+┃                                                                    ┃│                                                                    │
+┃                                                                    ┃│                                                                    │
+┃                                                                    ┃│                                                                    │
+┃                                                                    ┃│                                                                    │
+┃                                                                    ┃│                                                                    │
+┃                                                                    ┃│                                                                    │
+┃                                                                    ┃│                                                                    │
+┃                                                                    ┃│                                                                    │
+┃                                                                    ┃│                                                                    │
+┃                                                                    ┃│                                                                    │
+┃                                                                    ┃│                                                                    │
+┃                                                                    ┃│                                                                    │
+┃                                                                    ┃│                                                                    │
+┃                                                                    ┃│                                                                    │
+┃                                                                    ┃│                                                                    │
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛└────────────────────────────────────────────────────────────────────┘
+┌ Economia ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│████▊                                               corte do proxy: +196 tokens (3,5%)                                                    │
+│ a diferença entre os lados aparece quando os dois tiverem requisições contadas                                                           │
+└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+ q sair · Tab ←→ lado · ↑↓ requisição · Enter hex (auditada ◆)

@@ -1,0 +1,49 @@
+doctor
+======
+
+[0.0s]
+
+## mandrake doctor · right after setup (here MANDRAKE_HOME isolates it: the service is not loaded)
+
+[3.1s]
+    ~ $ mandrake doctor
+    ok   profile /tmp/mandrake-cli.oZGqv6/mh/config/mandrake.toml
+    ok   links: 2 as the profile says
+    ok   settings env.CLAUDE_CODE_PLUGIN_DIRS = /tmp/mandrake-cli.oZGqv6/mh/data/src/data/plugins/prompt
+    -trim
+    ok   settings sem ANTHROPIC_BASE_URL local (com ele, proxy fora derruba todas as sessões)
+    ok   plugin prompt-trim installed
+    ok   shell block in /tmp/mandrake-cli.oZGqv6/home/.bashrc
+    ok   souls ~/tmps/mandrake-e2e/cli/mandrake/data/prompt/souls
+    FAIL proxy: service file at /tmp/mandrake-cli.oZGqv6/mh/state/service/mandrake-proxy.service (MANDRA
+    KE_HOME is set: not loaded); 127.0.0.1:55819 not answering
+    ok   claude [claude stub] claude --version
+    ~ $
+
+## a link lost and the shell block deleted from ~/.bashrc
+
+[10.8s]
+    ok   profile /tmp/mandrake-cli.oZGqv6/mh/config/mandrake.toml
+    FAIL links: 1 as the profile says, differ: agents
+    ok   settings env.CLAUDE_CODE_PLUGIN_DIRS = /tmp/mandrake-cli.oZGqv6/mh/data/src/data/plugins/prompt
+    -trim
+    ok   settings sem ANTHROPIC_BASE_URL local (com ele, proxy fora derruba todas as sessões)
+    ok   plugin prompt-trim installed
+    FAIL shell block in /tmp/mandrake-cli.oZGqv6/home/.bashrc
+    ok   souls ~/tmps/mandrake-e2e/cli/mandrake/data/prompt/souls
+    FAIL proxy: service file at /tmp/mandrake-cli.oZGqv6/mh/state/service/mandrake-proxy.service (MANDRA
+    KE_HOME is set: not loaded); 127.0.0.1:55819 not answering
+    ok   claude [claude stub] claude --version
+    ~ $
+
+## does it say how to fix it? the setup again
+
+[19.9s]
+      ok   proxy: serviço escrito para 127.0.0.1:55819 (MANDRAKE_HOME: não carregado)
+    
+    Erros: nenhum
+    próximo passo: abra um shell novo e rode `mandrake doctor`
+    FAIL proxy: service file at /tmp/mandrake-cli.oZGqv6/mh/state/service/mandrake-proxy.service (MANDRA
+    KE_HOME is set: not loaded); 127.0.0.1:55819 not answering
+    ~ $ exit
+    exit

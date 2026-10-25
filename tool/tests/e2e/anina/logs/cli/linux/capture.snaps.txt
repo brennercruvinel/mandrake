@@ -1,0 +1,38 @@
+
+### 01-stdout
+
+dev_root = "/tmp/mandrake-cli.5lCSu9/work/claude"
+
+[links.agents]
+action = "link"
+target = "agents"
+
+[links.commands]
+action = "link"
+target = "commands"
+
+[proxy]
+port = 58245
+upstream = "https://api.anthropic.com"
+strip_fields = ["metadata"]
+audit = false
+audit_keep_days = 7
+count_tokens = true
+cut_identity = false
+unwrap_reminders = true
+
+[plugins]
+fancy = false
+tui_embed = false
+
+[souls]
+core_only_plain = false
+
+[skills]
+invoke = false
+~ $
+### 02-out
+
+captured 2 links into my-profile.toml
+-rw-rw-r-- 1 user user 443 Oct 24 22:25 my-profile.toml
+~ $

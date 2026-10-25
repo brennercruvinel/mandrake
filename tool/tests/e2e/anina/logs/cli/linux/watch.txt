@@ -1,0 +1,73 @@
+watch
+=====
+
+[0.0s]
+
+## mandrake watch · requests live, without Mandrake on the left, with it on the right
+
+[8.9s]
+     Mandrake  watch requisições ao vivo, relidas a cada 0,5 s
+    ┏ Sem Mandrake · pass ━━━━━━━━━━━━━━━━━┓┌ Com Mandrake · trim ─────────────────┐
+    ┃ requisições 0                        ┃│ requisições 6                        │
+    ┃ tokens      sem contagem             ┃│ tokens      5.680 → 5.484  (3,5%)    │
+    ┃ bytes       0 B → 0 B                ┃│ bytes       23,3 KB → 21,6 KB        │
+    ┃ usage       entrada 0 · saída 0      ┃│ usage       entrada 5.536 · saída 72 │
+    ┃ cache       lido 0 · criado 0        ┃│ cache       lido 0 · criado 0        │
+    ┃                                      ┃│hora U modelo   status tokens         │
+    ┃ aguardando requisições em            ┃│02:36: sonnet-4 200    1.036→967      │
+    ┃ /tmp/mandrake-cli.Ct1P3L/mh/state/eve┃│02:36: sonnet-4 200    434→424        │
+    ┃                                      ┃│02:36: opus-4-1 200    1.370→1.351    │
+    ┃                                      ┃│02:36: sonnet-4 200    1.036→967      │
+    ┃                                      ┃│02:36: opus-4-1 200    1.370→1.351    │
+    ┃                                      ┃│02:36: sonnet-4 200    434→424        │
+    ┃                                      ┃│                                      │
+    ┃                                      ┃│                                      │
+    ┃                                      ┃│                                      │
+    ┃                                      ┃│                                      │
+    ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛└──────────────────────────────────────┘
+    ┌ Economia ────────────────────────────────────────────────────────────────────┐
+    │██▊                   corte do proxy: +196 tokens (3,5%)                      │
+    │ a diferença entre os lados aparece quando os dois tiverem requisições contada│
+    └──────────────────────────────────────────────────────────────────────────────┘
+     q sair · Tab ←→ lado · ↑↓ requisição · Enter hex (auditada ◆)
+
+## Tab · the other side; up/down · a request
+
+[12.6s]
+     Mandrake  watch requisições ao vivo, relidas a cada 0,5 s
+    ┏ Sem Mandrake · pass ━━━━━━━━━━━━━━━━━┓┌ Com Mandrake · trim ─────────────────┐
+    ┃ requisições 0                        ┃│ requisições 6                        │
+    ┃ tokens      sem contagem             ┃│ tokens      5.680 → 5.484  (3,5%)    │
+    ┃ bytes       0 B → 0 B                ┃│ bytes       23,3 KB → 21,6 KB        │
+    ┃ usage       entrada 0 · saída 0      ┃│ usage       entrada 5.536 · saída 72 │
+    ┃ cache       lido 0 · criado 0        ┃│ cache       lido 0 · criado 0        │
+    ┃                                      ┃│hora U modelo   status tokens         │
+    ┃ aguardando requisições em            ┃│02:36: sonnet-4 200    1.036→967      │
+    ┃ /tmp/mandrake-cli.Ct1P3L/mh/state/eve┃│02:36: sonnet-4 200    434→424        │
+    ┃                                      ┃│02:36: opus-4-1 200    1.370→1.351    │
+    ┃                                      ┃│02:36: sonnet-4 200    1.036→967      │
+    ┃                                      ┃│02:36: opus-4-1 200    1.370→1.351    │
+    ┃                                      ┃│02:36: sonnet-4 200    434→424        │
+    ┃                                      ┃│                                      │
+    ┃                                      ┃│                                      │
+    ┃                                      ┃│                                      │
+    ┃                                      ┃│                                      │
+    ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛└──────────────────────────────────────┘
+    ┌ Economia ────────────────────────────────────────────────────────────────────┐
+    │██▊                   corte do proxy: +196 tokens (3,5%)                      │
+    │ a diferença entre os lados aparece quando os dois tiverem requisições contada│
+    └──────────────────────────────────────────────────────────────────────────────┘
+     q sair · Tab ←→ lado · ↑↓ requisição · Enter hex (auditada ◆)
+
+## Enter · that request in hex (audited ones, marked with a diamond)
+
+[17.5s]
+    ~ $ traffic_later 3; mandrake watch
+    [3] 298292
+    [3]+  Done                       ( sleep "${1:-2}"; for f in tools short reminde
+    rs;
+    do
+        send "$f"; sleep 1;
+    done ) > /dev/null 2>&1
+    ~ $ exit
+    exit

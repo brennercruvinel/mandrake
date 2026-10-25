@@ -1,0 +1,11 @@
+bench-view-wide
+===============
+
+[0.0s]
+
+## mandrake bench --view at 120x36
+
+[5.8s]
+    ~ $ mandrake bench --view
+    ~ $ exit
+    exit
