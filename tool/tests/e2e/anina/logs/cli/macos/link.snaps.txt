@@ -1,0 +1,40 @@
+
+### 01-installed
+
+~ $ ls -l ~/.claude
+total 16
+-rw-r--r--@ 1 use staff   11 Oct 25 03:10 CLAUDE.md
+lrwxr-xr-x@ 1 use staff   88 Oct 25 03:10 agents -> $TMPDIR
+//mandrake-cli.fpzlCH/work/claude/agents
+lrwxr-xr-x@ 1 use staff   90 Oct 25 03:10 commands -> $TMPDIR//mandrake-cli.fpzlCH/work/claude/comma
+nds
+-rw-r--r--@ 1 use staff  159 Oct 25 03:10 settings.json
+~ $
+### 02-plan
+
+links: commands: link para $TMPDIR//mandrake-cli.fpzlCH/wor
+k/claude/commands
+~ $
+### 03-apply
+
+links: commands: link para $TMPDIR//mandrake-cli.fpzlCH/wor
+k/claude/commands
+journal $TMPDIR//mandrake-cli.fpzlCH/mh/state/journal/20261
+025-061010-001.json
+total 16
+-rw-r--r--@ 1 use staff   11 Oct 25 03:10 CLAUDE.md
+lrwxr-xr-x@ 1 use staff   88 Oct 25 03:10 agents -> $TMPDIR
+//mandrake-cli.fpzlCH/work/claude/agents
+lrwxr-xr-x@ 1 use staff   90 Oct 25 03:10 commands -> $TMPDIR//mandrake-cli.fpzlCH/work/claude/comma
+nds
+-rw-r--r--@ 1 use staff  159 Oct 25 03:10 settings.json
+~ $
+### 04-rollback
+
+desfeito: 1 passo
+total 16
+-rw-r--r--@ 1 use staff   11 Oct 25 03:10 CLAUDE.md
+lrwxr-xr-x@ 1 use staff   88 Oct 25 03:10 agents -> $TMPDIR
+//mandrake-cli.fpzlCH/work/claude/agents
+-rw-r--r--@ 1 use staff  159 Oct 25 03:10 settings.json
+~ $
