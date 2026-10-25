@@ -123,3 +123,9 @@ esac
 cd "$HOME" || return
 PS1='\[\e[2m\]~\[\e[0m\] $ '
 clear
+
+# new_shell <cmd...>: a new shell of this machine (it reads the rc block setup wrote, ~/.bash_profile
+# on macOS, ~/.bashrc on Linux), keeping whatever this one exported, then runs the command there.
+new_shell() {
+  bash -c 'for f in ~/.bash_profile ~/.bashrc; do [ -f "$f" ] && . "$f"; done; echo "MANDRAKE_SOULS=$MANDRAKE_SOULS"; "$@"' _ "$@"
+}

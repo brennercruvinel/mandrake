@@ -66,8 +66,13 @@ check "launcher opens the soul" "$(grep -c -- "--settings $t/dev/souls/nova/sett
 check "launcher names it and passes the flags" "$(grep -c -- '--name Nova --x' <<<"$call")" 1
 check "the core goes before the soul" "$(grep -c -- '# Core' <<<"$call")" 1
 # Proxy down: the launcher must still start claude, without a base url, and say why.
-down="$(env -u ANTHROPIC_BASE_URL HOME="$t/home" MANDRAKE_HOME="$t/mh" MANDRAKE_PORT=1 PATH="$t/bin:$PATH" bash -c ". '$t/mh/data/shell/mandrake.sh'; claude --y; env | grep -c ANTHROPIC_BASE_URL" 2>&1)"
+down="$(env -u ANTHROPIC_BASE_URL HOME="$t/home" MANDRAKE_HOME="$t/mh" PATH="$t/bin:$PATH" bash -c ". '$t/mh/data/shell/mandrake.sh'; MANDRAKE_PORT=1 claude --y; env | grep -c ANTHROPIC_BASE_URL" 2>&1)"
 check "proxy down: claude still starts" "$(grep -c -- '--y' <<<"$down")" 1
 check "proxy down: the session goes direct, and says so" "$(grep -c 'vai direto para a API' <<<"$down")" 1
+# A stale MANDRAKE_* inherited from a parent shell loses to the installed value (#33), and doctor
+# names it in the shell that still has it.
+souls="$(env HOME="$t/home" MANDRAKE_HOME="$t/mh" MANDRAKE_SOULS=/old PATH="$t/bin:$PATH" bash -c ". '$t/mh/data/shell/mandrake.sh'; echo \"\$MANDRAKE_SOULS\"")"
+check "a stale MANDRAKE_SOULS loses to the installed one" "$souls" "$t/dev/souls"
+check "doctor names the stale variable" "$(MANDRAKE_SOULS=/old m doctor 2>&1 | grep -c 'MANDRAKE_SOULS é /old')" 1
 if [ "$fails" -gt 0 ]; then echo "--- setup.log"; cat "$t/setup.log"; echo "--- doctor.log"; cat "$t/doctor.log"; fi
 exit "$fails"
