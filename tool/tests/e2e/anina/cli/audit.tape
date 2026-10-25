@@ -23,7 +23,7 @@ Sleep 1.5
 Snap 02-last
 
 Caption "the kept bodies gone (deleted, or past audit_keep_days): the list says so, hex says why"
-Type 'clear; ls ~/../mh/state/audit | head -1 | cut -d. -f1 > ~/id; rm -rf ~/../mh/state/audit; mandrake audit; mandrake hex "$(cat ~/id)"; mandrake hex'
+Type 'clear; ls ~/.mandrake/state/audit | head -1 | cut -d. -f1 > ~/id; rm -rf ~/.mandrake/state/audit; mandrake audit; mandrake hex "$(cat ~/id)"; mandrake hex'
 Key Enter
 Wait "audit"
 Sleep 2.5

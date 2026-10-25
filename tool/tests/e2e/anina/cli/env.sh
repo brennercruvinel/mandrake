@@ -26,7 +26,7 @@ chmod +x "$T/bin/claude"
 for v in $(env | sed -n 's/^\(MANDRAKE_[A-Z_]*\)=.*/\1/p'); do
   case "$v" in MANDRAKE_BIN | MANDRAKE_REPO) ;; *) unset "$v" ;; esac
 done
-export HOME="$T/home" MANDRAKE_HOME="$T/mh" CLAUDE_CONFIG_DIR="$T/home/.claude" SHELL=/bin/bash
+export HOME="$T/home" MANDRAKE_HOME="$T/home/.mandrake" CLAUDE_CONFIG_DIR="$T/home/.claude" SHELL=/bin/bash
 export PATH="$T/bin:$PATH" MANDRAKE_SRC="$MANDRAKE_REPO" TERM="${TERM:-xterm-256color}"
 unset ANTHROPIC_API_KEY ANTHROPIC_BASE_URL MANDRAKE_BENCH_AUTH CLAUDE_CODE_OAUTH_TOKEN
 free_port() { python3 -c 'import socket; s=socket.socket(); s.bind(("127.0.0.1",0)); print(s.getsockname()[1])'; }
