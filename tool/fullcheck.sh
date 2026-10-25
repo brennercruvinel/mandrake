@@ -189,9 +189,9 @@ e2e_checks() {
   fi
   local tape
   export MANDRAKE_BIN="$PWD/$bin"
-  for tape in tool/tests/e2e/anina/*.tape; do
-    case "$tape" in */hygiene.tape) continue ;; esac
-    check "anina ${tape##*/}" anina record "$tape" -o "$out/rec/$(basename "$tape" .tape)"
+  # The four #6 tapes; hygiene and gate run this script themselves and are recorded by hand.
+  for tape in copy-fail same-second doctor-copy eof; do
+    check "anina $tape" anina record "tool/tests/e2e/anina/$tape.tape" -o "$out/rec/$tape"
   done
 }
 
