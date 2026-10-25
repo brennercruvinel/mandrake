@@ -13,11 +13,11 @@ flowchart LR
 2. `git switch -c <you>/<short-name> origin/main`, change what the issue asks, nothing else.
 3. `tool/fullcheck.sh` until it says `everything passed`.
 4. One line in `docs/news/<issue>.<type>.md`, the way it should read in the changelog.
-5. Open the pull request from the template: `Closes #<issue>`, a `[POCS]` line, the checks you ran.
+5. Open the pull request from the template: `Closes #<issue>`, a `[POCS]` line, the checks you ran, and its labels.
 
 ## The rules
 
-- **Start from an issue.** One change is one issue; several independent items are an epic with one sub-issue each. The pull request starts with `Closes #<sub-issue>. Part of #<epic>.` and follows the template.
+- **Start from an issue.** One change is one issue; several independent items are an epic with one sub-issue each. The pull request starts with `Closes #<sub-issue>. Part of #<epic>.` and follows the template; with more than one issue, one keyword per number (`Closes #25, closes #30`), since GitHub closes only the first of `Closes #25 #30`.
 - **No agent instruction files.** No `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `.cursorrules` or the like ([ADR-0004](docs/adr/workflows/0004-no-agent-instruction-files.md)). The code, `docs/`, the ADRs and the changelog are the context, for people and agents alike.
 - **Code files stay under 639 lines.** Data formats (JSON, JSONL, TOML catalogs, lockfiles, SVG, logs) are exempt.
 - **Run the gate before pushing:** `tool/fullcheck.sh`. There is no CI for now: this script is the gate.
@@ -25,6 +25,21 @@ flowchart LR
 - **Write an ADR** in `docs/adr/` when a choice has trade-offs someone will ask about ([how](docs/adr/README.md)). Architecture lives in [`docs/ATLAS.toml`](docs/ATLAS.toml); the names and abbreviations in [`docs/TERMS.md`](docs/TERMS.md).
 - **Show it working.** A `[POCS]` line in the pull request says where the change can be seen; test evidence from a terminal goes as anina recordings, embedded one per line.
 - **Sign your commits**, in plain English. The maintainer merges, after review.
+
+## Labels and the board
+
+Each issue and pull request takes **one type**, the word its commit prefix maps to, and **every area** it touches:
+
+| Commit prefix | Type label |
+| - | - |
+| `fix` | `bug` |
+| `feat` | `enhancement` |
+| `docs` | `documentation` |
+| `test` | `test` |
+| `refactor` | `refactor` |
+| `chore` | `ci` |
+
+Areas, by path: `cli`, `tui`, `proxy`, `meter`, `layout`, `plugins`, `shell`; each label's description says which folders it covers. An epic also takes `epic`, and a report from testing `feedback` (their templates add it). A label that does not exist yet is created by the maintainer, in the same pattern. Every issue and pull request is on the [board](https://github.com/users/brennercruvinel/projects/8), and a sub-issue is attached to its epic.
 
 ## The records, checked
 

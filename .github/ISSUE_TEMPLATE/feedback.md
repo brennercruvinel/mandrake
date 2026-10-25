@@ -1,6 +1,7 @@
 ---
 name: Feedback
 about: A bug, an improvement or a question, in plain words
+labels: feedback
 ---
 
 <!-- In your own words, in any language: what you did, what you expected, what happened.

@@ -1,6 +1,7 @@
 ---
 name: Epic
 about: A larger goal, split into sub-issues
+labels: epic
 ---
 
 ## Current state
