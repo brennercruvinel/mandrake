@@ -1104,6 +1104,7 @@ dependencies = [
  "mandrake-proxy",
  "mandrake-tui",
  "serde_json",
+ "tempfile",
  "toml",
 ]
 

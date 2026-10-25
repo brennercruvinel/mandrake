@@ -92,42 +92,46 @@ pub fn answers_embed(bin: &Path) -> bool {
 }
 
 /// The doctor line for one app: found where tui-embed looks, and with `--embed`.
-fn check_one(app: &App, path: Option<&OsString>, prefix_bin: &Path) -> (bool, String) {
+/// `(ok, what it found, the command that fixes it)`.
+fn check_one(
+    app: &App,
+    path: Option<&OsString>,
+    prefix_bin: &Path,
+) -> (bool, String, Option<String>) {
     let fix = format!(
         "cargo install --git {} --branch {BRANCH} --locked --root {}",
         app.git,
         prefix_bin.parent().unwrap_or(prefix_bin).display()
     );
     match find(app.name, path, prefix_bin) {
-        None => (
-            false,
-            format!("{}: not on PATH; install it: {fix}", app.name),
-        ),
+        None => (false, format!("{}: não está no PATH", app.name), Some(fix)),
         Some((p, _)) if !answers_embed(&p) => (
             false,
-            format!(
-                "{}: {} has no --embed mode; install the fork: {fix}",
-                app.name,
-                p.display()
-            ),
+            format!("{}: {} não tem o modo --embed", app.name, p.display()),
+            Some(fix),
         ),
         Some((p, false)) => (
             false,
             format!(
-                "{}: {} has --embed but its folder is not on PATH, so tui-embed will not find it",
+                "{}: {} tem --embed, mas a pasta não está no PATH e o tui-embed não o acha",
                 app.name,
                 p.display()
             ),
+            Some(format!(
+                "abra um shell novo (o bloco do Mandrake põe {} no PATH)",
+                prefix_bin.display()
+            )),
         ),
         Some((p, true)) => (
             true,
-            format!("{}: {} answers --embed", app.name, p.display()),
+            format!("{}: {} responde --embed", app.name, p.display()),
+            None,
         ),
     }
 }
 
-/// One doctor line per app.
-pub fn check(dirs: &Dirs) -> Vec<(bool, String)> {
+/// One doctor line per app: `(ok, what it found, the command that fixes it)`.
+pub fn check(dirs: &Dirs) -> Vec<(bool, String, Option<String>)> {
     let path = std::env::var_os("PATH");
     let bin = prefix(dirs).join("bin");
     APPS.iter()
@@ -242,9 +246,16 @@ mod tests {
     #[test]
     fn doctor_fails_with_a_clear_line_when_a_binary_is_missing() {
         let d = temp("missing");
-        let (ok, line) = check_one(&APPS[1], Some(&d.clone().into()), &d.join("prefix/bin"));
+        let (ok, line, fix) = check_one(&APPS[1], Some(&d.clone().into()), &d.join("prefix/bin"));
         assert!(!ok);
-        assert!(line.starts_with("gitlogue: not on PATH; install it: cargo install --git https://github.com/tiamatio/gitlogue --branch embed"), "{line}");
+        assert_eq!(line, "gitlogue: não está no PATH");
+        let fix = fix.unwrap();
+        assert!(
+            fix.starts_with(
+                "cargo install --git https://github.com/tiamatio/gitlogue --branch embed"
+            ),
+            "{fix}"
+        );
         std::fs::remove_dir_all(&d).unwrap();
     }
 
@@ -257,18 +268,18 @@ mod tests {
             "abtop",
             "echo 'Error: --embed requires a socket path' >&2",
         );
-        let (ok, line) = check_one(&APPS[0], Some(&path), &d.join("prefix/bin"));
-        assert!(ok, "{line}");
-        assert!(line.ends_with("answers --embed"), "{line}");
+        let (ok, line, fix) = check_one(&APPS[0], Some(&path), &d.join("prefix/bin"));
+        assert!(ok && fix.is_none(), "{line}");
+        assert!(line.ends_with("responde --embed"), "{line}");
 
         script(
             &d,
             "gitlogue",
             "echo \"error: unexpected argument '--embed' found\" >&2; exit 2",
         );
-        let (ok, line) = check_one(&APPS[1], Some(&path), &d.join("prefix/bin"));
-        assert!(!ok);
-        assert!(line.contains("has no --embed mode"), "{line}");
+        let (ok, line, fix) = check_one(&APPS[1], Some(&path), &d.join("prefix/bin"));
+        assert!(!ok && fix.is_some_and(|f| f.contains("--branch embed")));
+        assert!(line.contains("não tem o modo --embed"), "{line}");
         std::fs::remove_dir_all(&d).unwrap();
     }
 
@@ -278,12 +289,10 @@ mod tests {
         let bin = d.join("prefix/bin");
         std::fs::create_dir_all(&bin).unwrap();
         script(&bin, "abtop", "echo '--embed requires a socket path' >&2");
-        let (ok, line) = check_one(&APPS[0], Some(&d.join("empty").into()), &bin);
+        let (ok, line, fix) = check_one(&APPS[0], Some(&d.join("empty").into()), &bin);
         assert!(!ok);
-        assert!(
-            line.contains("not on PATH, so tui-embed will not find it"),
-            "{line}"
-        );
+        assert!(line.contains("a pasta não está no PATH"), "{line}");
+        assert!(fix.is_some_and(|f| f.contains("shell novo")));
         std::fs::remove_dir_all(&d).unwrap();
     }
 

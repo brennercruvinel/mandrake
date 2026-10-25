@@ -4,6 +4,7 @@ mod ab;
 mod apps;
 mod ask;
 mod cmd;
+mod doctor;
 mod install;
 
 use clap::{Parser, Subcommand};
@@ -203,6 +204,6 @@ fn main() -> anyhow::Result<()> {
             }
         }
         Cmd::Audit { last } => cmd::audit(&dirs, last),
-        Cmd::Doctor => cmd::doctor(&dirs),
+        Cmd::Doctor => doctor::run(&dirs),
     }
 }
