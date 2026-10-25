@@ -11,4 +11,4 @@ Keep it simple. Mandrake does three things (trim, measure, rebuild a `~/.claude`
 - **Show it working.** A `[POCS]` line in the pull request says where the change can be seen; test evidence from a terminal goes as anina recordings, embedded one per line.
 - **Sign your commits**, in plain English. The maintainer merges, after review.
 
-Setup: Rust (rustup.rs), then `cargo build --workspace` and `cargo test --workspace`. How Mandrake works for someone using it is in [`docs/how-it-works.md`](docs/how-it-works.md).
+Setup: Rust (rustup.rs), then `cargo build --workspace` and `cargo test --workspace`. How Mandrake works for someone using it is in [`docs/guide/how-it-works.md`](docs/guide/how-it-works.md).

@@ -38,7 +38,7 @@ docs/    how it works, setup, measure and audit; ATLAS.toml (architecture), adr/
 tool/    tests outside cargo: e2e scripts and anina tapes, request fixtures
 ```
 
-Read [docs/how-it-works.md](docs/how-it-works.md) first.
+Read [docs/guide/how-it-works.md](docs/guide/how-it-works.md) first.
 
 ## Contributing
 

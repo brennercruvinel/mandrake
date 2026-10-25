@@ -8,14 +8,14 @@ Legenda de dono: T = Tiamati, A = agente A, B = agente B, BR = Brenner.
 
 - O nome é Mandrake. O `agent/mcps/mandrake` (REA) convive por enquanto; o Mandrake vai ser o superagente de harness e segurança.
 - Uso sempre interno, Mac e Linux, sem nenhum caminho de máquina no código.
-- Sem ADR: `docs/` explica o funcionamento e as possibilidades. → substituída em 2026-10-25 pela [ADR-0001](adr/workflows/0001-decision-records-and-changelog-fragments.md)
+- Sem ADR: `docs/` explica o funcionamento e as possibilidades. → substituída em 2026-10-25 pela [ADR-0001](../adr/workflows/0001-decision-records-and-changelog-fragments.md)
 - `core` é o system prompt sem o qual o agente perde capacidade; `soul` é um exemplo de agente com alma, de código e alto nível, que não copia o Tiamati.
-- O prompt-trim é obrigatório ([ADR-0003](adr/promptcut/0003-prompt-trim-always-on-safeguards-kept.md)). O fancy e o tui-embed são opcionais no wizard. O tui-slider entra nas telas.
+- O prompt-trim é obrigatório ([ADR-0003](../adr/promptcut/0003-prompt-trim-always-on-safeguards-kept.md)). O fancy e o tui-embed são opcionais no wizard. O tui-slider entra nas telas.
 - A POC prova a reconstrução: guardar a configuração atual em zip, mandar o que o Mandrake recria para a lixeira, instalar pelo Mandrake e voltar ao mesmo resultado.
 
 ## Contratos (T, antes de A e B começarem)
 
-- C1 T: workspace em `rust/` ([ADR-0002](adr/structure/0002-rust-workspace-in-rust.md)) com os crates `cli` (binário `mandrake`), `layout`, `proxy`, `meter` e `tui`; Rust 1.99, edition 2024. → **feito**
+- C1 T: workspace em `rust/` ([ADR-0002](../adr/structure/0002-rust-workspace-in-rust.md)) com os crates `cli` (binário `mandrake`), `layout`, `proxy`, `meter` e `tui`; Rust 1.99, edition 2024. → **feito**
 - C2 T: diretórios XDG nos dois sistemas, todos sobrescrevíveis por variável: config `~/.config/mandrake`, dados `~/.local/share/mandrake`, estado `~/.local/state/mandrake`. `MANDRAKE_HOME` isola tudo para teste. → **feito**
 - C3 T: `meter::Event`, uma linha JSONL por requisição. Campos: id, ts, mode (`trim` ou `pass`), path, status, ms, bytes antes/depois, tokens antes/depois (via `count_tokens`), usage (input, output, cache read/create) e cortes por tipo. → **feito**
 - C4 T: perfil `mandrake.toml`, escrito pelo wizard e lido por `setup --profile`. Contém a raiz de desenvolvimento, o destino de cada item, o proxy, os plugins, os souls e as skills. → **feito**
@@ -37,7 +37,7 @@ Legenda de dono: T = Tiamati, A = agente A, B = agente B, BR = Brenner.
 ## Proxy e medição (A)
 
 - P1 A: proxy em hyper/tokio no `127.0.0.1:<porta>`, com upstream configurável e repasse em stream. → **feito**
-- P2 A: regras de trim em `cfgs/proxy/trim.toml`: identidades do system, `<system-reminder>`, campos removidos. O padrão do produto remove só `metadata`; `safeguards` só sai por configuração explícita ([ADR-0003](adr/promptcut/0003-prompt-trim-always-on-safeguards-kept.md)). → **feito**
+- P2 A: regras de trim em `cfgs/proxy/trim.toml`: identidades do system, `<system-reminder>`, campos removidos. O padrão do produto remove só `metadata`; `safeguards` só sai por configuração explícita ([ADR-0003](../adr/promptcut/0003-prompt-trim-always-on-safeguards-kept.md)). → **feito**
 - P3 A: modo `pass` (sem trim) na mesma base, para o A/B e o log "antes". → **feito**
 - P4 A: corrige os achados da auditoria: abortar o upstream quando o cliente cai, não injetar JSON num SSE já aberto, tirar o `</system-reminder>` órfão e rotacionar o log. → **feito**
 - P5 A: `count_tokens` do corpo antes e depois, com a credencial da própria requisição, assíncrono, sem atrasar a resposta. → **feito**

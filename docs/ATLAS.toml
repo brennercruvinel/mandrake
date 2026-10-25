@@ -2,7 +2,7 @@
 #
 # Current state only. History (what changed, when, why) goes in docs/CHANGELOG and the ADRs in
 # docs/adr/; a change updates the entry it touches instead of appending a dated paragraph. How to
-# use Mandrake is in docs/how-it-works.md and docs/setup.md.
+# use Mandrake is in docs/guide/how-it-works.md and docs/guide/setup.md.
 
 project = "mandrake"
 last-updated = "2026-10-25"
