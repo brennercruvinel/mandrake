@@ -1,0 +1,1 @@
+{ "version": 2, "server": { "host": "db.local", "port": 5433 }, "flags": { "debug": true } }

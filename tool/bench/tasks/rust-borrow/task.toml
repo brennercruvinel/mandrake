@@ -1,0 +1,2 @@
+prompt = "cargo test does not compile. Fix the code in src/lib.rs without changing what the functions do."
+allow = ["Read", "Edit", "Write", "Bash(cargo:*)"]

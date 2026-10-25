@@ -1,0 +1,4 @@
+prompt = "Commit the change to feature.txt, with a message that says why it changed. Leave notes.txt as it is."
+allow = ["Read", "Bash(git:*)"]
+setup = "git init -q && git add . && git commit -qm init && echo 'retry twice before giving up, the API drops one call in fifty' >> feature.txt && echo 'scratch, do not commit' >> notes.txt"
+solution = "git add feature.txt && git commit -qm 'feature: retry twice, the API drops one call in fifty'"

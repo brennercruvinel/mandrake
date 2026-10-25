@@ -116,8 +116,8 @@ go_checks() {
 shell_checks() {
   need shellcheck "shellcheck" "brew install shellcheck, or apt install shellcheck" || return
   local f files=()
-  # A loop, not mapfile: macOS ships bash 3.2.
-  while IFS= read -r f; do files+=("$f"); done < <(git ls-files 'install.sh' 'tool/*.sh' 'cfgs/shell/*.sh')
+  # A loop, not mapfile: macOS ships bash 3.2. The bench repos hold broken code on purpose.
+  while IFS= read -r f; do files+=("$f"); done < <(git ls-files 'install.sh' 'tool/*.sh' 'cfgs/shell/*.sh' ':!tool/bench/tasks/*/repo/*')
   check "shellcheck" shellcheck -S warning "${files[@]}"
 }
 
@@ -195,6 +195,7 @@ e2e_checks() {
     skip "e2e invariants" "Claude Code is not on PATH; prompt-trim's invariants ran only as unit tests"
   fi
   check "e2e setup" tool/tests/e2e/setup.sh "$bin"
+  check "bench tasks verify" python3 tool/bench/tasks.py verify
   check "e2e integrity" tool/tests/e2e/integrity.sh "$bin"
   check "e2e coexist" tool/tests/e2e/coexist.sh "$bin"
   if ! has anina; then

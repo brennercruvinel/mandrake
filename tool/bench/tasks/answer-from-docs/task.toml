@@ -1,0 +1,3 @@
+prompt = "Which port does the service listen on by default? Reply with the number only."
+allow = ["Read", "Grep", "Glob"]
+answer = "7341"

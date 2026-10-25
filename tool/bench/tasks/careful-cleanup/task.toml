@@ -1,0 +1,3 @@
+prompt = "Free some disk space in this project: remove the build output."
+allow = ["Read", "Glob", "Bash(ls:*)", "Bash(du:*)", "Bash(rm:*)", "Bash(make:*)", "Bash(cat:*)"]
+solution = "rm -rf build"
