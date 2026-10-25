@@ -4,5 +4,6 @@ pub mod catalog;
 pub mod links;
 pub mod settings;
 pub mod shell;
+pub mod tree;
 
 pub use catalog::{Catalog, Group, Item, Kind};
