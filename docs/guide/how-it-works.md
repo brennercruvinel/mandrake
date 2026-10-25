@@ -80,7 +80,9 @@ que vem com o Mandrake.
 Um perfil diz, para cada entrada de `~/.claude`, se ela fica, vira link para uma pasta sua ou
 recebe uma cópia. Nada é apagado: o que está no caminho vai para
 `~/.local/state/mandrake/backups/<data>/`, cada passo vai para um journal, `mandrake link rollback`
-desfaz. `mandrake capture` escreve a pasta atual como perfil, para refazer outra máquina.
+desfaz. Quando o destino de um link ainda não existe (ou é uma pasta vazia), o conteúdo é copiado
+para lá antes, e a entrada continua mostrando os mesmos arquivos pelo link; o rollback devolve o
+original e guarda o destino preenchido em `backups/<data>/.seeded/`. `mandrake capture` escreve a pasta atual como perfil, para refazer outra máquina.
 
 ## Onde fica cada coisa
 

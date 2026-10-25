@@ -194,6 +194,8 @@ e2e_checks() {
   else
     skip "e2e invariants" "Claude Code is not on PATH; prompt-trim's invariants ran only as unit tests"
   fi
+  check "e2e setup" tool/tests/e2e/setup.sh "$bin"
+  check "e2e integrity" tool/tests/e2e/integrity.sh "$bin"
   if ! has anina; then
     skip "anina tapes" "anina is not on PATH; the cases above ran without recording"
     return
