@@ -123,9 +123,9 @@ fn renders_both_sides_and_the_savings() {
         "cache",
         "sonnet-4-5",
         "1.000→600",
-        "com Mandrake: -400 tokens por requisição (36,4%)",
+        "com Mandrake, cada requisição economizou 400 tokens (36,4%)",
         "por requisição sem 1.100 · com 700 tokens",
-        "corte do proxy +600 (30,0%); o resto sai no prompt-trim",
+        "o proxy economizou 600 tokens (30,0%); o resto sai no prompt-trim",
         "Enter hex",
     ] {
         assert!(screen.contains(needle), "missing {needle:?} in\n{screen}");
@@ -139,10 +139,11 @@ fn renders_both_sides_and_the_savings() {
 fn empty_file_says_where_it_waits() {
     let s = WatchState::new("/tmp/x/events.jsonl".into());
     let screen = text(&draw(120, 24, |f| render(f, &s)));
-    assert!(screen.contains("aguardando requisições em"));
+    assert!(screen.contains("`mandrake proxy run --pass`"), "{screen}");
+    assert!(screen.contains("abra uma sessão com `claude`"), "{screen}");
     assert!(screen.contains("/tmp/x/events.jsonl"));
     assert!(screen.contains("sem tokens contados"));
-    assert!(screen.contains("quando os dois tiverem"));
+    assert!(screen.contains("tiverem requisições contadas"));
 }
 
 #[test]
@@ -151,4 +152,39 @@ fn print_screen() {
     let mut s = sample();
     s.focus = Focus::Trim;
     println!("{}", text(&draw(150, 22, |f| render(f, &s))));
+}
+
+#[test]
+fn focus_starts_on_the_side_with_requests_until_one_is_picked() {
+    let mut s = WatchState::new("x".into());
+    s.ingest(false, vec![ev("t1", Mode::Trim, 10, 9)]);
+    assert_eq!(s.focus, Focus::Trim, "the pass side is empty");
+    s.on_key(KeyCode::Left);
+    s.ingest(false, vec![ev("t2", Mode::Trim, 10, 9)]);
+    assert_eq!(s.focus, Focus::Pass, "the person picked it");
+}
+
+#[test]
+fn at_80x24_nothing_is_cut_and_no_saving_has_a_sign() {
+    let s = sample();
+    let screen = text(&draw(80, 24, |f| render(f, &s)));
+    for needle in [
+        "hora UTC",
+        "status",
+        "tokens",
+        "aud",
+        "com Mandrake, cada requisição economizou 400 tokens (36,4%)",
+        "por requisição sem 1.100 · com 700 tokens",
+        "o proxy economizou 600 tokens (30,0%)",
+        "Enter hex (auditada ◆)",
+    ] {
+        assert!(screen.contains(needle), "missing {needle:?} in\n{screen}");
+    }
+    assert!(!screen.contains("+600"), "{screen}");
+    let empty = WatchState::new("~/.local/state/mandrake/events.jsonl".into());
+    let screen = text(&draw(80, 24, |f| render(f, &empty)));
+    assert!(
+        screen.contains("events.jsonl"),
+        "the path wraps, not cut:\n{screen}"
+    );
 }

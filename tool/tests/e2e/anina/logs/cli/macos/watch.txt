@@ -1,0 +1,101 @@
+watch
+=====
+
+[1.4s]
+    ~ $
+
+## mandrake watch · requests live, without Mandrake on the left, with it on the right
+
+[9.2s]
+     Mandrake  watch requisições ao vivo, relidas a cada 0,5 s
+    ┌ Sem Mandrake · pass ─────────────────┐┏ Com Mandrake · trim ━━━━━━━━━━━━━━━━━┓
+    │ requisições 0                        │┃ requisições 6                        ┃
+    │ tokens      sem contagem             │┃ tokens      5.680 → 5.484  (3,5%)    ┃
+    │ bytes       0 B → 0 B                │┃ bytes       23,3 KB → 21,6 KB        ┃
+    │ usage       entrada 0 · saída 0      │┃ usage       entrada 5.536 · saída 72 ┃
+    │ cache       lido 0 · criado 0        │┃ cache       lido 0 · criado 0        ┃
+    │vazio: este lado mostra o Claude Code │┃hora UTC status tokens             aud┃
+    │sem o Mandrake e só enche com         │┃07:31:15 200    1.036→967           ◆ ┃
+    │`mandrake proxy run --pass` (como, em │┃07:31:14 200    434→424             ◆ ┃
+    │docs/guide/measure.md)                │┃07:31:13 200    1.370→1.351         ◆ ┃
+    │                                      │┃07:31:07 200    1.036→967           ◆ ┃
+    │lendo                                 │┃07:31:07 200    1.370→1.351         ◆ ┃
+    │/var/folders/mj/0tkdbz3x7qx4f8r3vpczfp│┃07:31:07 200    434→424             ◆ ┃
+    │hr0000gn/T//mandrake-cli.QC4Zyt/mh/sta│┃                                      ┃
+    │te/events.jsonl                       │┃                                      ┃
+    └──────────────────────────────────────┘┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+    ┌ Economia ────────────────────────────────────────────────────────────────────┐
+    │ o proxy economizou 196 tokens (3,5%)                                         │
+    │ ██───────────────────────────────────────────────────────────────────────────│
+    │ a diferença entre os lados aparece quando os dois                            │
+    │ tiverem requisições contadas                                                 │
+    └──────────────────────────────────────────────────────────────────────────────┘
+     q sair · Tab ←→ lado · ↑↓ requisição · Enter hex (auditada ◆)
+
+## Enter · the newest request in hex: focus starts on the side that has requests
+
+[11.5s]
+     Mandrake  watch requisições ao vivo, relidas a cada 0,5 s
+    ┌ Sem Mandrake · pass ─────────────────┐┏ Com Mandrake · trim ━━━━━━━━━━━━━━━━━┓
+    │ requisições 0                        │┃ requisições 6                        ┃
+    │ tokens      sem contagem             │┃ tokens      5.680 → 5.484  (3,5%)    ┃
+    │ bytes       0 B → 0 B                │┃ bytes       23,3 KB → 21,6 KB        ┃
+    │ usage       entrada 0 · saída 0      │┃ usage       entrada 5.536 · saída 72 ┃
+    │ cache       lido 0 · criado 0        │┃ cache       lido 0 · criado 0        ┃
+    │vazio: este lado mostra o Claude Code │┃hora UTC status tokens             aud┃
+    │sem o Mandrake e só enche com         │┃07:31:15 200    1.036→967           ◆ ┃
+    │`mandrake proxy run --pass` (como, em │┃07:31:14 200    434→424             ◆ ┃
+    │docs/guide/measure.md)                │┃07:31:13 200    1.370→1.351         ◆ ┃
+    │                                      │┃07:31:07 200    1.036→967           ◆ ┃
+    │lendo                                 │┃07:31:07 200    1.370→1.351         ◆ ┃
+    │/var/folders/mj/0tkdbz3x7qx4f8r3vpczfp│┃07:31:07 200    434→424             ◆ ┃
+    │hr0000gn/T//mandrake-cli.QC4Zyt/mh/sta│┃                                      ┃
+    │te/events.jsonl                       │┃                                      ┃
+    └──────────────────────────────────────┘┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+    ┌ Economia ────────────────────────────────────────────────────────────────────┐
+    │ o proxy economizou 196 tokens (3,5%)                                         │
+    │ ██───────────────────────────────────────────────────────────────────────────│
+    │ a diferença entre os lados aparece quando os dois                            │
+    │ tiverem requisições contadas                                                 │
+    └──────────────────────────────────────────────────────────────────────────────┘
+     q sair · Tab ←→ lado · ↑↓ requisição · Enter hex (auditada ◆)
+
+## Tab · the other side; up/down · a request
+
+[16.1s]
+     Mandrake  watch requisições ao vivo, relidas a cada 0,5 s
+    ┌ Sem Mandrake · pass ─────────────────┐┏ Com Mandrake · trim ━━━━━━━━━━━━━━━━━┓
+    │ requisições 0                        │┃ requisições 6                        ┃
+    │ tokens      sem contagem             │┃ tokens      5.680 → 5.484  (3,5%)    ┃
+    │ bytes       0 B → 0 B                │┃ bytes       23,3 KB → 21,6 KB        ┃
+    │ usage       entrada 0 · saída 0      │┃ usage       entrada 5.536 · saída 72 ┃
+    │ cache       lido 0 · criado 0        │┃ cache       lido 0 · criado 0        ┃
+    │vazio: este lado mostra o Claude Code │┃hora UTC status tokens             aud┃
+    │sem o Mandrake e só enche com         │┃07:31:15 200    1.036→967           ◆ ┃
+    │`mandrake proxy run --pass` (como, em │┃07:31:14 200    434→424             ◆ ┃
+    │docs/guide/measure.md)                │┃07:31:13 200    1.370→1.351         ◆ ┃
+    │                                      │┃07:31:07 200    1.036→967           ◆ ┃
+    │lendo                                 │┃07:31:07 200    1.370→1.351         ◆ ┃
+    │/var/folders/mj/0tkdbz3x7qx4f8r3vpczfp│┃07:31:07 200    434→424             ◆ ┃
+    │hr0000gn/T//mandrake-cli.QC4Zyt/mh/sta│┃                                      ┃
+    │te/events.jsonl                       │┃                                      ┃
+    └──────────────────────────────────────┘┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+    ┌ Economia ────────────────────────────────────────────────────────────────────┐
+    │ o proxy economizou 196 tokens (3,5%)                                         │
+    │ ██───────────────────────────────────────────────────────────────────────────│
+    │ a diferença entre os lados aparece quando os dois                            │
+    │ tiverem requisições contadas                                                 │
+    └──────────────────────────────────────────────────────────────────────────────┘
+     q sair · Tab ←→ lado · ↑↓ requisição · Enter hex (auditada ◆)
+
+## Enter · that request in hex (audited ones, marked with a diamond)
+
+[20.9s]
+    ~ $ traffic_later 3; mandrake watch
+    [3] 70516
+    [3]+  Done                    ( sleep "${1:-2}"; for f in tools short reminders;
+    do
+        send "$f"; sleep 1;
+    done ) > /dev/null 2>&1
+    ~ $ exit
+    exit
