@@ -20,11 +20,17 @@ _mandrake_route() {
   [ -n "${ANTHROPIC_BASE_URL:-}" ] && return 0
   [ "${MANDRAKE_PROXY:-1}" = 0 ] && return 0
   local port="${MANDRAKE_PORT:-8787}"
-  if (exec 3<>"/dev/tcp/127.0.0.1/$port") 2>/dev/null || nc -z -w 1 127.0.0.1 "$port" 2>/dev/null; then
-    export ANTHROPIC_BASE_URL="http://127.0.0.1:$port"
-  else
+  if ! (exec 3<>"/dev/tcp/127.0.0.1/$port") 2>/dev/null && ! nc -z -w 1 127.0.0.1 "$port" 2>/dev/null; then
     echo "mandrake: proxy fora do ar em 127.0.0.1:$port, esta sessão vai direto para a API (mandrake doctor)" >&2
+    return 0
   fi
+  # Another program on the same port would get every request: only Mandrake's proxy answers
+  # `mandrake` on /_mandrake. Without curl, an open port is taken as the proxy, as before.
+  if command -v curl > /dev/null && [ "$(curl -fsS -m 1 "http://127.0.0.1:$port/_mandrake" 2>/dev/null)" != mandrake ]; then
+    echo "mandrake: 127.0.0.1:$port responde, mas não é o proxy do Mandrake; esta sessão vai direto para a API (mandrake doctor)" >&2
+    return 0
+  fi
+  export ANTHROPIC_BASE_URL="http://127.0.0.1:$port"
 }
 
 claude() {
