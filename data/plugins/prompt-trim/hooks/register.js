@@ -5,15 +5,17 @@
 // Kept, with their fixed English wording rewritten below: instructions, output_style_instructions,
 // queued_command, file, at_mention_reference, edited_text_file, deferred_tools_delta,
 // skill_listing, hook_additional_context, hook_blocking_error, poll_events, task_status.
+// Kept as they are, because they carry a mode or a limit the harness enforces and appear only while
+// it is on (docs/guide/prompt-trim-invariants.md): plan_mode, plan_mode_exit, plan_mode_reentry,
+// auto_mode, auto_mode_exit, sandbox_instructions, critical_system_reminder; and what a hook says to
+// the model: hook_success, async_hook_response, hook_stopped_continuation.
+// Anything not listed here passes: a new attachment reaches the model until someone decides to cut it.
 const ATTACHMENTS = new Set([
   'account_memory_recall',
   'advisor_tool',
   'agent_listing_delta',
   'agent_mention',
   'artifact_opening_prefetch',
-  'async_hook_response',
-  'auto_mode',
-  'auto_mode_exit',
   'bash_output_audience_note',
   'batching_reminder',
   'budget_usd',
@@ -21,7 +23,6 @@ const ATTACHMENTS = new Set([
   'context_sections',
   'coordinator_context',
   'cowork_memory_context',
-  'critical_system_reminder',
   'date',
   'date_change',
   'diagnostics',
@@ -31,8 +32,6 @@ const ATTACHMENTS = new Set([
   'elapsed_time_reminder',
   'environment',
   'fork_briefing',
-  'hook_stopped_continuation',
-  'hook_success',
   'inlined_image_paths',
   'invoked_skills',
   'language',
@@ -49,15 +48,11 @@ const ATTACHMENTS = new Set([
   'pdf_reference',
   'peer_mention',
   'plan_file_reference',
-  'plan_mode',
-  'plan_mode_exit',
-  'plan_mode_reentry',
   'prefix_delta',
   'proactivity',
   'read_truncation_notice',
   'relevant_memories',
   'remote_session_change',
-  'sandbox_instructions',
   'secondary_reminder',
   'selected_lines_in_diff',
   'selected_lines_in_ide',

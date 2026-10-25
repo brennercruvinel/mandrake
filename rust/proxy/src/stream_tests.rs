@@ -337,3 +337,19 @@ async fn client_going_away_aborts_the_upstream_stream() {
     assert_eq!(e.error.as_deref(), Some("client disconnected"));
     assert_eq!(e.usage.map(|u| u.input), Some(12));
 }
+
+#[tokio::test(flavor = "multi_thread")]
+async fn the_proxy_says_who_it_is_without_going_upstream() {
+    let tmp = tempfile::tempdir().unwrap();
+    let (up, seen) = fake_upstream().await;
+    let (proxy, _dirs) = start_proxy(&up, Mode::Trim, tmp.path()).await;
+    let port: u16 = proxy.rsplit(':').next().unwrap().parse().unwrap();
+    let ours = tokio::task::spawn_blocking(move || crate::service::is_mandrake(port))
+        .await
+        .unwrap();
+    assert!(ours, "GET /_mandrake answers mandrake");
+    assert!(
+        seen.requests.lock().unwrap().is_empty(),
+        "nothing went upstream"
+    );
+}

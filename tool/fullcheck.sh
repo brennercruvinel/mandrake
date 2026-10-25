@@ -99,6 +99,12 @@ ts_checks() {
     fi
     check "tsc ${p##*/}" tsc_run --noEmit -p "$p"
   done
+  # prompt-trim's invariants (docs/guide/prompt-trim-invariants.md), plain JS on node's runner.
+  if has node; then
+    check "prompt-trim invariants" node --test data/plugins/prompt-trim/tests/invariants.test.js
+  else
+    fail "prompt-trim invariants" "node is not installed: nodejs.org"
+  fi
 }
 
 go_checks() {
@@ -194,8 +200,14 @@ e2e_checks() {
   need cargo "e2e" "rustup.rs" || return
   check "cargo build" cargo build --workspace --locked
   check "e2e cases" tool/tests/e2e/anina/cases.sh all "$bin"
+  if has claude; then
+    check "e2e invariants" tool/tests/e2e/invariants.sh "$bin"
+  else
+    skip "e2e invariants" "Claude Code is not on PATH; prompt-trim's invariants ran only as unit tests"
+  fi
   check "e2e setup" tool/tests/e2e/setup.sh "$bin"
   check "e2e integrity" tool/tests/e2e/integrity.sh "$bin"
+  check "e2e coexist" tool/tests/e2e/coexist.sh "$bin"
   if ! has anina; then
     skip "anina tapes" "anina is not on PATH; the cases above ran without recording"
     return

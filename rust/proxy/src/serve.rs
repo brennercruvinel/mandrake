@@ -26,6 +26,10 @@ use tokio::sync::mpsc;
 use tokio::task::JoinHandle;
 
 /// Request headers that describe this hop, not the request: never forwarded.
+/// `GET` here answers `mandrake` without going upstream, so the launcher and doctor can tell this
+/// proxy from another program listening on the same port.
+pub const IDENTITY: &str = "/_mandrake";
+
 const HOP: [&str; 10] = [
     "host",
     "content-length",
@@ -169,6 +173,12 @@ async fn handle(
     let (parts, body) = req.into_parts();
     let method = parts.method.clone();
     let path = parts.uri.path().to_string();
+    if method == Method::GET && path == IDENTITY {
+        let body = Full::new(Bytes::from_static(b"mandrake\n"))
+            .map_err(|never| match never {})
+            .boxed();
+        return Ok(Response::new(body));
+    }
     let mut rec = Record::new(state.clone(), &method, &path);
     let before = match body.collect().await {
         Ok(b) => b.to_bytes(),
