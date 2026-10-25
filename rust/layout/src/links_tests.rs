@@ -66,7 +66,7 @@ fn plan_apply_is_idempotent_and_rollback_restores() {
     assert_eq!(op("agents/toth.md"), Op::Link);
     assert_eq!(op("projects"), Op::None);
 
-    let j = apply(&t.dirs, &cat, &steps, "s1").unwrap().unwrap();
+    let j = apply(&t.dirs, &cat, &steps).unwrap().unwrap();
     assert!(j.exists());
     assert_eq!(
         inspect(&t.dirs.claude.join("skills")),
@@ -102,7 +102,7 @@ fn capture_round_trips_through_apply() {
     let t = setup();
     let cat = Catalog::builtin().unwrap();
     let p = profile(&t);
-    apply(&t.dirs, &cat, &plan(&t.dirs, &cat, &p).unwrap(), "s1").unwrap();
+    apply(&t.dirs, &cat, &plan(&t.dirs, &cat, &p).unwrap()).unwrap();
     // The CLI's own links inside its folder stay out of the profile.
     std::fs::create_dir_all(t.dirs.claude.join("debug")).unwrap();
     symlink(
@@ -126,4 +126,161 @@ fn keys_cannot_leave_the_folder() {
     let mut p = profile(&t);
     p.links.insert("../escape".into(), link("x"));
     assert!(plan(&t.dirs, &cat, &p).is_err());
+}
+
+fn copy_spec(target: &str) -> LinkSpec {
+    LinkSpec {
+        action: Action::Copy,
+        target: Some(target.into()),
+    }
+}
+
+fn only(t: &T, key: &str, spec: LinkSpec) -> Profile {
+    let mut p = Profile {
+        dev_root: Some(t.dev.to_string_lossy().into()),
+        ..Default::default()
+    };
+    p.links.insert(key.into(), spec);
+    p
+}
+
+fn journals(t: &T) -> Vec<String> {
+    let mut v: Vec<String> = std::fs::read_dir(t.dirs.journal())
+        .unwrap()
+        .map(|e| e.unwrap().file_name().to_string_lossy().into_owned())
+        .collect();
+    v.sort();
+    v
+}
+
+#[test]
+fn a_copy_that_fails_midway_is_rolled_back() {
+    let t = setup();
+    let cat = Catalog::builtin().unwrap();
+    std::fs::create_dir_all(t.dirs.claude.join("rules")).unwrap();
+    std::fs::write(t.dirs.claude.join("rules/mine.md"), "mine").unwrap();
+    // The source has a good file and a dangling link: the copy starts, then stops on the link.
+    std::fs::write(t.dev.join("devops/rules/a.md"), "a").unwrap();
+    symlink(
+        Path::new("/nowhere/at/all"),
+        &t.dev.join("devops/rules/z-broken"),
+    )
+    .unwrap();
+    let p = only(&t, "rules", copy_spec("devops/rules"));
+    let steps = plan(&t.dirs, &cat, &p).unwrap();
+    assert_eq!(
+        steps.iter().find(|s| s.path == "rules").unwrap().op,
+        Op::BackupCopy
+    );
+
+    let err = apply(&t.dirs, &cat, &steps).unwrap_err();
+    assert!(
+        format!("{err:#}").contains("mandrake link rollback"),
+        "{err:#}"
+    );
+    let jfile = t.dirs.journal().join(&journals(&t)[0]);
+    let j: Journal = serde_json::from_slice(&std::fs::read(jfile).unwrap()).unwrap();
+    assert!(
+        j.done[0].pending,
+        "the step is in the journal before it ran"
+    );
+    assert_eq!(
+        inspect(&t.dirs.claude.join("rules/mine.md")),
+        Found::Missing
+    );
+
+    assert_eq!(rollback(&t.dirs).unwrap(), 1);
+    assert_eq!(
+        std::fs::read_to_string(t.dirs.claude.join("rules/mine.md")).unwrap(),
+        "mine"
+    );
+    assert_eq!(inspect(&t.dirs.claude.join("rules/a.md")), Found::Missing);
+}
+
+#[test]
+fn a_pending_step_that_never_moved_the_original_leaves_it_alone() {
+    let t = setup();
+    std::fs::create_dir_all(t.dirs.journal()).unwrap();
+    std::fs::write(t.dirs.claude.join("settings.json"), "{\"mine\":1}").unwrap();
+    let j = Journal {
+        stamp: "x".into(),
+        claude: t.dirs.claude.clone(),
+        done: vec![Done {
+            path: "settings.json".into(),
+            before: Found::File,
+            op: Op::BackupLink,
+            backup: Some(t.dirs.backups().join("x/settings.json")),
+            pending: true,
+        }],
+    };
+    write_journal(&t.dirs.journal().join("x.json"), &j).unwrap();
+    assert_eq!(rollback(&t.dirs).unwrap(), 1);
+    assert_eq!(
+        std::fs::read_to_string(t.dirs.claude.join("settings.json")).unwrap(),
+        "{\"mine\":1}"
+    );
+}
+
+#[test]
+fn two_applies_in_a_row_keep_two_journals_and_two_backups() {
+    let t = setup();
+    let cat = Catalog::builtin().unwrap();
+    let p = only(&t, "settings.json", link("devops/settings.json"));
+    let at = t.dirs.claude.join("settings.json");
+    std::fs::write(&at, "first").unwrap();
+    apply(&t.dirs, &cat, &plan(&t.dirs, &cat, &p).unwrap()).unwrap();
+    std::fs::remove_file(&at).unwrap();
+    std::fs::write(&at, "second").unwrap();
+    apply(&t.dirs, &cat, &plan(&t.dirs, &cat, &p).unwrap()).unwrap();
+
+    let js = journals(&t);
+    assert_eq!(js.len(), 2, "{js:?}");
+    let saved: Vec<String> = js
+        .iter()
+        .map(|j| {
+            let stamp = j.trim_end_matches(".json");
+            std::fs::read_to_string(t.dirs.backups().join(stamp).join("settings.json")).unwrap()
+        })
+        .collect();
+    assert_eq!(
+        saved,
+        ["first", "second"],
+        "names sort in the order of the runs"
+    );
+    assert_eq!(rollback(&t.dirs).unwrap(), 1);
+    assert_eq!(std::fs::read_to_string(&at).unwrap(), "second");
+}
+
+#[test]
+fn a_correct_copy_is_left_alone_and_a_stale_one_is_redone() {
+    let t = setup();
+    let cat = Catalog::builtin().unwrap();
+    std::fs::write(t.dev.join("devops/rules/a.md"), "a").unwrap();
+    std::fs::write(t.dev.join("devops/settings.json"), "{\"k\":1}").unwrap();
+    let mut p = only(&t, "rules", copy_spec("devops/rules"));
+    p.links
+        .insert("settings.json".into(), copy_spec("devops/settings.json"));
+    apply(&t.dirs, &cat, &plan(&t.dirs, &cat, &p).unwrap()).unwrap();
+    let before = journals(&t);
+
+    let steps = plan(&t.dirs, &cat, &p).unwrap();
+    assert!(steps.iter().all(|s| !s.op.changes()), "{steps:?}");
+    assert_eq!(apply(&t.dirs, &cat, &steps).unwrap(), None);
+    assert_eq!(journals(&t), before, "no new journal");
+    assert!(
+        !t.dirs.backups().exists(),
+        "no backup of a copy that is already right"
+    );
+
+    std::fs::write(t.dirs.claude.join("rules/a.md"), "edited").unwrap();
+    let op = |k: &str| {
+        plan(&t.dirs, &cat, &p)
+            .unwrap()
+            .into_iter()
+            .find(|s| s.path == k)
+            .unwrap()
+            .op
+    };
+    assert_eq!(op("rules"), Op::BackupCopy);
+    assert_eq!(op("settings.json"), Op::None);
 }

@@ -55,7 +55,7 @@ pub fn settings_keys(dirs: &Dirs, profile: &Profile, root: &Path) -> Result<Vec<
     let changed = settings::apply(
         &dirs.claude.join("settings.json"),
         &keys,
-        &dirs.backups().join(mandrake_home::stamp()),
+        &dirs.backups().join(dirs.fresh_stamp()),
     )?;
     Ok(changed
         .into_iter()

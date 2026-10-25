@@ -1,7 +1,8 @@
 //! Links of the Claude Code folder: what is there, what the profile wants, and the steps between.
 //!
 //! Nothing is ever deleted. A real file or folder in the way moves to `state/backups/<stamp>/`, and
-//! every step goes to `state/journal/<stamp>.json`, which `rollback` replays backwards.
+//! every step goes to `state/journal/<stamp>.json`, which `rollback` replays backwards. A step is
+//! written as pending before anything moves, so a run that stops halfway can still be undone.
 
 use anyhow::{Context, Result, bail};
 use mandrake_home::{Action, Dirs, LinkSpec, Profile};
@@ -9,6 +10,7 @@ use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 
 use crate::catalog::{Catalog, Kind};
+use crate::tree;
 
 /// What sits at a path, without following a symlink.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -91,6 +93,13 @@ pub fn plan(dirs: &Dirs, catalog: &Catalog, profile: &Profile) -> Result<Vec<Ste
             (Action::Link, Found::Link(_)) => Op::Relink,
             (Action::Link, _) => Op::BackupLink,
             (Action::Copy, Found::Missing) => Op::Copy,
+            (Action::Copy, Found::File | Found::Dir)
+                if target
+                    .as_deref()
+                    .is_some_and(|t| tree::same(t, &dirs.claude.join(&key))) =>
+            {
+                Op::None
+            }
             (Action::Copy, _) => Op::BackupCopy,
         };
         steps.push(Step {
@@ -125,6 +134,10 @@ pub struct Done {
     pub op: Op,
     /// Where the real file or folder went, for `backup-*` ops.
     pub backup: Option<PathBuf>,
+    /// Written before the step starts and cleared once it finished: a run that stopped here may
+    /// have done part of it. Journals from before this field read as finished steps.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub pending: bool,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -134,68 +147,88 @@ pub struct Journal {
     pub done: Vec<Done>,
 }
 
-/// Applies the steps that change something and writes the journal; returns its path.
-pub fn apply(
-    dirs: &Dirs,
-    catalog: &Catalog,
-    steps: &[Step],
-    stamp: &str,
-) -> Result<Option<PathBuf>> {
+/// Applies the steps that change something and writes the journal; returns its path. Each step
+/// is recorded as pending before it touches anything, so when one fails the journal already holds
+/// what `rollback` needs.
+pub fn apply(dirs: &Dirs, catalog: &Catalog, steps: &[Step]) -> Result<Option<PathBuf>> {
     let todo: Vec<&Step> = steps.iter().filter(|s| s.op.changes()).collect();
     if todo.is_empty() {
         return Ok(None);
     }
+    let (stamp, jpath) = reserve(dirs)?;
     let mut journal = Journal {
-        stamp: stamp.into(),
+        stamp,
         claude: dirs.claude.clone(),
         done: vec![],
     };
-    let jpath = dirs.journal().join(format!("{stamp}.json"));
+    for s in todo {
+        let backup = matches!(s.op, Op::BackupLink | Op::BackupCopy)
+            .then(|| dirs.backups().join(&journal.stamp).join(&s.path));
+        journal.done.push(Done {
+            path: s.path.clone(),
+            before: s.found.clone(),
+            op: s.op,
+            backup: backup.clone(),
+            pending: true,
+        });
+        write_journal(&jpath, &journal)?;
+        let kind = catalog.get(&s.path).map(|i| i.kind);
+        run_step(&dirs.claude.join(&s.path), s, kind, backup.as_deref()).with_context(|| {
+            format!(
+                "stopped at {}; `mandrake link rollback` undoes this run ({})",
+                s.path,
+                jpath.display()
+            )
+        })?;
+        journal.done.last_mut().expect("just pushed").pending = false;
+        write_journal(&jpath, &journal)?;
+    }
+    Ok(Some(jpath))
+}
+
+/// Claims this run's journal file first, so no other run can take the same name.
+fn reserve(dirs: &Dirs) -> Result<(String, PathBuf)> {
     std::fs::create_dir_all(dirs.journal())?;
-    let result = (|| -> Result<()> {
-        for s in todo {
-            let at = dirs.claude.join(&s.path);
-            let target = s.target.as_ref().expect("plan checked the target");
-            let kind = catalog.get(&s.path).map(|i| i.kind);
-            let mut backup = None;
-            if matches!(s.op, Op::BackupLink | Op::BackupCopy) {
-                let to = dirs.backups().join(stamp).join(&s.path);
-                std::fs::create_dir_all(to.parent().unwrap())?;
-                std::fs::rename(&at, &to)
-                    .with_context(|| format!("moving {} to the backup", at.display()))?;
-                backup = Some(to);
-            }
-            if s.op == Op::Relink {
-                std::fs::remove_file(&at)
-                    .with_context(|| format!("removing the old link {}", at.display()))?;
-            }
-            if let Some(dir) = at.parent() {
-                std::fs::create_dir_all(dir)?;
-            }
-            match s.action {
-                Action::Link => {
-                    if kind == Some(Kind::Dir) && !target.exists() {
-                        std::fs::create_dir_all(target)?;
-                    }
-                    symlink(target, &at).with_context(|| {
-                        format!("linking {} -> {}", at.display(), target.display())
-                    })?;
-                }
-                Action::Copy => copy_tree(target, &at)?,
-                Action::Keep => unreachable!(),
-            }
-            journal.done.push(Done {
-                path: s.path.clone(),
-                before: s.found.clone(),
-                op: s.op,
-                backup,
-            });
-            write_journal(&jpath, &journal)?;
+    loop {
+        let stamp = dirs.fresh_stamp();
+        let jpath = dirs.journal().join(format!("{stamp}.json"));
+        let created = std::fs::OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .open(&jpath);
+        match created {
+            Ok(_) => return Ok((stamp, jpath)),
+            Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => continue,
+            Err(e) => return Err(e).with_context(|| format!("creating {}", jpath.display())),
         }
-        Ok(())
-    })();
-    write_journal(&jpath, &journal)?;
-    result.map(|_| Some(jpath))
+    }
+}
+
+fn run_step(at: &Path, s: &Step, kind: Option<Kind>, backup: Option<&Path>) -> Result<()> {
+    let target = s.target.as_ref().expect("plan checked the target");
+    if let Some(to) = backup {
+        std::fs::create_dir_all(to.parent().unwrap())?;
+        std::fs::rename(at, to)
+            .with_context(|| format!("moving {} to the backup", at.display()))?;
+    }
+    if s.op == Op::Relink {
+        std::fs::remove_file(at)
+            .with_context(|| format!("removing the old link {}", at.display()))?;
+    }
+    if let Some(dir) = at.parent() {
+        std::fs::create_dir_all(dir)?;
+    }
+    match s.action {
+        Action::Link => {
+            if kind == Some(Kind::Dir) && !target.exists() {
+                std::fs::create_dir_all(target)?;
+            }
+            symlink(target, at)
+                .with_context(|| format!("linking {} -> {}", at.display(), target.display()))
+        }
+        Action::Copy => tree::copy(target, at),
+        Action::Keep => unreachable!(),
+    }
 }
 
 fn write_journal(path: &Path, j: &Journal) -> Result<()> {
@@ -208,25 +241,31 @@ pub fn rollback(dirs: &Dirs) -> Result<usize> {
     let Some(jpath) = latest_journal(dirs)? else {
         bail!("no journal to roll back in {}", dirs.journal().display())
     };
-    let j: Journal = serde_json::from_slice(&std::fs::read(&jpath)?)?;
+    let j: Journal = serde_json::from_slice(&std::fs::read(&jpath)?)
+        .with_context(|| format!("reading {}", jpath.display()))?;
     for d in j.done.iter().rev() {
-        let at = j.claude.join(&d.path);
-        match inspect(&at) {
-            Found::Link(_) => std::fs::remove_file(&at)?,
-            Found::Dir => std::fs::remove_dir_all(&at)?,
-            Found::File => std::fs::remove_file(&at)?,
-            Found::Missing => {}
-        }
-        match (&d.before, &d.backup) {
-            (_, Some(b)) => {
-                std::fs::rename(b, &at).with_context(|| format!("restoring {}", at.display()))?
-            }
-            (Found::Link(t), None) => symlink(t, &at)?,
-            _ => {}
-        }
+        undo(&j.claude.join(&d.path), d)?;
     }
     std::fs::rename(&jpath, jpath.with_extension("rolled-back.json"))?;
     Ok(j.done.len())
+}
+
+/// Puts back what was at `at` before the step. A pending step may have stopped anywhere: when the
+/// original never reached the backup, or nothing changed yet, there is nothing to undo.
+fn undo(at: &Path, d: &Done) -> Result<()> {
+    let moved = d.backup.as_deref().filter(|b| b.symlink_metadata().is_ok());
+    if d.pending && moved.is_none() && (d.backup.is_some() || inspect(at) == d.before) {
+        return Ok(());
+    }
+    tree::remove(at)?;
+    match (&d.before, &d.backup) {
+        (_, Some(b)) => {
+            std::fs::rename(b, at).with_context(|| format!("restoring {}", at.display()))?
+        }
+        (Found::Link(t), None) => symlink(t, at)?,
+        _ => {}
+    }
+    Ok(())
 }
 
 fn latest_journal(dirs: &Dirs) -> Result<Option<PathBuf>> {
@@ -310,19 +349,6 @@ fn common_root<'a>(paths: impl Iterator<Item = &'a Path>) -> Option<PathBuf> {
 #[cfg(unix)]
 fn symlink(target: &Path, at: &Path) -> std::io::Result<()> {
     std::os::unix::fs::symlink(target, at)
-}
-
-fn copy_tree(from: &Path, to: &Path) -> Result<()> {
-    let m = std::fs::metadata(from).with_context(|| format!("copy source {}", from.display()))?;
-    if m.is_file() {
-        std::fs::copy(from, to)?;
-        return Ok(());
-    }
-    std::fs::create_dir_all(to)?;
-    for e in std::fs::read_dir(from)?.flatten() {
-        copy_tree(&e.path(), &to.join(e.file_name()))?;
-    }
-    Ok(())
 }
 
 #[cfg(test)]

@@ -78,6 +78,25 @@ impl Dirs {
         self.state.join("logs")
     }
 
+    /// A name no earlier run used for its journal or its backup folder: `stamp()` plus a counter,
+    /// so two runs in the same second never share one, and the names still sort by time.
+    pub fn fresh_stamp(&self) -> String {
+        let base = stamp();
+        let taken = |s: &str| {
+            [
+                self.journal().join(format!("{s}.json")),
+                self.journal().join(format!("{s}.rolled-back.json")),
+                self.backups().join(s),
+            ]
+            .iter()
+            .any(|p| p.symlink_metadata().is_ok())
+        };
+        (1..)
+            .map(|n| format!("{base}-{n:03}"))
+            .find(|s| !taken(s))
+            .expect("some counter is free")
+    }
+
     /// Expands `~/` and joins a relative path onto `root`; absolute paths pass through.
     pub fn expand(&self, path: &str, root: Option<&Path>) -> PathBuf {
         if let Some(rest) = path.strip_prefix("~/") {
@@ -283,6 +302,26 @@ mod tests {
         assert_eq!(s.len(), 15);
         assert!(s.starts_with("20"));
         assert!(rfc3339().ends_with('Z'));
+    }
+
+    #[test]
+    fn fresh_stamps_skip_names_in_use() {
+        let tmp = std::env::temp_dir().join(format!("mandrake-stamp-{}", std::process::id()));
+        let d = Dirs::resolve(env(&[
+            ("HOME", "/h"),
+            ("MANDRAKE_HOME", tmp.to_str().unwrap()),
+        ]))
+        .unwrap();
+        let a = d.fresh_stamp();
+        assert_eq!(a.len(), 19, "{a}");
+        std::fs::create_dir_all(d.journal()).unwrap();
+        std::fs::write(d.journal().join(format!("{a}.json")), "{}").unwrap();
+        let b = d.fresh_stamp();
+        assert_ne!(a, b);
+        std::fs::create_dir_all(d.backups().join(&b)).unwrap();
+        let c = d.fresh_stamp();
+        assert!(c != a && c != b);
+        let _ = std::fs::remove_dir_all(&tmp);
     }
 
     #[test]
