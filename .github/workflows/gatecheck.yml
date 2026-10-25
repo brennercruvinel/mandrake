@@ -1,0 +1,67 @@
+# The pull-request gate. It runs tool/fullcheck.sh, the same script a contributor runs before
+# pushing, so a red line here is the line they would have seen locally.
+#
+# gate:  every check once, on Linux.
+# macos: cargo test only, for the paths and the terminal code that differ on macOS.
+# The anina tapes need anina on PATH; until it can be installed here, the gate runs the four e2e
+# cases as plain scripts and says the recordings were skipped.
+
+name: gatecheck
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+
+permissions: {}
+
+concurrency:
+  group: gatecheck-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  gate:
+    name: gate (linux)
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: toolchain
+        run: rustup toolchain install stable --profile minimal --component clippy,rustfmt && rustup default stable
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+      - uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
+      - uses: taiki-e/install-action@1e29709c0ec63babbe8f266397a465f29a825f91 # v2.87.31
+        with:
+          tool: cargo-deny,shellcheck,zizmor
+      - name: actionlint
+        run: |
+          go install github.com/rhysd/actionlint/cmd/actionlint@v1.7.12
+          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+      - name: tool/fullcheck.sh
+        env:
+          FULLCHECK_BASE: origin/${{ github.base_ref || 'main' }}
+          FULLCHECK_SKIP_NEWS: ${{ contains(github.event.pull_request.labels.*.name, 'skip-news') && '1' || '0' }}
+        run: tool/fullcheck.sh
+
+  macos:
+    name: cargo test (macos)
+    runs-on: macos-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+      - name: toolchain
+        run: rustup toolchain install stable --profile minimal && rustup default stable
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+      - name: tool/fullcheck.sh test
+        run: tool/fullcheck.sh test
