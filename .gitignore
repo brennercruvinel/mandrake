@@ -1,5 +1,38 @@
+# Build output
 /target
-.DS_Store
+*.rs.bk
 *.zip
-/tool/tests/fixtures/*.raw.json
+
+# Caches
+__pycache__/
+*.py[cod]
+.ruff_cache/
+.pytest_cache/
+node_modules/
+*.tsbuildinfo
+
+# Editors and OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+.zed/
+*.swp
+*~
+
+# Local state: agent sessions and the installer's backups of this checkout
+/.claude/
 /.backup/
+
+# Temporaries
+tmp/
+tmps/
+temp/
+temps/
+
+# Logs, except the e2e evidence that pull requests cite
+*.log
+!tool/tests/e2e/anina/logs/**/*.log
+
+# Request bodies saved from real sessions stay local; the committed fixtures are synthetic
+/tool/tests/fixtures/*.raw.json

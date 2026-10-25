@@ -10,6 +10,9 @@ license.workspace = true
 name = "mandrake"
 path = "src/main.rs"
 
+[lints]
+workspace = true
+
 [dependencies]
 mandrake-home.workspace = true
 mandrake-layout.workspace = true

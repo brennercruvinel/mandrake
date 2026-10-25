@@ -123,7 +123,7 @@ describe('native', () => {
     expect(markers).toEqual([`${CONFIG.glyphs.bullet} `, `${CONFIG.glyphs.bullet} `, '2. '])
     const indented = walk(tree).filter(n => n.type === 'Box' && n.props?.paddingLeft === CONFIG.indent)
     expect(indented).toHaveLength(1)
-    expect(textOf(indented[0])).toContain('two')
+    expect(textOf(indented[0]!)).toContain('two')
   })
 
   const blocksOf = (tree: Node) => walk(tree).find(n => n.type === 'Box' && n.props?.gap === 1)!.children as Node[]

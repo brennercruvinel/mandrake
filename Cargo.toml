@@ -9,6 +9,16 @@ rust-version = "1.88"
 license = "MIT"
 repository = "https://github.com/brennercruvinel/mandrake"
 
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+# Tests may unwrap and expect (clippy.toml); everywhere else an error carries its context.
+[workspace.lints.clippy]
+unwrap_used = "deny"
+expect_used = "deny"
+dbg_macro = "deny"
+todo = "deny"
+
 [workspace.dependencies]
 mandrake-home = { path = "rust/home" }
 mandrake-layout = { path = "rust/layout" }

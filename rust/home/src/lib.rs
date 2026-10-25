@@ -91,10 +91,14 @@ impl Dirs {
             .iter()
             .any(|p| p.symlink_metadata().is_ok())
         };
-        (1..)
-            .map(|n| format!("{base}-{n:03}"))
-            .find(|s| !taken(s))
-            .expect("some counter is free")
+        let mut n = 1u32;
+        loop {
+            let s = format!("{base}-{n:03}");
+            if !taken(&s) {
+                return s;
+            }
+            n += 1;
+        }
     }
 
     /// Expands `~/` and joins a relative path onto `root`; absolute paths pass through.

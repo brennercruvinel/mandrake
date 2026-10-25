@@ -1,5 +1,10 @@
 //! `mandrake setup --cli` with its input closed: it stops before the summary and applies nothing.
 
+#![allow(
+    clippy::unwrap_used,
+    reason = "an integration test: a failed unwrap is the failure report"
+)]
+
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 

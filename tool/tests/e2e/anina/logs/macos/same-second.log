@@ -1,0 +1,24 @@
+== 2. two applies in the same second, then rollback twice
+
+$ mandrake link apply   # rules -> a
+  links: backuplink  rules -> $T/a
+  journal $T/mh/state/journal/20261025-021752-001.json
+
+$ mandrake link apply   # rules -> b, same second
+  links: relink      rules -> $T/b
+  journal $T/mh/state/journal/20261025-021752-002.json
+
+$ ls state/journal
+  20261025-021752-001.json
+  20261025-021752-002.json
+
+$ mandrake link rollback
+  rolled back 1 steps
+
+$ mandrake link rollback
+  rolled back 1 steps
+
+$ readlink ~/.claude/rules || ls ~/.claude/rules
+  folder: original.txt
+
+verdict: FIXED two journals, and two rollbacks bring the original folder back

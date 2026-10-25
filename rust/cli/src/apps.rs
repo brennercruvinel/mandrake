@@ -240,7 +240,8 @@ fn cargo_error(stderr: &str) -> String {
     why
 }
 
-#[cfg(all(test, unix))]
+#[cfg(test)]
+#[cfg(unix)]
 mod tests {
     use super::*;
     use std::os::unix::fs::PermissionsExt;

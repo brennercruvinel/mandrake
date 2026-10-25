@@ -23,3 +23,22 @@ tool/tests/e2e/anina/record.sh after              # with anina on PATH: SVGs and
 
 `record.sh <label>` writes `docs/img/e2e/<label>/<case>.svg` and `logs/<label>/<case>.log`. The
 `before` set was recorded on Linux (x86_64, Ubuntu) against `main` at `b815ea6`, before the fix.
+The `macos` set was recorded on macOS 27 (arm64) against `main` at `7b82f23`, after the fix.
+
+A binary built outside the checkout (`CARGO_TARGET_DIR` elsewhere) finds no Mandrake data, and
+setup stops with `no Mandrake source found`; point `MANDRAKE_SRC` at the checkout. Both scripts
+drop the `MANDRAKE_*` variables a shell with Mandrake installed exports, except `MANDRAKE_SRC` and
+`MANDRAKE_BIN`, so the throwaway install never reads the real souls or core.
+
+## Repository hygiene (#9)
+
+`hygiene.sh` builds, runs the four cases, compiles the Python helper and creates the files an
+editor and a scratch session leave (`.vscode/`, `.idea/`, `.zed/`, `.claude/`, `tmp/`, `.DS_Store`,
+a `.log`), then ends with `verdict: CLEAN` when `git status --short` shows nothing, or `verdict:
+DIRTY` with the paths. It removes only what it created. `hygiene.tape` records it with anina.
+
+## Quality gate (#15)
+
+`gate.sh` stages a 640-line script and a `CLAUDE.md`, runs `tool/fullcheck.sh files` (it fails on
+both), takes them back out and runs the whole gate, ending with `verdict: GATE WORKS` when the
+first run failed and the second passed. `gate.tape` records it with anina.

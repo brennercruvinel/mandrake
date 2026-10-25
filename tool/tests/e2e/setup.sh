@@ -4,6 +4,10 @@
 # with doctor passing on everything but the proxy (not started here). Never touches the real home.
 #   tool/tests/e2e/setup.sh [path/to/mandrake]
 set -uo pipefail
+# A shell with Mandrake installed exports MANDRAKE_SOULS, MANDRAKE_CORE... and env.sh keeps what is
+# already set, so the throwaway install would read the real souls. Only MANDRAKE_SRC passes through.
+for v in $(env | sed -n 's/^\(MANDRAKE_[A-Z_]*\)=.*/\1/p'); do [ "$v" = MANDRAKE_SRC ] || unset "$v"; done
+unset ANTHROPIC_BASE_URL
 bin="${1:-$(cd "$(dirname "$0")/../../.." && pwd)/target/debug/mandrake}"
 t="$(mktemp -d)"; trap 'rm -rf "$t"' EXIT
 fails=0

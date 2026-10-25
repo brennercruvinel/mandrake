@@ -180,7 +180,9 @@ pub fn apply(dirs: &Dirs, catalog: &Catalog, steps: &[Step]) -> Result<Option<Pa
                 jpath.display()
             )
         })?;
-        journal.done.last_mut().expect("just pushed").pending = false;
+        if let Some(d) = journal.done.last_mut() {
+            d.pending = false;
+        }
         write_journal(&jpath, &journal)?;
     }
     Ok(Some(jpath))
@@ -205,9 +207,13 @@ fn reserve(dirs: &Dirs) -> Result<(String, PathBuf)> {
 }
 
 fn run_step(at: &Path, s: &Step, kind: Option<Kind>, backup: Option<&Path>) -> Result<()> {
-    let target = s.target.as_ref().expect("plan checked the target");
+    let Some(target) = s.target.as_ref() else {
+        bail!("{} has no target in the profile", s.path)
+    };
     if let Some(to) = backup {
-        std::fs::create_dir_all(to.parent().unwrap())?;
+        if let Some(dir) = to.parent() {
+            std::fs::create_dir_all(dir)?;
+        }
         std::fs::rename(at, to)
             .with_context(|| format!("moving {} to the backup", at.display()))?;
     }

@@ -1,0 +1,15 @@
+# Text is stored with LF on every platform; scripts must run on Linux and macOS as checked out.
+* text=auto eol=lf
+
+*.sh text eol=lf
+*.rs text eol=lf diff=rust
+*.go text eol=lf diff=golang
+*.py text eol=lf diff=python
+*.md text eol=lf diff=markdown
+
+# Generated, folded on GitHub, but its diff stays visible: a dependency bump is reviewed locally too.
+Cargo.lock linguist-generated=true
+
+# Recorded evidence: compared as files, never merged line by line.
+docs/img/e2e/** -diff -merge linguist-generated=true
+tool/tests/e2e/anina/logs/** -merge linguist-generated=true

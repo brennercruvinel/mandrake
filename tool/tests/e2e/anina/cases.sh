@@ -7,6 +7,12 @@
 # folder, and `claude` is a stub, so no plugin install reaches a real Claude Code.
 #   tool/tests/e2e/anina/cases.sh <copy-fail|same-second|doctor-copy|eof|all> [path/to/mandrake]
 set -uo pipefail
+# A shell with Mandrake installed exports MANDRAKE_SOULS, MANDRAKE_CORE... into every case; only
+# MANDRAKE_SRC and MANDRAKE_BIN pass through.
+for v in $(env | sed -n 's/^\(MANDRAKE_[A-Z_]*\)=.*/\1/p'); do
+  case "$v" in MANDRAKE_SRC | MANDRAKE_BIN) ;; *) unset "$v" ;; esac
+done
+unset ANTHROPIC_BASE_URL
 here="$(cd "$(dirname "$0")" && pwd)"
 bin="${2:-${MANDRAKE_BIN:-$here/../../../../target/debug/mandrake}}"
 [ -x "$bin" ] || { echo "no mandrake binary at $bin"; exit 2; }
@@ -48,8 +54,7 @@ copy_fail() {
 
 same_second() {
   echo "== 2. two applies in the same second, then rollback twice"
-  local try
-  for try in 1 2 3 4 5; do
+  for _ in 1 2 3 4 5; do
     fresh; mkdir -p "$t/home/.claude/rules" "$t/a" "$t/b"; echo keep-me > "$t/home/.claude/rules/original.txt"
     local s0; s0="$(date +%s)"
     profile '[links.rules]' 'action = "link"' "target = \"$t/a\""
