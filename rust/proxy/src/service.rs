@@ -217,16 +217,41 @@ pub fn health(dirs: &Dirs, os: Os, isolated: bool, port: u16) -> (bool, String) 
         (up, format!("{kind} {name} {state}"))
     };
     let answering = answers(port);
-    let port_state = if answering {
-        "respondendo"
-    } else {
-        "não responde"
+    let ours = answering && is_mandrake(port);
+    let port_state = match (answering, ours) {
+        (true, true) => "respondendo",
+        (true, false) => "responde, mas não é o proxy do Mandrake: mude port em [proxy] no perfil",
+        _ => "não responde",
     };
+    let answering = ours;
     // Isolated, nothing is ever loaded: a proxy answering on the port (`proxy run`) is the healthy state.
     (
         (loaded || isolated) && answering,
         format!("proxy: {service}; 127.0.0.1:{port} {port_state}"),
     )
+}
+
+/// Whether what answers on the port is this proxy: `GET /_mandrake` says `mandrake`.
+pub fn is_mandrake(port: u16) -> bool {
+    use std::io::{Read, Write};
+    let Ok(mut s) = TcpStream::connect_timeout(
+        &SocketAddr::from(([127, 0, 0, 1], port)),
+        Duration::from_millis(500),
+    ) else {
+        return false;
+    };
+    let _ = s.set_read_timeout(Some(Duration::from_millis(800)));
+    let req = format!(
+        "GET {} HTTP/1.1\r\nHost: 127.0.0.1\r\nConnection: close\r\n\r\n",
+        crate::serve::IDENTITY
+    );
+    if s.write_all(req.as_bytes()).is_err() {
+        return false;
+    }
+    let mut buf = vec![];
+    let _ = s.take(4096).read_to_end(&mut buf);
+    let text = String::from_utf8_lossy(&buf);
+    text.starts_with("HTTP/1.1 200") && text.trim_end().ends_with("mandrake")
 }
 
 pub fn answers(port: u16) -> bool {
@@ -370,12 +395,19 @@ mod tests {
                 !health(&d, os, true, 1).0,
                 "an isolated service is never loaded"
             );
+            // Something else listening on the port is not the proxy (stream_tests has the real one).
             let up = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
             let port = up.local_addr().unwrap().port();
-            assert!(
-                health(&d, os, true, port).0,
-                "isolated, a proxy answering the port is healthy"
-            );
+            let other = std::thread::spawn(move || {
+                use std::io::Write;
+                if let Ok((mut s, _)) = up.accept() {
+                    let _ = s.write_all(b"HTTP/1.1 200 OK\r\nContent-Length: 2\r\n\r\nhi");
+                }
+            });
+            let (ok, line) = health(&d, os, true, port);
+            assert!(!ok, "{line}");
+            assert!(line.contains("não é o proxy do Mandrake"), "{line}");
+            other.join().unwrap();
             assert!(uninstall(&d, os, true).unwrap().starts_with("removido"));
             assert!(
                 status(&d, os, true, 1)

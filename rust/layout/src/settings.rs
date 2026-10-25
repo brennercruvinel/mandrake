@@ -17,11 +17,51 @@ pub fn wanted(_port: u16, prompt_trim: &Path) -> Vec<(&'static str, String)> {
     vec![(PLUGIN_DIRS, prompt_trim.to_string_lossy().into_owned())]
 }
 
-/// Removes an `ANTHROPIC_BASE_URL` that points at a local proxy (an older Mandrake wrote it).
-pub fn drop_local_base_url(doc: &mut Value) -> Option<(String, Option<String>, String)> {
+/// `CLAUDE_CODE_PLUGIN_DIRS` is a list Claude Code splits on `:`. Ours joins it: the other folders
+/// stay in their order, and a prompt-trim from an older install is replaced, not doubled.
+pub fn with_plugin_dir(old: Option<&str>, ours: &str) -> String {
+    let mut dirs: Vec<&str> = old
+        .unwrap_or("")
+        .split(':')
+        .map(str::trim)
+        .filter(|d| !d.is_empty() && *d != ours && !is_a_prompt_trim(d))
+        .collect();
+    dirs.insert(0, ours);
+    dirs.join(":")
+}
+
+/// Whether the list already holds this folder.
+pub fn has_plugin_dir(doc: &Value, ours: &str) -> bool {
+    doc["env"][PLUGIN_DIRS]
+        .as_str()
+        .is_some_and(|v| v.split(':').any(|d| d.trim() == ours))
+}
+
+/// A Mandrake prompt-trim folder, from this install or an older one.
+fn is_a_prompt_trim(dir: &str) -> bool {
+    dir.trim_end_matches('/')
+        .ends_with("data/plugins/prompt-trim")
+}
+
+/// Whether a base url is Mandrake's own proxy: local, on the profile's port or 8787, the port an
+/// older Mandrake wrote. Another local proxy (LiteLLM, a router, a cost meter) is not ours.
+pub fn is_ours(url: &str, port: u16) -> bool {
+    let Some(rest) = url
+        .strip_prefix("http://127.0.0.1:")
+        .or_else(|| url.strip_prefix("http://localhost:"))
+    else {
+        return false;
+    };
+    let p = rest.split(['/', '?']).next().unwrap_or("");
+    p.parse::<u16>().is_ok_and(|p| p == port || p == 8787)
+}
+
+/// Removes an `ANTHROPIC_BASE_URL` that points at Mandrake's own proxy (an older Mandrake wrote
+/// it). Any other value is someone else's and stays.
+pub fn drop_local_base_url(doc: &mut Value, port: u16) -> Option<(String, Option<String>, String)> {
     let env = doc.get_mut("env")?.as_object_mut()?;
     let old = env.get(BASE_URL)?.as_str()?.to_owned();
-    if !old.starts_with("http://127.0.0.1") && !old.starts_with("http://localhost") {
+    if !is_ours(&old, port) {
         return None;
     }
     env.remove(BASE_URL);
@@ -58,9 +98,14 @@ pub fn merge(
     let mut changed = vec![];
     for (k, v) in keys {
         let old = env.get(*k).and_then(Value::as_str).map(str::to_owned);
-        if old.as_deref() != Some(v.as_str()) {
-            env.insert((*k).to_owned(), Value::String(v.clone()));
-            changed.push(((*k).to_owned(), old, v.clone()));
+        let new = if *k == PLUGIN_DIRS {
+            with_plugin_dir(old.as_deref(), v)
+        } else {
+            v.clone()
+        };
+        if old.as_deref() != Some(new.as_str()) {
+            env.insert((*k).to_owned(), Value::String(new.clone()));
+            changed.push(((*k).to_owned(), old, new));
         }
     }
     Ok(changed)
@@ -70,12 +115,13 @@ pub fn merge(
 pub fn apply(
     path: &Path,
     keys: &[(&str, String)],
+    port: u16,
     backup_dir: &Path,
 ) -> Result<Vec<(String, Option<String>, String)>> {
     let mut doc = read(path)?;
     let mut changed =
         merge(&mut doc, keys).with_context(|| format!("merging into {}", path.display()))?;
-    changed.extend(drop_local_base_url(&mut doc));
+    changed.extend(drop_local_base_url(&mut doc, port));
     if changed.is_empty() {
         return Ok(changed);
     }
@@ -136,7 +182,7 @@ mod tests {
         let link = tmp.path().join("settings.json");
         std::os::unix::fs::symlink(&real, &link).unwrap();
         let keys = wanted(8787, Path::new("/d/plugins/prompt-trim"));
-        let changed = apply(&link, &keys, &tmp.path().join("bk")).unwrap();
+        let changed = apply(&link, &keys, 8787, &tmp.path().join("bk")).unwrap();
         assert_eq!(changed.len(), 2, "plugin dir set, local base url dropped");
         assert!(
             std::fs::symlink_metadata(&link)
@@ -157,11 +203,41 @@ mod tests {
         );
         assert!(tmp.path().join("bk/settings.json").exists());
         assert!(
-            apply(&link, &keys, &tmp.path().join("bk2"))
+            apply(&link, &keys, 8787, &tmp.path().join("bk2"))
                 .unwrap()
                 .is_empty(),
             "idempotent"
         );
+    }
+
+    #[test]
+    fn other_plugin_folders_and_other_proxies_stay() {
+        let mut doc = serde_json::json!({"env": {
+            "CLAUDE_CODE_PLUGIN_DIRS": "/opt/other-plugin:/old/mandrake/src/data/plugins/prompt-trim:/x/y",
+            "ANTHROPIC_BASE_URL": "http://localhost:4000",
+        }});
+        let keys = wanted(8787, Path::new("/d/data/plugins/prompt-trim"));
+        merge(&mut doc, &keys).unwrap();
+        assert_eq!(
+            doc["env"][PLUGIN_DIRS], "/d/data/plugins/prompt-trim:/opt/other-plugin:/x/y",
+            "ours first, the others kept in order, the old prompt-trim replaced"
+        );
+        assert!(has_plugin_dir(&doc, "/d/data/plugins/prompt-trim"));
+        assert!(drop_local_base_url(&mut doc, 8787).is_none());
+        assert_eq!(
+            doc["env"][BASE_URL], "http://localhost:4000",
+            "another proxy stays"
+        );
+        assert!(merge(&mut doc, &keys).unwrap().is_empty(), "idempotent");
+    }
+
+    #[test]
+    fn only_mandrakes_own_port_counts_as_ours() {
+        assert!(is_ours("http://127.0.0.1:8787", 9000), "the old default");
+        assert!(is_ours("http://localhost:9000/", 9000));
+        assert!(!is_ours("http://127.0.0.1:4000", 8787));
+        assert!(!is_ours("https://gateway.example.com", 8787));
+        assert!(!is_ours("http://127.0.0.1:87870", 8787));
     }
 
     #[test]

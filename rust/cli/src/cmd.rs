@@ -277,8 +277,7 @@ pub fn status(dirs: &Dirs) -> Result<()> {
     };
     let trim = install::prompt_trim(&dirs.data.join("src"));
     let doc = settings::read(&dirs.claude.join("settings.json")).unwrap_or_default();
-    let plugin_on =
-        doc["env"][settings::PLUGIN_DIRS].as_str() == Some(trim.to_string_lossy().as_ref());
+    let plugin_on = settings::has_plugin_dir(&doc, &trim.to_string_lossy());
     let proxy_up = std::net::TcpStream::connect(("127.0.0.1", p.proxy.port)).is_ok();
     let mark = |b: bool| if b { "ligado" } else { "DESLIGADO" };
     println!("Como funciona, em duas camadas:");
