@@ -19,6 +19,12 @@ ln -s "$MANDRAKE_BIN" "$T/bin/mandrake"
 # The stub stands in for Claude Code: it says what it was asked to run and exits.
 printf '#!/bin/sh\necho "[claude stub] claude $*"\n' > "$T/bin/claude"
 chmod +x "$T/bin/claude"
+# A shell with Mandrake installed exports MANDRAKE_PORT, MANDRAKE_SOULS, MANDRAKE_PREFIX... and the
+# installed env.sh keeps what is already set, so the sandbox would reach the real proxy, souls and
+# prefix (#33). Only the two inputs above pass through.
+for v in $(env | sed -n 's/^\(MANDRAKE_[A-Z_]*\)=.*/\1/p'); do
+  case "$v" in MANDRAKE_BIN | MANDRAKE_REPO) ;; *) unset "$v" ;; esac
+done
 export HOME="$T/home" MANDRAKE_HOME="$T/mh" CLAUDE_CONFIG_DIR="$T/home/.claude" SHELL=/bin/bash
 export PATH="$T/bin:$PATH" MANDRAKE_SRC="$MANDRAKE_REPO" TERM="${TERM:-xterm-256color}"
 unset ANTHROPIC_API_KEY ANTHROPIC_BASE_URL MANDRAKE_BENCH_AUTH CLAUDE_CODE_OAUTH_TOKEN
