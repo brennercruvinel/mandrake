@@ -15,7 +15,7 @@ Legenda de dono: T = Tiamati, A = agente A, B = agente B, BR = Brenner.
 
 ## Contratos (T, antes de A e B começarem)
 
-- C1 T: workspace em `pkgs/` com os crates `cli` (binário `mandrake`), `layout`, `proxy`, `meter` e `tui`; Rust 1.99, edition 2024. → **feito**
+- C1 T: workspace em `rust/` com os crates `cli` (binário `mandrake`), `layout`, `proxy`, `meter` e `tui`; Rust 1.99, edition 2024. → **feito**
 - C2 T: diretórios XDG nos dois sistemas, todos sobrescrevíveis por variável: config `~/.config/mandrake`, dados `~/.local/share/mandrake`, estado `~/.local/state/mandrake`. `MANDRAKE_HOME` isola tudo para teste. → **feito**
 - C3 T: `meter::Event`, uma linha JSONL por requisição. Campos: id, ts, mode (`trim` ou `pass`), path, status, ms, bytes antes/depois, tokens antes/depois (via `count_tokens`), usage (input, output, cache read/create) e cortes por tipo. → **feito**
 - C4 T: perfil `mandrake.toml`, escrito pelo wizard e lido por `setup --profile`. Contém a raiz de desenvolvimento, o destino de cada item, o proxy, os plugins, os souls e as skills. → **feito**

@@ -26,7 +26,7 @@ mandrake doctor
 ## Layout
 
 ```
-pkgs/    Rust workspace: cli (the binary), home (dirs, profile), layout (links), meter (events),
+rust/    Rust workspace: cli (the binary), home (dirs, profile), layout (links), meter (events),
          proxy (trim, measure, service), tui (watch, hex, bench, wizard)
 cfgs/    what the installer writes: setup/items.toml (the catalog), proxy/ (trim rules, service
          templates), shell/mandrake.sh (the launcher)
