@@ -23,3 +23,10 @@ tool/tests/e2e/anina/record.sh after              # with anina on PATH: SVGs and
 
 `record.sh <label>` writes `docs/img/e2e/<label>/<case>.svg` and `logs/<label>/<case>.log`. The
 `before` set was recorded on Linux (x86_64, Ubuntu) against `main` at `b815ea6`, before the fix.
+
+## Repository hygiene (#9)
+
+`hygiene.sh` builds, runs the four cases, compiles the Python helper and creates the files an
+editor and a scratch session leave (`.vscode/`, `.idea/`, `.zed/`, `.claude/`, `tmp/`, `.DS_Store`,
+a `.log`), then ends with `verdict: CLEAN` when `git status --short` shows nothing, or `verdict:
+DIRTY` with the paths. It removes only what it created. `hygiene.tape` records it with anina.
