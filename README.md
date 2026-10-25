@@ -16,6 +16,7 @@ mandrake doctor
 | `mandrake capture` | the current `~/.claude` as a profile |
 | `mandrake link plan\|apply\|rollback` | the links, with backup and journal; nothing is deleted |
 | `mandrake proxy run\|install\|uninstall\|status` | the local proxy that trims and measures |
+| `mandrake compare` | what Claude Code sends without and with Mandrake, side by side, part by part; answered locally, spends nothing |
 | `mandrake watch` | live split view: without and with Mandrake, tokens and savings |
 | `mandrake hex <id>` | one request before and after the cut, side by side in hex |
 | `mandrake bench` | token savings over fixed requests; `--view` draws the report |

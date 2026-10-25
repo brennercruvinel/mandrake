@@ -4,6 +4,7 @@
 
 mod audit;
 mod bench;
+mod capture;
 mod clock;
 mod count;
 mod log;
@@ -21,6 +22,8 @@ use std::path::Path;
 
 /// Writes a bench report as `<out>.json` and `<out>.md`.
 pub use bench::write as write_bench;
+/// A stand-in API on loopback for `mandrake compare`: answers locally, sends nothing anywhere.
+pub use capture::serve as serve_capture;
 /// `trim` cuts per `cfgs/proxy/trim.toml` and the profile; `pass` forwards untouched and still measures.
 pub use mandrake_meter::Mode;
 

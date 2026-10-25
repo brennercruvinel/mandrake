@@ -1,0 +1,1 @@
+`mandrake compare` shows, side by side and part by part (system prompt, tools, messages), what Claude Code sends for a prompt without Mandrake and with it; both requests are answered by a local stand-in API, so nothing is spent.

@@ -46,6 +46,10 @@ define `ANTHROPIC_BASE_URL` por sessão, só quando o proxy responde. Proxy fora
 direto na API, com um aviso. Sessões abertas fora desse shell (IDE, app) não passam pelo proxy,
 mas continuam com o prompt-trim.
 
+## Ver o corte
+
+`mandrake compare` roda um prompt pelo seu Claude Code duas vezes, sem e com o Mandrake, e mostra lado a lado o que cada um enviaria: o system prompt, as ferramentas e as mensagens, com o tamanho de cada parte. As duas requisições vão para uma API falsa local, que responde na hora: nada chega à Anthropic e nada é gasto. `--print` imprime a tabela.
+
 ## Quanto economiza, medido
 
 `mandrake bench` roda os mesmos prompts pelo `claude -p`, com o seu login, sem Mandrake (sem

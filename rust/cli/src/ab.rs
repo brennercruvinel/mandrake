@@ -21,7 +21,7 @@ pub const PROMPTS: [(&str, &str); 3] = [
     ),
 ];
 
-struct Proxies(Vec<Child>);
+pub(crate) struct Proxies(Vec<Child>);
 impl Drop for Proxies {
     fn drop(&mut self) {
         for c in &mut self.0 {
@@ -31,11 +31,11 @@ impl Drop for Proxies {
     }
 }
 
-fn free_port() -> Result<u16> {
+pub(crate) fn free_port() -> Result<u16> {
     Ok(TcpListener::bind("127.0.0.1:0")?.local_addr()?.port())
 }
 
-fn wait_port(port: u16) -> bool {
+pub(crate) fn wait_port(port: u16) -> bool {
     let end = Instant::now() + Duration::from_secs(10);
     while Instant::now() < end {
         if std::net::TcpStream::connect(("127.0.0.1", port)).is_ok() {
@@ -47,7 +47,7 @@ fn wait_port(port: u16) -> bool {
 }
 
 /// Runs `claude -p` with a settings overlay, with a ceiling; returns its last line.
-fn claude(cwd: &Path, port: u16, plugin_dir: &str, prompt: &str) -> Result<String> {
+pub(crate) fn claude(cwd: &Path, port: u16, plugin_dir: &str, prompt: &str) -> Result<String> {
     let settings = serde_json::json!({ "env": {
         "ANTHROPIC_BASE_URL": format!("http://127.0.0.1:{port}"),
         "CLAUDE_CODE_PLUGIN_DIRS": plugin_dir,
@@ -87,7 +87,7 @@ fn claude(cwd: &Path, port: u16, plugin_dir: &str, prompt: &str) -> Result<Strin
 }
 
 /// The events written since `seen`, waiting for their token counts to land.
-fn new_events(path: &Path, seen: usize) -> Vec<Event> {
+pub(crate) fn new_events(path: &Path, seen: usize) -> Vec<Event> {
     let end = Instant::now() + Duration::from_secs(40);
     loop {
         let all = mandrake_meter::read(path).unwrap_or_default();
@@ -103,6 +103,31 @@ fn sum(evs: &[Event], f: impl Fn(&Event) -> Option<u64>) -> Option<u64> {
         .map(&f)
         .try_fold(0u64, |a, v| v.map(|v| a + v))
         .filter(|_| !evs.is_empty())
+}
+
+/// Starts the two measuring proxies of a run folder, `pass` and `trim`, each on a free port; they
+/// read the profile saved in `run/config` and stop when the returned guard drops.
+pub(crate) fn proxies(run: &Path) -> Result<(Proxies, u16, u16)> {
+    let exe = std::env::current_exe()?;
+    let (pass_port, trim_port) = (free_port()?, free_port()?);
+    let mut kids = Proxies(vec![]);
+    for (port, pass) in [(pass_port, true), (trim_port, false)] {
+        let mut c = Command::new(&exe);
+        c.args(["proxy", "run", "--port", &port.to_string()])
+            .env("MANDRAKE_HOME", run);
+        if pass {
+            c.arg("--pass");
+        }
+        let log = std::fs::File::create(run.join(format!("proxy-{port}.log")))?;
+        kids.0.push(c.stdout(log.try_clone()?).stderr(log).spawn()?);
+        if !wait_port(port) {
+            bail!(
+                "o proxy de medição não subiu na porta {port} (veja {})",
+                run.display()
+            );
+        }
+    }
+    Ok((kids, pass_port, trim_port))
 }
 
 pub fn run(dirs: &Dirs, profile: &Profile, plugin_dir: &Path, out: &Path) -> Result<BenchReport> {
@@ -121,25 +146,7 @@ pub fn run(dirs: &Dirs, profile: &Profile, plugin_dir: &Path, out: &Path) -> Res
     p.proxy.audit = true;
     p.proxy.audit_keep_days = 7;
     p.save(&run.join("config/mandrake.toml"))?;
-    let exe = std::env::current_exe()?;
-    let (pass_port, trim_port) = (free_port()?, free_port()?);
-    let mut kids = Proxies(vec![]);
-    for (port, pass) in [(pass_port, true), (trim_port, false)] {
-        let mut c = Command::new(&exe);
-        c.args(["proxy", "run", "--port", &port.to_string()])
-            .env("MANDRAKE_HOME", &run);
-        if pass {
-            c.arg("--pass");
-        }
-        let log = std::fs::File::create(run.join(format!("proxy-{port}.log")))?;
-        kids.0.push(c.stdout(log.try_clone()?).stderr(log).spawn()?);
-        if !wait_port(port) {
-            bail!(
-                "o proxy de medição não subiu na porta {port} (veja {})",
-                run.display()
-            );
-        }
-    }
+    let (kids, pass_port, trim_port) = proxies(&run)?;
     let events = run.join("state/events.jsonl");
     let mut rows = vec![];
     println!(
