@@ -8,7 +8,7 @@ Set Env CLI_SEED=traffic
 Spawn bash --rcfile "$CLI_ENV" -i
 Wait '/~ \$/'
 
-Caption "mandrake watch at 140x40 · requests arriving live"
+Caption "mandrake watch · requests live, without Mandrake on the left, with it on the right"
 Type "traffic_later 3; mandrake watch"
 Key Enter
 Wait "q sair"

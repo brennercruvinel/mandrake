@@ -26,7 +26,7 @@ Key q
 Sleep 0.8
 
 Caption "bench --view on a machine that never measured"
-Type 'clear; rm -rf ~/../mh/state/bench; mandrake bench --view'
+Type 'clear; rm -rf ~/.mandrake/state/bench; mandrake bench --view'
 Key Enter
 Sleep 2
 Snap 03-none

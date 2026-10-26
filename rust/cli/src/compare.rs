@@ -80,7 +80,10 @@ pub fn run(
     let without = side(pass_port, "", Mode::Pass)?;
     let with = side(trim_port, &plugin_dir.to_string_lossy(), Mode::Trim)?;
     drop(kids);
-    eprintln!("corpos guardados em {}", run.join("state/audit").display());
+    eprintln!(
+        "corpos guardados em {}",
+        dirs.tilde(&run.join("state/audit"))
+    );
     match shown {
         Shown::Screen => mandrake_tui::compare(&without, &with, prompt, false),
         Shown::Table => mandrake_tui::compare(&without, &with, prompt, true),

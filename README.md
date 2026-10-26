@@ -37,7 +37,7 @@ tools, messages. Both requests are answered locally, so nothing is spent and no 
 
 Every request live as it goes through the proxy: without Mandrake on the left, with it on the right.
 
-![mandrake watch](docs/img/demo/watch.svg)
+![mandrake watch](docs/img/demo/watch-wide.svg)
 
 ### `mandrake hex`
 
