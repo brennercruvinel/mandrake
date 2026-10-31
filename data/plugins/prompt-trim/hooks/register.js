@@ -152,8 +152,8 @@ const REWRITE = {
 const rewrite = (type, text) =>
   (REWRITE[type] ?? []).reduce((t, [from, to]) => t.replace(from, to), String(text)).replace(/^\s+/, '')
 
-// Subagent types offered to Claude: none.
-const OFFER_AGENTS = false
+// Subagent types offered to Claude: all that Claude Code would offer.
+const OFFER_AGENTS = true
 
 // Tool descriptions: removed.
 const TOOL_DESCRIPTIONS = false
