@@ -66,3 +66,9 @@ test('I7: what is cut is a short named list, not a pattern', () => {
   assert.doesNotMatch(src, /ATTACHMENTS\.has\(e\.type\) \|\|/)
   assert.match(src, /if \(ATTACHMENTS\.has\(e\.type\)\) return \{ text: null \}/)
 })
+
+test('I8: subagent types reach Claude as Claude Code offers them', async () => {
+  const agent = { agentType: 'Explore', isOffered: true }
+  const seen = await hooks['agent.offer']({}, agent, async (/** @type {any} */ e) => e)
+  assert.deepEqual(seen, agent)
+})
