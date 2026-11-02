@@ -16,7 +16,10 @@ stop() { [ "${#pids[@]}" -gt 0 ] && kill "${pids[@]}" 2> /dev/null && wait "${pi
 trap 'stop; rm -rf "$t"' EXIT
 fails=0
 check() { if [ "$2" = "$3" ]; then echo "ok    $1"; else echo "FAIL  $1: got '$2', want '$3'"; fails=$((fails + 1)); fi; }
-m() { env HOME="$t/home" MANDRAKE_HOME="$t/mh" CLAUDE_CONFIG_DIR="$t/home/.claude" SHELL=/bin/bash "$bin" "$@"; }
+# Mandrake's process itself: `m ... &` would give $! the subshell that runs the function, and killing
+# that one leaves the proxy behind.
+mx() { exec env HOME="$t/home" MANDRAKE_HOME="$t/mh" CLAUDE_CONFIG_DIR="$t/home/.claude" SHELL=/bin/bash "$bin" "$@"; }
+m() { (mx "$@"); }
 free_port() { python3 -c 'import socket; s=socket.socket(); s.bind(("127.0.0.1",0)); print(s.getsockname()[1])'; }
 wait_port() { for _ in $(seq 50); do (exec 3<> "/dev/tcp/127.0.0.1/$1") 2> /dev/null && return 0; sleep 0.1; done; return 1; }
 port="$(free_port)"
@@ -61,12 +64,15 @@ check "and the launcher says it is not Mandrake" "$(grep -c 'não é o proxy do 
 stop
 
 # Mandrake's own proxy on the port: the session goes through it.
-m proxy run --port "$port" > "$t/proxy.log" 2>&1 &
+mx proxy run --port "$port" > "$t/proxy.log" 2>&1 &
 pids+=("$!")
 wait_port "$port"
 check "the proxy says who it is" "$(curl -fsS -m 2 "http://127.0.0.1:$port/_mandrake")" mandrake
 check "Mandrake's proxy: the session goes through it" "$(launch)" "base=http://127.0.0.1:$port"
 check "a base url from the shell is left alone" "$(env HOME="$t/home" MANDRAKE_HOME="$t/mh" PATH="$t/bin:$PATH" ANTHROPIC_BASE_URL=http://localhost:4000 bash -c ". '$t/mh/data/shell/mandrake.sh'; claude" 2>&1)" "base=http://localhost:4000"
+
+stop
+check "the proxy stops with the test" "$(curl -s -m 1 -o /dev/null -w '%{http_code}' "http://127.0.0.1:$port/_mandrake")" 000
 
 if [ "$fails" -gt 0 ]; then echo "--- setup.log"; cat "$t/setup.log"; echo "--- doctor.log"; cat "$t/doctor.log"; fi
 echo
