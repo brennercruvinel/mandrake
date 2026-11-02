@@ -136,6 +136,11 @@ prompt, its `settings.json` is added, and `~/.config/gh-<soul>` becomes its gh l
 exists. An `agents.json` in the souls folder gives extra names (`{"rhizo": ["Rhizo", "Root"]}`).
 Any other `claude` call is plain Claude Code.
 
+`codex invoke <soul>` and `opencode invoke <soul>` open the same soul in those CLIs, each on a server of
+its own so the soul's env reaches its commands. In a session opened without a soul, `/invoke <soul>`
+binds it. `soul` (next to `mandrake.sh` in `~/.local/share/mandrake/shell/`) does all of it, and
+`soul whoami`, `soul env <soul>` and `soul prompt <soul>` answer from a script.
+
 ## Claude Code versions
 
 prompt-trim hooks into Claude Code's plugin API, which can change between releases. There is no CI:

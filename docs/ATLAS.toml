@@ -57,7 +57,7 @@ role = "Optional plugin (TypeScript): terminal apps in a pane next to the conver
 
 [[layers]]
 name = "cfgs and data/prompt"
-role = "What the installer writes: the catalog of ~/.claude entries, trim rules and service templates, the shell launcher (claude, claude invoke <soul>), the core prompt and the example soul Rhizo, the optional invoke skill."
+role = "What the installer writes: the catalog of ~/.claude entries, trim rules and service templates, the shell launcher (mandrake.sh: one-line claude, codex and opencode functions; soul: everything about souls, from opening one in each CLI to binding one to a session already open), the core prompt and the example soul Rhizo, the optional invoke skill."
 
 [[layers]]
 name = "tool"
