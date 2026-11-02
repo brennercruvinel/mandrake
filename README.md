@@ -62,7 +62,8 @@ prompt); `--view` draws the last report.
 | `mandrake link plan\|apply\|rollback` | the links, with backup and journal; nothing is deleted |
 | `mandrake proxy run\|install\|uninstall\|status` | the local proxy that trims and measures |
 | `mandrake audit` | requests whose bodies were kept |
-| `claude invoke <soul>` | a session with a soul: the core prompt plus its own, its settings and gh login |
+| `claude invoke <soul>` | a session with a soul: the core prompt plus its own, its settings and gh login; `codex` and `opencode` take `invoke <soul>` too |
+| `/invoke <soul>` | inside a session opened without a soul (an IDE, the app): binds it to that soul |
 
 **If something breaks:** `mandrake link rollback` undoes the last apply, the originals wait in
 `~/.local/state/mandrake/backups/`, and `mandrake doctor` says what is off.

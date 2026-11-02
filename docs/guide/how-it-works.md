@@ -75,6 +75,26 @@ prompt-trim.
 perfil diga `core_only_plain = true` (souls que já se sustentam sozinhas). `Rhizo` é o exemplo
 que vem com o Mandrake.
 
+A mesma soul abre em outras CLIs, com o mesmo env e o `/invoke` como primeira mensagem:
+
+| CLI | O prompt da soul vai em | Servidor |
+| - | - | - |
+| `claude invoke <soul>` | `--system-prompt-file`, com `--settings` | o do processo |
+| `codex invoke <soul>` | `-c developer_instructions`; o env em `shell_environment_policy.set`, que o Codex não filtra | `--no-daemon` |
+| `opencode invoke <soul>` | `instructions` em `OPENCODE_CONFIG_CONTENT` | `--standalone` |
+
+Codex e OpenCode rodam por padrão num servidor de fundo compartilhado, aberto sem o env da soul: por
+isso cada sessão de soul sobe o seu. `--yolo` vira a flag de cada CLI para rodar sem aprovações.
+
+Uma sessão aberta sem soul (pelo IDE, pelo app, por `claude` sozinho) ganha uma com `/invoke <soul>`:
+o `soul bind` guarda o par sessão → soul em `~/.local/state/mandrake/souls/` e devolve o prompt da
+soul para o modelo. O env da soul não entra no processo que já está rodando; comandos que dependem
+dele (git, gh) rodam com o prefixo que o bind mostra. Uma sessão que já é uma soul recusa outra.
+
+Todo esse trabalho mora em `cfgs/shell/soul`; as funções `claude`, `codex` e `opencode` do
+`mandrake.sh` têm uma linha cada, porque o Bash do Claude Code guarda as funções do shell, mas
+descarta as que começam com `_`.
+
 ## A pasta ~/.claude
 
 Um perfil diz, para cada entrada de `~/.claude`, se ela fica, vira link para uma pasta sua ou
