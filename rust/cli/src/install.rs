@@ -179,15 +179,24 @@ pub fn shell(dirs: &Dirs, profile: &Profile, root: &Path) -> Result<Vec<String>>
     Ok(out)
 }
 
-/// /invoke and the other skills only a person starts, for each CLI found besides Claude Code. `soul`
-/// writes them, so they follow the same rules as the launcher, and they stay thin: each one calls
-/// `soul skill`, which reads the skill at run time.
+/// What Claude Code has, for each CLI found besides it: the instructions, the skills, the agents and
+/// the profile's MCP servers. `soul` writes them, so they follow the same rules as the launcher, and
+/// the skills only a person starts stay thin: each one calls `soul skill`, which reads the skill at
+/// run time.
 pub fn harnesses(dirs: &Dirs, profile: &Profile) -> Result<Vec<String>> {
-    if !profile.skills.invoke {
+    if !profile.skills.invoke && profile.mcps.is_none() {
         return Ok(vec![]);
     }
-    let out = Command::new(dirs.data.join("shell/soul"))
-        .arg("install")
+    let mut soul = Command::new(dirs.data.join("shell/soul"));
+    soul.arg("install");
+    if !profile.skills.invoke {
+        soul.arg("--no-skills");
+    }
+    if let Some(m) = &profile.mcps {
+        soul.arg("--mcps")
+            .arg(dirs.expand(m, profile.dev_root(dirs).as_deref()));
+    }
+    let out = soul
         .env("HOME", &dirs.home)
         .env("CLAUDE_CONFIG_DIR", &dirs.claude)
         .output()

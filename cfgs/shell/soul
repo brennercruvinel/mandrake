@@ -15,8 +15,13 @@
 #   soul session                   the CLI and the id of the session this runs in, tab separated
 #   soul skill <name> [args...]    a skill as plain text for any CLI that runs commands: its front matter
 #                                  gone, its !`command` lines run, its variables filled in
-#   soul install                   gives each CLI found here the skills only a person starts (their
-#                                  disable-model-invocation is true), as thin files that call soul skill
+#   soul install [--no-skills] [--mcps <catalog>]
+#                                  gives each CLI found here what Claude Code has: the instructions in
+#                                  CLAUDE.md, the skills, the agents and the catalog's MCP servers. The
+#                                  skills only a person starts (disable-model-invocation: true) become
+#                                  thin files that call soul skill
+#   soul mcp <catalog> [--dry-run] registers the catalog's servers in each CLI found: enabled ones are
+#                                  added, replacing what was there, disabled ones removed
 # CLIs: claude (system prompt, settings, /invoke first), codex and opencode (the prompt as instructions,
 # the env exported, the invoke skill rendered as the first message). Both of these run their own server
 # here, not the shared background one, since that one was started without the soul's env.
@@ -227,6 +232,19 @@ opencode_command() {
   echo "opencode: /$name em $out"
 }
 
+# What an agent's tools leave out, as OpenCode permissions: an agent with no list has them all.
+agent_denies() {
+  local tools first=1 pair
+  tools="$(field "$1" tools)"
+  [ -n "$tools" ] || return 0
+  for pair in 'Bash:shell' 'Edit|MultiEdit|Write:edit' 'WebFetch:webfetch' 'WebSearch:websearch' 'Task|Agent:subagent'; do
+    grep -qE "(^|[ ,])(${pair%:*})([ ,]|$)" <<<"$tools" && continue
+    [ "$first" = 0 ] || echo "permissions:"
+    first=0
+    printf '  - action: %s\n    resource: "*"\n    effect: deny\n' "${pair#*:}"
+  done
+}
+
 opencode_agent() {
   local name="$1" from="$claude_home/agents/$1.md" dir="$config_home/opencode/agents" out
   out="$dir/$name.md"
@@ -236,6 +254,7 @@ opencode_agent() {
   { echo ---
     echo "description: $(field "$from" description | jq -Rs 'rtrimstr("\n")')"
     echo "mode: subagent"
+    agent_denies "$from"
     echo ---; echo; echo "$stamp"; body "$from"
   } > "$out"
   echo "opencode: agente $name em $out"
@@ -258,11 +277,36 @@ shared_skill() {
   echo "skills: $name em $dir"
 }
 
-install_harnesses() {
-  command -v jq >/dev/null || { echo "jq não encontrado: /invoke e /sleep só no Claude Code"; return 0; }
+# CLAUDE.md is Claude Code's name: OpenCode and Codex read AGENTS.md only, and without the link a session
+# there runs without the instructions.
+link_instructions() {
+  local from="$claude_home/CLAUDE.md" to="$1"
+  [ -e "$from" ] || return 0
+  [ "$(readlink "$to" 2>/dev/null)" != "$from" ] || return 0
+  if [ -e "$to" ] || [ -L "$to" ]; then keep "$to"; return; fi
+  mkdir -p "$(dirname "$to")"
+  ln -s "$from" "$to"
+  echo "instruções: $to"
+}
+
+# The rest of the skills are the same file everywhere: OpenCode reads Claude Code's folder, the others
+# read ~/.agents/skills. A link keeps them from going stale.
+shared_links() {
+  local f name to n=0
+  for f in "$claude_home"/skills/*/SKILL.md; do
+    [ -f "$f" ] && [ "$(field "$f" disable-model-invocation)" != true ] || continue
+    name="$(basename "$(dirname "$f")")"; to="$HOME/.agents/skills/$name"
+    if [ -e "$to" ] || [ -L "$to" ]; then continue; fi
+    mkdir -p "$HOME/.agents/skills"
+    ln -s "$(dirname "$f")" "$to" && n=$((n + 1))
+  done
+  [ "$n" = 0 ] || echo "skills: $n ligadas em $HOME/.agents/skills"
+}
+
+install_skills() {
   local f name agent oc=0 shared=0
   command -v opencode >/dev/null && oc=1
-  { [ "$oc" = 1 ] || command -v codex >/dev/null || command -v gemini >/dev/null; } && shared=1
+  { command -v codex >/dev/null || command -v gemini >/dev/null; } && shared=1
   for f in "$claude_home"/skills/*/SKILL.md; do
     [ -f "$f" ] && [ "$(field "$f" disable-model-invocation)" = true ] || continue
     name="$(basename "$(dirname "$f")")"; agent="$(field "$f" agent)"
@@ -270,8 +314,111 @@ install_harnesses() {
       opencode_command "$name" "$f"
       [ -z "$agent" ] || opencode_agent "$agent"
     fi
-    [ "$shared" = 0 ] || shared_skill "$name" "$f"
+    { [ "$shared" = 0 ] && [ "$oc" = 0 ]; } || shared_skill "$name" "$f"
   done
+  [ "$oc" = 0 ] || link_instructions "$config_home/opencode/AGENTS.md"
+  command -v codex >/dev/null && link_instructions "${CODEX_HOME:-$HOME/.codex}/AGENTS.md"
+  [ "$shared" = 0 ] || shared_links
+}
+
+# The catalog, one JSON line per server, with its ${VAR} resolved from the environment, then its "vars",
+# then HOME.
+mcp_lines() {
+  local vars key
+  vars="$(jq -c --arg home "$HOME" '.vars // {} | . + {HOME: $home}' "$1")" || die "catálogo inválido: $1"
+  for key in $(jq -r 'keys[]' <<<"$vars"); do
+    [ -z "${!key-}" ] || vars="$(jq -c --arg k "$key" --arg v "${!key}" '.[$k] = $v' <<<"$vars")"
+  done
+  jq -c --argjson vars "$vars" '
+    def expand: reduce ($vars | to_entries[]) as $v (.; gsub("\\$\\{" + $v.key + "\\}"; $v.value));
+    .servers | to_entries[]
+    | {name: .key, enabled: .value.enabled, config: (.value.config | walk(if type == "string" then expand else . end))}
+  ' "$1"
+}
+
+claude_mcp() {
+  local line name
+  while IFS= read -r line; do
+    name="$(jq -r .name <<<"$line")"
+    claude mcp remove "$name" -s user > /dev/null 2>&1
+    [ "$(jq -r .enabled <<<"$line")" = true ] || continue
+    claude mcp add-json "$name" "$(jq -c .config <<<"$line")" -s user > /dev/null || echo "claude: $name falhou"
+  done < <(mcp_lines "$1")
+  echo "claude: mcp em dia"
+}
+
+codex_mcp() {
+  local line name cfg how
+  while IFS= read -r line; do
+    name="$(jq -r .name <<<"$line")"; cfg="$(jq -c .config <<<"$line")"
+    codex mcp remove "$name" > /dev/null 2>&1
+    [ "$(jq -r .enabled <<<"$line")" = true ] || continue
+    how=()
+    if [ "$(jq -r '.url // empty' <<<"$cfg")" != "" ]; then
+      how=(--url "$(jq -r .url <<<"$cfg")")
+    else
+      while IFS= read -r a; do how+=(--env "$a"); done < <(jq -r '(.env // {}) | to_entries[] | "\(.key)=\(.value)"' <<<"$cfg")
+      how+=(--)
+      while IFS= read -r a; do how+=("$a"); done < <(jq -r '[.command] + (.args // []) | .[]' <<<"$cfg")
+    fi
+    codex mcp add "$name" "${how[@]}" > /dev/null || echo "codex: $name falhou"
+  done < <(mcp_lines "$1")
+  echo "codex: mcp em dia"
+}
+
+# The whole file through jq, so the rest of it stays. A file with comments is the person's: jq cannot keep them.
+opencode_mcp() {
+  local dir="$config_home/opencode" file tmp
+  file="$dir/opencode.json"
+  if [ ! -f "$file" ] && [ -f "$dir/opencode.jsonc" ]; then
+    echo "opencode: $dir/opencode.jsonc tem comentários, mcp não escrito"
+    return 0
+  fi
+  mkdir -p "$dir"
+  [ -f "$file" ] || echo '{"$schema": "https://opencode.ai/config.json"}' > "$file"
+  jq -e . "$file" > /dev/null 2>&1 || { echo "opencode: $file não é JSON puro, mcp não escrito"; return 0; }
+  tmp="$(mktemp "$file.XXXXXX")" || return 1
+  if jq --slurpfile lines <(mcp_lines "$1") '
+    def server:
+      if (.url // "") != "" then {type: "remote", url} + (if (.headers // {}) == {} then {} else {headers} end)
+      else {type: "local", command: ([.command] + (.args // []))}
+        + (if (.env // {}) == {} then {} else {environment: .env} end) end;
+    reduce $lines[] as $s (.;
+      if $s.enabled then .mcp.servers[$s.name] = ($s.config | server)
+      else del(.mcp.servers[$s.name]) end)' "$file" > "$tmp"; then
+    mv "$tmp" "$file"
+    echo "opencode: mcp em dia"
+  else
+    rm -f "$tmp"
+    echo "opencode: catálogo inválido, mcp não escrito"
+  fi
+}
+
+mcp() {
+  local file="${1:?soul mcp <catalog> [--dry-run]}" line
+  [ -f "$file" ] || die "catálogo não existe: $file"
+  command -v jq > /dev/null || die "jq é preciso para ler o catálogo"
+  if [ "${2:-}" = --dry-run ]; then
+    mcp_lines "$file"
+    return 0
+  fi
+  if command -v claude > /dev/null; then claude_mcp "$file"; fi
+  if command -v opencode > /dev/null; then opencode_mcp "$file"; fi
+  if command -v codex > /dev/null; then codex_mcp "$file"; fi
+}
+
+install_harnesses() {
+  local skills=1 catalog=""
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --no-skills) skills=0; shift ;;
+      --mcps) catalog="${2:-}"; shift 2 ;;
+      *) die "soul install: não conheço $1" ;;
+    esac
+  done
+  command -v jq > /dev/null || { echo "jq não encontrado: as outras CLIs ficam sem skills e sem mcp"; return 0; }
+  if [ "$skills" = 1 ]; then install_skills; fi
+  if [ -n "$catalog" ]; then mcp "$catalog"; fi
 }
 
 # A session that resumes, prints, runs a subcommand or asks for help gets no invoke first; the
@@ -317,6 +464,8 @@ launch() {
     opencode)
       local base="${OPENCODE_CONFIG_CONTENT:-}"
       [ -n "$base" ] || base='{}'
+      # Its Claude models run Claude Code under this private server, which inherits the route.
+      route
       OPENCODE_CONFIG_CONTENT="$(jq -c --arg f "$file" '.instructions = ((.instructions // []) + [$f])' <<<"$base")" \
         || die "OPENCODE_CONFIG_CONTENT não é JSON"
       export OPENCODE_CONFIG_CONTENT
@@ -379,6 +528,7 @@ case "$cmd" in
     printf '%s\t%s\n' "${line%%$'\t'*}" "$id" ;;
   skill) n="${1:?soul skill <name> [args...]}"; shift
     render_skill "$n" "$@" || die "skill '$n' não existe em $claude_home/skills" ;;
-  install) install_harnesses ;;
+  install) install_harnesses "$@" ;;
+  mcp) mcp "$@" ;;
   *) sed -n '2,/^set /p' "$0" | sed '$d; s/^# \{0,1\}//' >&2; exit 2 ;;
 esac

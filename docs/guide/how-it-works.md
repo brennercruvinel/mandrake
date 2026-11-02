@@ -105,6 +105,23 @@ CLI está rodando e o id da sessão, pela variável que cada uma define para seu
 subagente do OpenCode responde pela raiz, lida do banco dele em modo leitura. O porquê está no
 [ADR-0005](../adr/installer/0005-any-cli-reads-its-own-store-read-only.md).
 
+O resto do que o Claude Code tem chega junto:
+
+| O quê | OpenCode | Codex |
+| - | - | - |
+| `CLAUDE.md` | link em `~/.config/opencode/AGENTS.md` | link em `~/.codex/AGENTS.md` |
+| Skills que o modelo inicia | lê a pasta do Claude Code | link em `~/.agents/skills/` |
+| Agentes | `agents/`, e o que `tools` deixa de fora vira `deny` | não |
+| MCP do catálogo (`mcps` no perfil) | `mcp.servers` em `opencode.json` | `codex mcp add` |
+
+Os dois só leem `AGENTS.md`: sem o link, a sessão roda sem as instruções. `soul mcp <catálogo>` escreve
+os servidores em cada CLI encontrada, e um servidor com `enabled: false` sai delas. Os plugins de tela
+(fancy, mermaid, tui-embed) desenham dentro do Claude Code e ficam nele.
+
+Uma soul aberta com `opencode invoke` passa pelo proxy: os modelos Claude do OpenCode rodam o Claude Code
+debaixo do servidor privado da sessão, que herda a rota. Numa sessão sem soul, ligada ao serviço de fundo,
+não passa.
+
 Todo esse trabalho mora em `cfgs/shell/soul`; as funções `claude`, `codex` e `opencode` do
 `mandrake.sh` têm uma linha cada, porque o Bash do Claude Code guarda as funções do shell, mas
 descarta as que começam com `_`.

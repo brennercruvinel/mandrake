@@ -143,12 +143,45 @@ check "a forked skill runs in a child of its agent" "$(grep -c -E '^(agent: scri
 check "a description with quotes stays one YAML string" "$(grep -c '^description: "A \\"ritual\\": by hand"$' "$oc/commands/ritual.md")" 1
 check "opencode gets the agent as a subagent" "$(grep -c '^mode: subagent$' "$oc/agents/scribe.md")" 1
 check "codex gets the shared skill, never by itself" "$(grep -c 'allow_implicit_invocation: false' "$t/h2/.agents/skills/ritual/agents/openai.yaml")" 1
-check "a skill the model may start is left to each CLI" "$(ls "$oc/commands/open.md" "$t/h2/.agents/skills/open" 2>/dev/null | wc -l | tr -d ' ')" 0
+check "a skill the model may start gets no command" "$(ls "$oc/commands/open.md" 2>/dev/null | wc -l | tr -d ' ')" 0
 before="$(cat "$oc/commands/ritual.md")"; cli "$soulb" install > /dev/null 2>&1
 check "soul install again changes nothing" "$(cat "$oc/commands/ritual.md")" "$before"
 echo mine > "$oc/commands/ritual.md"
 check "a file that is not Mandrake's stays" "$(cli "$soulb" install 2>&1 | grep -c 'não é do Mandrake, mantido')" 1
 check "and keeps its content" "$(cat "$oc/commands/ritual.md")" mine
+# What Claude Code has reaches the others: the instructions, the agent's limits, the rest of the skills.
+echo "# Rules" > "$cc/CLAUDE.md"
+cli CODEX_HOME="$t/h2/.codex" "$soulb" install > "$t/install2.log" 2>&1
+check "opencode reads the instructions" "$(cat "$t/h2/.config/opencode/AGENTS.md")" "# Rules"
+check "codex reads the instructions" "$(cat "$t/h2/.codex/AGENTS.md")" "# Rules"
+check "a skill the model starts reaches codex through a link" "$(readlink "$t/h2/.agents/skills/open")" "$cc/skills/open"
+check "what an agent's tools leave out is denied" "$(grep -c '^  - action: \(edit\|webfetch\|websearch\|subagent\)$' "$oc/agents/scribe.md")" 4
+check "and what they list stays" "$(grep -c '^  - action: shell$' "$oc/agents/scribe.md")" 0
+echo mine > "$t/h2/.codex/own.md"; rm "$t/h2/.codex/AGENTS.md"; mv "$t/h2/.codex/own.md" "$t/h2/.codex/AGENTS.md"
+check "instructions of the person stay" "$(cli CODEX_HOME="$t/h2/.codex" "$soulb" install 2>&1 | grep -c 'AGENTS.md: já existe')" 1
+# One catalog, every CLI found. The stubs log what they are asked to run.
+mkdir -p "$t/stub"
+for c in claude codex; do printf '#!/bin/sh\necho "%s $*" >> "%s/mcp.log"\n' "$c" "$t" > "$t/stub/$c"; chmod +x "$t/stub/$c"; done
+cat > "$t/catalog.json" <<'JSON'
+{"vars": {"ROOT": "/srv/tools"}, "servers": {
+  "alpha": {"enabled": true, "config": {"type": "stdio", "command": "${ROOT}/run.sh", "args": ["alpha"], "env": {"K": "${HOME}/v"}}},
+  "beta": {"enabled": true, "config": {"type": "http", "url": "http://127.0.0.1:9/mcp", "headers": {"H": "1"}}},
+  "off": {"enabled": false, "config": {"type": "stdio", "command": "x"}}}}
+JSON
+ocfg="$oc/opencode.json"
+printf '{"model": "a/b", "mcp": {"servers": {"off": {"type": "local", "command": ["x"]}, "mine": {"type": "local", "command": ["y"]}}}}\n' > "$ocfg"
+cli PATH="$t/stub:$t/bin:$PATH" "$soulb" mcp "$t/catalog.json" > "$t/mcp.out" 2>&1
+check "opencode gets a local server" "$(jq -c .mcp.servers.alpha "$ocfg")" "{\"type\":\"local\",\"command\":[\"/srv/tools/run.sh\",\"alpha\"],\"environment\":{\"K\":\"$t/h2/v\"}}"
+check "opencode gets a remote server" "$(jq -c .mcp.servers.beta "$ocfg")" '{"type":"remote","url":"http://127.0.0.1:9/mcp","headers":{"H":"1"}}'
+check "a disabled server leaves" "$(jq -c '.mcp.servers.off // "gone"' "$ocfg")" '"gone"'
+check "the rest of the file stays" "$(jq -c '[.model, .mcp.servers.mine.command[0]]' "$ocfg")" '["a/b","y"]'
+check "claude gets it from the same catalog" "$(grep -c '^claude mcp add-json alpha {.*/srv/tools/run.sh' "$t/mcp.log")" 1
+check "codex gets it, with its env" "$(grep -c "^codex mcp add alpha --env K=$t/h2/v -- /srv/tools/run.sh alpha$" "$t/mcp.log")" 1
+check "codex gets a remote one by url" "$(grep -c '^codex mcp add beta --url http://127.0.0.1:9/mcp$' "$t/mcp.log")" 1
+check "a disabled one is not added" "$(grep -c 'add.* off' "$t/mcp.log")" 0
+rm "$ocfg"; printf '{// mine\n}\n' > "$oc/opencode.jsonc"
+check "a config with comments stays the person's" "$(cli PATH="$t/stub:$t/bin:$PATH" "$soulb" mcp "$t/catalog.json" 2>&1 | grep -c 'tem comentários')" 1
+check "and no second file appears" "$(ls "$ocfg" 2>/dev/null | wc -l | tr -d ' ')" 0
 # Proxy down: the launcher must still start claude, without a base url, and say why.
 down="$(env -u ANTHROPIC_BASE_URL HOME="$t/home" MANDRAKE_HOME="$t/mh" PATH="$t/bin:$PATH" bash -c ". '$t/mh/data/shell/mandrake.sh'; MANDRAKE_PORT=1 claude --y; env | grep -c ANTHROPIC_BASE_URL" 2>&1)"
 check "proxy down: claude still starts" "$(grep -c -- '--y' <<<"$down")" 1
