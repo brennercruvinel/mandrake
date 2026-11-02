@@ -16,7 +16,7 @@ An ADR records a decision with trade-offs someone will ask about, or a lesson th
 | [structure/](structure/) | Crates, folders and the boundaries between them |
 | `interface/` | The CLI, the screens, the plugins' commands and what a person sees |
 | [promptcut/](promptcut/) | What is cut from a request, what is kept, and how the saving is measured |
-| `installer/` | Setup, profiles, links, backups, rollback and the shell launcher |
+| [installer/](installer/) | Setup, profiles, links, backups, rollback and the shell launcher |
 | [workflows/](workflows/) | Tests, the quality gate, CI, records and how a change gets in |
 
 A folder is created with its first ADR, and a new category enters with the ADR that needs it, together with its row here. A decision that spans categories goes in the folder of its main consequence, with the others as `tags`.

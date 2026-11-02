@@ -84,7 +84,7 @@ for c in codex opencode; do
   printf '#!/bin/sh\nfor a in "$@"; do printf "%%s\\n" "$a"; done\necho "soul=$MANDRAKE_SOUL"\necho "occ=$OPENCODE_CONFIG_CONTENT"\n' > "$t/bin/$c"
   chmod +x "$t/bin/$c"
 done
-sh_() { env -u ANTHROPIC_BASE_URL -u MANDRAKE_SHELL HOME="$t/home" MANDRAKE_HOME="$t/mh" MANDRAKE_PROXY=0 PATH="$t/bin:$PATH" bash -c ". '$t/mh/data/shell/mandrake.sh'; $1" 2>&1; }
+sh_() { env -u ANTHROPIC_BASE_URL -u MANDRAKE_SHELL -u OPENCODE_CONFIG_CONTENT HOME="$t/home" MANDRAKE_HOME="$t/mh" MANDRAKE_PROXY=0 PATH="$t/bin:$PATH" bash -c ". '$t/mh/data/shell/mandrake.sh'; $1" 2>&1; }
 cx="$(sh_ 'codex --yolo invoke Nova')"
 check "codex: the soul's prompt as developer instructions" "$(grep -c '^developer_instructions=".*# Nova' <<<"$cx")" 1
 check "codex: the soul's env set for its commands" "$(grep -c '^shell_environment_policy.set={.*MANDRAKE_SOUL="nova"' <<<"$cx")" 1
@@ -101,10 +101,54 @@ alone="$(sh_ "f=\"\$(declare -f claude)\"; bash -c \"\$f; claude --solo\"")"
 check "claude works from a snapshot with only its function" "$(grep -c -- '^--solo$' <<<"$alone")" 1
 # /invoke <soul> in a session opened without one binds it; the next /invoke there knows it.
 inv() { env -u MANDRAKE_SOUL -u MANDRAKE_SHELL HOME="$t/home" MANDRAKE_HOME="$t/mh" bash -c ". '$t/mh/data/shell/env.sh'; '$t/mh/data/src/data/skills/invoke/invoke.sh' $1" 2>&1; }
-check "/invoke without a soul says how to get one" "$(inv s1 | grep -c '^soul: none (claude invoke <soul>, or /invoke <soul> here: nova')" 1
+check "/invoke without a soul says how to get one" "$(inv s1 | grep -c '^soul: none (claude|codex|opencode invoke <soul>, or /invoke <soul> here: nova')" 1
 check "/invoke NOVA binds the session" "$(inv 's1 NOVA' | grep -c '^soul: nova, ligada agora')" 1
 check "the next /invoke knows it" "$(inv s1 | head -1)" "soul: nova"
 check "invoking the same soul again keeps it" "$(inv 's1 nova' | head -1)" "soul: nova (já era desta sessão)"
+# The session, whichever CLI runs this: a trap in place of opencode shows its service is left alone.
+soulb="$t/mh/data/shell/soul"
+sess() { env -u CLAUDE_CODE_SESSION_ID -u OPENCODE_SESSION_ID -u CODEX_SESSION_ID -u CODEX_THREAD_ID -u HERMES_SESSION_ID \
+  HOME="$t/home" MANDRAKE_HOME="$t/mh" XDG_DATA_HOME="$t/data" PATH="$t/trap:$PATH" "$@" "$soulb" session 2>&1; }
+check "session in claude" "$(sess CLAUDE_CODE_SESSION_ID=c1)" "$(printf 'claude\tc1')"
+check "session in codex" "$(sess CODEX_THREAD_ID=x1)" "$(printf 'codex\tx1')"
+check "session in codex is the root's" "$(sess CODEX_THREAD_ID=kid CODEX_SESSION_ID=root)" "$(printf 'codex\troot')"
+check "outside a CLI it says so" "$(sess | grep -c 'fora de uma sessão')" 1
+mkdir -p "$t/trap" "$t/data/opencode"
+printf '#!/bin/sh\ntouch "%s/service-called"\nexit 1\n' "$t" > "$t/trap/opencode"; chmod +x "$t/trap/opencode"
+if command -v sqlite3 > /dev/null; then
+  sqlite3 "$t/data/opencode/opencode.db" "create table session_v2 (id text, parent_id text);
+    insert into session_v2 values ('ses_root', null), ('ses_kid', 'ses_root'), ('ses_deep', 'ses_kid');"
+  check "an OpenCode subagent is its root" "$(sess OPENCODE_SESSION_ID=ses_deep)" "$(printf 'opencode\tses_root')"
+  check "its database answers, the service stays out" "$(ls "$t/service-called" 2>/dev/null | wc -l | tr -d ' ')" 0
+  rm "$t/data/opencode/opencode.db"
+fi
+check "a parent it cannot read is an error, never the child" "$(sess OPENCODE_SESSION_ID=ses_kid | grep -c 'não consegui ler a sessão')" 1
+# A skill rendered for any CLI, and what each CLI found gets.
+cc="$t/cc"; mkdir -p "$cc/skills/ritual" "$cc/skills/open" "$cc/agents"
+printf '%s\n' --- 'name: ritual' 'description: A "ritual": by hand' 'disable-model-invocation: true' 'context: fork' 'agent: scribe' --- '' \
+  '!`echo sid=${CLAUDE_SESSION_ID} args=$ARGUMENTS`' 'at ${CLAUDE_SKILL_DIR}' > "$cc/skills/ritual/SKILL.md"
+printf '%s\n' --- 'name: open' 'description: The model may start this' --- '' 'body' > "$cc/skills/open/SKILL.md"
+printf '%s\n' --- 'name: scribe' 'description: Writes' 'tools: Bash' --- '' 'You write.' > "$cc/agents/scribe.md"
+cli() { env -u CLAUDE_CODE_SESSION_ID -u OPENCODE_SESSION_ID HOME="$t/h2" MANDRAKE_HOME="$t/mh" CLAUDE_CONFIG_DIR="$cc" XDG_CONFIG_HOME="$t/h2/.config" PATH="$t/bin:$PATH" "$@"; }
+mkdir -p "$t/h2"
+ren="$(cli CODEX_THREAD_ID=x1 "$soulb" skill ritual 'a; touch pwned' 2>&1)"
+check "a rendered skill says so in its first line" "$(head -1 <<<"$ren")" "<!-- mandrake:skill ritual -->"
+check "its command runs, with the session and the arguments" "$(grep -c '^sid=x1 args=a; touch pwned$' <<<"$ren")" 1
+check "its folder is filled in" "$(grep -c "^at $cc/skills/ritual$" <<<"$ren")" 1
+check "a skill that does not exist is an error" "$(cli "$soulb" skill none 2>&1 | grep -c "skill 'none' não existe")" 1
+cli "$soulb" install > "$t/install.log" 2>&1
+oc="$t/h2/.config/opencode"
+check "opencode gets the command" "$(grep -c "soul skill ritual \$ARGUMENTS" "$oc/commands/ritual.md")" 1
+check "a forked skill runs in a child of its agent" "$(grep -c -E '^(agent: scribe|subagent: true)$' "$oc/commands/ritual.md")" 2
+check "a description with quotes stays one YAML string" "$(grep -c '^description: "A \\"ritual\\": by hand"$' "$oc/commands/ritual.md")" 1
+check "opencode gets the agent as a subagent" "$(grep -c '^mode: subagent$' "$oc/agents/scribe.md")" 1
+check "codex gets the shared skill, never by itself" "$(grep -c 'allow_implicit_invocation: false' "$t/h2/.agents/skills/ritual/agents/openai.yaml")" 1
+check "a skill the model may start is left to each CLI" "$(ls "$oc/commands/open.md" "$t/h2/.agents/skills/open" 2>/dev/null | wc -l | tr -d ' ')" 0
+before="$(cat "$oc/commands/ritual.md")"; cli "$soulb" install > /dev/null 2>&1
+check "soul install again changes nothing" "$(cat "$oc/commands/ritual.md")" "$before"
+echo mine > "$oc/commands/ritual.md"
+check "a file that is not Mandrake's stays" "$(cli "$soulb" install 2>&1 | grep -c 'não é do Mandrake, mantido')" 1
+check "and keeps its content" "$(cat "$oc/commands/ritual.md")" mine
 # Proxy down: the launcher must still start claude, without a base url, and say why.
 down="$(env -u ANTHROPIC_BASE_URL HOME="$t/home" MANDRAKE_HOME="$t/mh" PATH="$t/bin:$PATH" bash -c ". '$t/mh/data/shell/mandrake.sh'; MANDRAKE_PORT=1 claude --y; env | grep -c ANTHROPIC_BASE_URL" 2>&1)"
 check "proxy down: claude still starts" "$(grep -c -- '--y' <<<"$down")" 1

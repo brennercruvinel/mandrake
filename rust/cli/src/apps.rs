@@ -47,7 +47,7 @@ fn find(name: &str, path: Option<&OsString>, prefix_bin: &Path) -> Option<(PathB
 }
 
 /// The first `name` on `path`, the one a spawn by name runs.
-fn on_path(name: &str, path: Option<&OsString>) -> Option<PathBuf> {
+pub fn on_path(name: &str, path: Option<&OsString>) -> Option<PathBuf> {
     path.into_iter()
         .flat_map(std::env::split_paths)
         .filter(|d| d.is_absolute())

@@ -9,7 +9,9 @@ exec $SHELL             # loads the shell block, which also puts ~/.local/bin on
 mandrake doctor
 ```
 
-You need Rust (rustup.rs), Claude Code, and `jq` for soul aliases. Go is optional (fancy's tab tint).
+You need Rust (rustup.rs), at least one of Claude Code, OpenCode or Codex, and `jq` for soul aliases and
+for the skills in OpenCode and Codex. The plugins and the proxy are Claude Code's. Go is optional
+(fancy's tab tint).
 
 The wizard asks, step by step:
 
@@ -138,8 +140,10 @@ Any other `claude` call is plain Claude Code.
 
 `codex invoke <soul>` and `opencode invoke <soul>` open the same soul in those CLIs, each on a server of
 its own so the soul's env reaches its commands. In a session opened without a soul, `/invoke <soul>`
-binds it. `soul` (next to `mandrake.sh` in `~/.local/share/mandrake/shell/`) does all of it, and
-`soul whoami`, `soul env <soul>` and `soul prompt <soul>` answer from a script.
+binds it, in any of them: setup gives each CLI it finds `/invoke` (`$invoke` in Codex), and a CLI
+installed later gets it on the next `mandrake setup`. `soul` (next to `mandrake.sh` in
+`~/.local/share/mandrake/shell/`) does all of it, and `soul whoami`, `soul session`, `soul env <soul>`,
+`soul prompt <soul>` and `soul skill <name>` answer from a script.
 
 ## Claude Code versions
 

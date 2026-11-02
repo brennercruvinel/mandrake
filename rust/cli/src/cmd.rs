@@ -99,6 +99,7 @@ pub fn setup(dirs: &Dirs, from: Option<PathBuf>, asking: Asking) -> Result<()> {
         }
     }
     step("skill", install::skill(dirs, &profile, &root));
+    step("clis", install::harnesses(dirs, &profile));
     let exe = std::env::current_exe()?;
     step(
         "proxy",
