@@ -91,6 +91,20 @@ o `soul bind` guarda o par sessão → soul em `~/.local/state/mandrake/souls/` 
 soul para o modelo. O env da soul não entra no processo que já está rodando; comandos que dependem
 dele (git, gh) rodam com o prefixo que o bind mostra. Uma sessão que já é uma soul recusa outra.
 
+Isso vale dentro de qualquer CLI. O `mandrake setup` roda `soul install`, que dá a cada CLI encontrada
+as skills que só uma pessoa inicia (`disable-model-invocation: true`), como arquivos finos que chamam
+`soul skill <nome>`:
+
+| CLI | Onde fica | Como chama |
+| - | - | - |
+| OpenCode | `~/.config/opencode/commands/`, e o agente em `agents/` | `/invoke` |
+| Codex | `~/.agents/skills/` | `$invoke` |
+
+`soul skill` renderiza a skill na hora, então esses arquivos não envelhecem, e `soul session` diz qual
+CLI está rodando e o id da sessão, pela variável que cada uma define para seus comandos. Uma sessão de
+subagente do OpenCode responde pela raiz, lida do banco dele em modo leitura. O porquê está no
+[ADR-0005](../adr/installer/0005-any-cli-reads-its-own-store-read-only.md).
+
 Todo esse trabalho mora em `cfgs/shell/soul`; as funções `claude`, `codex` e `opencode` do
 `mandrake.sh` têm uma linha cada, porque o Bash do Claude Code guarda as funções do shell, mas
 descarta as que começam com `_`.

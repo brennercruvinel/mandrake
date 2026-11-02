@@ -12,17 +12,25 @@
 #   soul prompt <soul>             its system prompt: the core first when the profile says so, then the soul
 #   soul resolve <name>            the soul's folder name, from that name or an alias in agents.json
 #   soul list                      the souls
+#   soul session                   the CLI and the id of the session this runs in, tab separated
+#   soul skill <name> [args...]    a skill as plain text for any CLI that runs commands: its front matter
+#                                  gone, its !`command` lines run, its variables filled in
+#   soul install                   gives each CLI found here the skills only a person starts (their
+#                                  disable-model-invocation is true), as thin files that call soul skill
 # CLIs: claude (system prompt, settings, /invoke first), codex and opencode (the prompt as instructions,
 # the env exported, the invoke skill rendered as the first message). Both of these run their own server
 # here, not the shared background one, since that one was started without the soul's env.
-# The session id comes from --session, else CLAUDE_CODE_SESSION_ID (Claude Code sets it for its Bash tool).
+# The session id comes from --session, else from the variable each CLI sets for the commands it runs.
 set -uo pipefail
 
+self="$(cd "$(dirname "$0")" && pwd)/$(basename "$0")"
+# A CLI's background service was not started from a shell that sourced the rc block.
+if [ -z "${MANDRAKE_SOULS:-}" ] && [ -f "${self%/*}/env.sh" ]; then . "${self%/*}/env.sh"; fi
 souls="${MANDRAKE_SOULS:-}"
 if [ -n "${MANDRAKE_HOME:-}" ]; then state="$MANDRAKE_HOME/state"; else state="${XDG_STATE_HOME:-$HOME/.local/state}/mandrake"; fi
 binds="$state/souls"
 claude_home="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
-self="$(cd "$(dirname "$0")" && pwd)/$(basename "$0")"
+config_home="${XDG_CONFIG_HOME:-$HOME/.config}"
 die() { echo "soul: $*" >&2; exit 1; }
 lower() { printf '%s' "$1" | tr '[:upper:]' '[:lower:]'; }
 
@@ -81,15 +89,51 @@ env_lines() {
   if g="$(gh_dir "$1")"; then echo "export GH_CONFIG_DIR=$(q "$g")"; fi
 }
 
+# The CLI running this and its session id, from the variable each one sets for its commands. Codex's
+# session id stays the root's in a subagent, where its thread id does not.
+harness() {
+  if [ -n "${CLAUDE_CODE_SESSION_ID:-}" ]; then printf 'claude\t%s\n' "$CLAUDE_CODE_SESSION_ID"
+  elif [ -n "${OPENCODE_SESSION_ID:-}" ]; then printf 'opencode\t%s\n' "$OPENCODE_SESSION_ID"
+  elif [ -n "${CODEX_SESSION_ID:-${CODEX_THREAD_ID:-}}" ]; then printf 'codex\t%s\n' "${CODEX_SESSION_ID:-$CODEX_THREAD_ID}"
+  elif [ -n "${HERMES_SESSION_ID:-}" ]; then printf 'hermes\t%s\n' "$HERMES_SESSION_ID"
+  else return 1; fi
+}
+
+# The parent of an OpenCode session, empty for a root. Its database answers read-only in under a
+# millisecond; its API goes through the background service, starting one to answer, and takes 20 s to
+# fail when one cannot start. The API is only for a database this cannot read.
+opencode_parent() {
+  local db="${XDG_DATA_HOME:-$HOME/.local/share}/opencode/opencode.db" up
+  if command -v sqlite3 > /dev/null && [ -f "$db" ] \
+    && up="$(sqlite3 -readonly "$db" "select coalesce(parent_id, '') from session_v2 where id = '$1'" 2>/dev/null)"; then
+    echo "$up"
+    return 0
+  fi
+  opencode api get "/api/session/$1" 2>/dev/null < /dev/null | jq -er '.data.parentID // ""'
+}
+
+# A subagent's session is a child in OpenCode, with its own id: the soul and the memory are the root's.
+# A lookup that fails stops here: taking a child for the root would consolidate the wrong transcript.
+root_session() {
+  local id="$1" up
+  while [[ "$id" =~ ^ses_[A-Za-z0-9]+$ ]] && [ ! -f "$binds/$id" ]; do
+    up="$(opencode_parent "$id")" || die "não consegui ler a sessão $id no OpenCode"
+    [ -n "$up" ] || break
+    id="$up"
+  done
+  echo "$id"
+}
+
 session_of() {
-  local sid="${CLAUDE_CODE_SESSION_ID:-}"
+  local sid=""
   while [ $# -gt 0 ]; do case "$1" in --session) sid="${2:-}"; shift 2 ;; *) shift ;; esac; done
-  echo "$sid"
+  [ -n "$sid" ] || sid="$(harness | cut -f2)"
+  [ -z "$sid" ] || root_session "$sid"
 }
 
 whoami_() {
-  local sid; sid="$(session_of "$@")"
   [ -n "${MANDRAKE_SOUL:-}" ] && { echo "$MANDRAKE_SOUL"; return 0; }
+  local sid; sid="$(session_of "$@")"
   [ -n "$sid" ] && [ -f "$binds/$sid" ] && { cat "$binds/$sid"; return 0; }
   return 1
 }
@@ -97,8 +141,8 @@ whoami_() {
 bind() {
   local name sid had
   name="$(resolve "${1:?soul bind <soul> [--session <id>]}")" || exit 1; shift
-  sid="$(session_of "$@")"
-  [ -n "$sid" ] || die "sem id de sessão (passe --session, ou rode de dentro do Claude Code)"
+  sid="$(session_of "$@")" || exit 1
+  [ -n "$sid" ] || die "sem id de sessão (passe --session, ou rode de dentro da CLI)"
   case "$sid" in */* | .*) die "id de sessão inválido: $sid" ;; esac
   if had="$(whoami_ --session "$sid")"; then
     [ "$had" = "$name" ] || die "esta sessão já é $had; para ser $name, abra outra sessão"
@@ -134,18 +178,100 @@ route() {
   export ANTHROPIC_BASE_URL="http://127.0.0.1:$port"
 }
 
-# The invoke skill as a plain first message, for CLIs that do not run Claude Code skills: the front
-# matter goes, each !`command` line is replaced by its output, the skill variables are filled in.
-render_invoke() {
-  local dir="$claude_home/skills/invoke" line cmd
+# A skill as plain text, for CLIs that do not run Claude Code skills: the front matter goes, each
+# !`command` line is replaced by its output, the skill variables are filled in. The first line says it
+# was rendered: a CLI stores this as a user turn, and whoever reads the transcript must not take it as
+# something the person typed. An empty session stays a word on the command line ('').
+render_skill() {
+  local name="$1" dir="$claude_home/skills/$1" sid args="" a line cmd; shift
   [ -f "$dir/SKILL.md" ] || return 1
+  sid="$(session_of)"; sid="${sid:-\'\'}"
+  for a in "$@"; do args="$args${args:+ }$(q "$a")"; done
+  echo "<!-- mandrake:skill $name -->"
   while IFS= read -r line || [ -n "$line" ]; do
-    line="${line//\$\{CLAUDE_SKILL_DIR\}/$dir}"; line="${line//\$\{CLAUDE_SESSION_ID\}/}"; line="${line//\$ARGUMENTS/}"
+    line="${line//\$\{CLAUDE_SKILL_DIR\}/$dir}"; line="${line//\$\{CLAUDE_SESSION_ID\}/$sid}"; line="${line//\$ARGUMENTS/$args}"
     case "$line" in
       '!`'*'`') cmd="${line#'!`'}"; cmd="${cmd%'`'}"; bash -c "$cmd" 2>&1 ;;
       *) printf '%s\n' "$line" ;;
     esac
   done < <(body "$dir/SKILL.md")
+}
+
+# A front matter field of a file, unquoted.
+field() {
+  awk -v k="$2" 'NR == 1 && /^---$/ { fm = 1; next } fm && /^---$/ { exit }
+    fm && index($0, k ":") == 1 { sub(/^[^:]*:[ \t]*/, ""); gsub(/^["'\'']|["'\'']$/, ""); print; exit }' "$1"
+}
+
+# Files of ours say so in this line: a file without it is the person's, and stays.
+stamp='<!-- mandrake:rendered: edit the skill and run mandrake setup -->'
+writable() { [ ! -e "$1" ] || grep -qF "$stamp" "$1"; }
+keep() { echo "$1: já existe e não é do Mandrake, mantido"; }
+
+# OpenCode's !`command` lines run outside any session, so the command asks for the shell tool, which has one.
+opencode_command() {
+  local name="$1" skill="$2" dir="$config_home/opencode/commands" out agent
+  out="$dir/$name.md"; agent="$(field "$skill" agent)"
+  writable "$out" || { keep "$out"; return; }
+  mkdir -p "$dir"
+  { echo ---
+    echo "description: $(field "$skill" description | jq -Rs 'rtrimstr("\n")')"
+    if [ "$(field "$skill" context)" = fork ]; then
+      [ -z "$agent" ] || echo "agent: $agent"
+      echo "subagent: true"
+    fi
+    echo ---; echo; echo "$stamp"
+    echo "Run this with the shell tool, unchanged, and follow what it prints as your instructions:"; echo
+    echo "\`$self skill $name \$ARGUMENTS\`"
+  } > "$out"
+  echo "opencode: /$name em $out"
+}
+
+opencode_agent() {
+  local name="$1" from="$claude_home/agents/$1.md" dir="$config_home/opencode/agents" out
+  out="$dir/$name.md"
+  [ -f "$from" ] || return 0
+  writable "$out" || { keep "$out"; return; }
+  mkdir -p "$dir"
+  { echo ---
+    echo "description: $(field "$from" description | jq -Rs 'rtrimstr("\n")')"
+    echo "mode: subagent"
+    echo ---; echo; echo "$stamp"; body "$from"
+  } > "$out"
+  echo "opencode: agente $name em $out"
+}
+
+# ~/.agents/skills: Codex reads it, Gemini CLI too, and in OpenCode it wins over ~/.claude/skills, so
+# @name there gets this one and not Claude Code's syntax.
+shared_skill() {
+  local name="$1" skill="$2" dir="$HOME/.agents/skills/$1"
+  writable "$dir/SKILL.md" || { keep "$dir/SKILL.md"; return; }
+  mkdir -p "$dir/agents"
+  { echo ---; echo "name: $name"
+    echo "description: $(field "$skill" description | jq -Rs 'rtrimstr("\n")')"
+    echo "disable-model-invocation: true"
+    echo ---; echo; echo "$stamp"
+    echo "Run this with the shell tool, adding what the person typed after the skill's name, and follow what it prints as your instructions:"; echo
+    echo "\`$self skill $name\`"
+  } > "$dir/SKILL.md"
+  printf 'policy:\n  allow_implicit_invocation: false\n' > "$dir/agents/openai.yaml"
+  echo "skills: $name em $dir"
+}
+
+install_harnesses() {
+  command -v jq >/dev/null || { echo "jq não encontrado: /invoke e /sleep só no Claude Code"; return 0; }
+  local f name agent oc=0 shared=0
+  command -v opencode >/dev/null && oc=1
+  { [ "$oc" = 1 ] || command -v codex >/dev/null || command -v gemini >/dev/null; } && shared=1
+  for f in "$claude_home"/skills/*/SKILL.md; do
+    [ -f "$f" ] && [ "$(field "$f" disable-model-invocation)" = true ] || continue
+    name="$(basename "$(dirname "$f")")"; agent="$(field "$f" agent)"
+    if [ "$oc" = 1 ]; then
+      opencode_command "$name" "$f"
+      [ -z "$agent" ] || opencode_agent "$agent"
+    fi
+    [ "$shared" = 0 ] || shared_skill "$name" "$f"
+  done
 }
 
 # A session that resumes, prints, runs a subcommand or asks for help gets no invoke first; the
@@ -186,7 +312,7 @@ launch() {
         set="$set${set:+,}$k=$(jq -n --arg v "${!k}" '$v')"
       done
       extra=(--no-daemon -c "developer_instructions=$(jq -Rs . < "$file")" -c "shell_environment_policy.set={$set}")
-      if wants_invoke codex "$@" && first_text="$(render_invoke)"; then first=("$first_text"); fi
+      if wants_invoke codex "$@" && first_text="$(render_skill invoke)"; then first=("$first_text"); fi
       exec codex "${extra[@]}" "$@" ${first[@]+"${first[@]}"} ;;
     opencode)
       local base="${OPENCODE_CONFIG_CONTENT:-}"
@@ -194,7 +320,7 @@ launch() {
       OPENCODE_CONFIG_CONTENT="$(jq -c --arg f "$file" '.instructions = ((.instructions // []) + [$f])' <<<"$base")" \
         || die "OPENCODE_CONFIG_CONTENT não é JSON"
       export OPENCODE_CONFIG_CONTENT
-      if wants_invoke opencode "$@" && first_text="$(render_invoke)"; then first=(--prompt "$first_text"); fi
+      if wants_invoke opencode "$@" && first_text="$(render_skill invoke)"; then first=(--prompt "$first_text"); fi
       exec opencode --standalone "$@" ${first[@]+"${first[@]}"} ;;
     *) die "não sei abrir uma soul em $cli (claude, codex, opencode)" ;;
   esac
@@ -248,5 +374,11 @@ case "$cmd" in
   prompt) n="$(resolve "${1:?soul prompt <soul>}")" || exit 1; prompt "$n" ;;
   resolve) resolve "${1:?soul resolve <name>}" ;;
   list) list ;;
+  session) line="$(harness)" || die "fora de uma sessão de CLI (claude, opencode, codex)"
+    id="$(root_session "${line#*$'\t'}")" || exit 1
+    printf '%s\t%s\n' "${line%%$'\t'*}" "$id" ;;
+  skill) n="${1:?soul skill <name> [args...]}"; shift
+    render_skill "$n" "$@" || die "skill '$n' não existe em $claude_home/skills" ;;
+  install) install_harnesses ;;
   *) sed -n '2,/^set /p' "$0" | sed '$d; s/^# \{0,1\}//' >&2; exit 2 ;;
 esac

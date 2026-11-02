@@ -6,6 +6,7 @@ use mandrake_home::{Action, Dirs, Profile};
 use mandrake_layout::{Catalog, links, settings};
 
 use crate::install;
+use std::path::PathBuf;
 
 /// The command that reapplies the saved profile: links, settings, shell block, plugins, data.
 const SETUP: &str = "mandrake setup --yes";
@@ -170,18 +171,37 @@ pub fn checks(dirs: &Dirs) -> Result<Vec<Check>> {
         Ok((ok, line)) => Check::ok(ok, line, proxy_fix),
         Err(e) => Check::ok(false, format!("proxy: {e:#}"), proxy_fix),
     });
-    let v = std::process::Command::new("claude")
-        .arg("--version")
-        .output();
-    out.push(Check::ok(
-        v.as_ref().is_ok_and(|o| o.status.success()),
-        format!(
-            "claude {}",
-            v.map(|o| String::from_utf8_lossy(&o.stdout).trim().to_owned())
-                .unwrap_or_else(|_| "não encontrado no PATH".into())
-        ),
-        "instale o Claude Code: https://docs.claude.com/claude-code",
-    ));
+    let path = std::env::var_os("PATH");
+    let found = |c: &str| crate::apps::on_path(c, path.as_ref()).is_some();
+    if found("claude") || !(found("opencode") || found("codex")) {
+        let v = std::process::Command::new("claude")
+            .arg("--version")
+            .output();
+        out.push(Check::ok(
+            v.as_ref().is_ok_and(|o| o.status.success()),
+            format!(
+                "claude {}",
+                v.map(|o| String::from_utf8_lossy(&o.stdout).trim().to_owned())
+                    .unwrap_or_else(|_| "não encontrado no PATH".into())
+            ),
+            "instale o Claude Code, o OpenCode ou o Codex",
+        ));
+    }
+    // What `soul install` writes, for each CLI found: a CLI installed after setup has no /invoke yet.
+    let config = std::env::var_os("XDG_CONFIG_HOME")
+        .map_or_else(|| dirs.home.join(".config"), PathBuf::from);
+    for (cli, file) in [
+        ("opencode", config.join("opencode/commands/invoke.md")),
+        ("codex", dirs.home.join(".agents/skills/invoke/SKILL.md")),
+    ] {
+        if p.skills.invoke && found(cli) {
+            out.push(Check::ok(
+                file.is_file(),
+                format!("{cli}: /invoke em {}", file.display()),
+                "mandrake setup",
+            ));
+        }
+    }
     Ok(out)
 }
 

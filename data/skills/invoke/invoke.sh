@@ -8,11 +8,13 @@ sid="${1:-}"; shift || true
 soul="${MANDRAKE_SHELL:-${XDG_DATA_HOME:-$HOME/.local/share}/mandrake/shell}/soul"
 [ -n "${MANDRAKE_HOME:-}" ] && [ -z "${MANDRAKE_SHELL:-}" ] && soul="$MANDRAKE_HOME/data/shell/soul"
 [ -x "$soul" ] || { echo "soul: none ($soul is missing; run mandrake setup)"; exit 0; }
+# An empty id is the session soul sees running, in whichever CLI this is.
+[ -n "$sid" ] || sid="$("$soul" session 2>/dev/null | cut -f2)"
 if [ -n "${1:-}" ] && "$soul" resolve "$1" >/dev/null 2>&1; then
   "$soul" bind "$1" --session "$sid" 2>&1 || exit 0
   shift
 fi
-name="$("$soul" whoami --session "$sid")" || { echo "soul: none (claude invoke <soul>, or /invoke <soul> here: $("$soul" list))"; exit 0; }
+name="$("$soul" whoami --session "$sid")" || { echo "soul: none (claude|codex|opencode invoke <soul>, or /invoke <soul> here: $("$soul" list))"; exit 0; }
 echo "soul: $name"
 mem="${MANDRAKE_MEMORY_CMD:-}"
 if [ -z "$mem" ]; then echo "memory: none configured (skills.memory_cmd in the Mandrake profile)"; exit 0; fi

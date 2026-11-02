@@ -179,9 +179,38 @@ pub fn shell(dirs: &Dirs, profile: &Profile, root: &Path) -> Result<Vec<String>>
     Ok(out)
 }
 
+/// /invoke and the other skills only a person starts, for each CLI found besides Claude Code. `soul`
+/// writes them, so they follow the same rules as the launcher, and they stay thin: each one calls
+/// `soul skill`, which reads the skill at run time.
+pub fn harnesses(dirs: &Dirs, profile: &Profile) -> Result<Vec<String>> {
+    if !profile.skills.invoke {
+        return Ok(vec![]);
+    }
+    let out = Command::new(dirs.data.join("shell/soul"))
+        .arg("install")
+        .env("HOME", &dirs.home)
+        .env("CLAUDE_CONFIG_DIR", &dirs.claude)
+        .output()
+        .context("rodando soul install")?;
+    if !out.status.success() {
+        bail!(
+            "soul install falhou: {}",
+            String::from_utf8_lossy(&out.stderr).trim()
+        );
+    }
+    Ok(String::from_utf8_lossy(&out.stdout)
+        .lines()
+        .map(str::to_owned)
+        .collect())
+}
+
 /// fancy and tui-embed through the `mandrake` marketplace, skipped when a plugin of that name is
-/// already on from any marketplace (two fancy would draw every reply twice).
+/// already on from any marketplace (two fancy would draw every reply twice). Without Claude Code
+/// there is nothing to install them into, and the rest of the setup still applies.
 pub fn plugins(dirs: &Dirs, profile: &Profile, root: &Path) -> Result<Vec<String>> {
+    if crate::apps::on_path("claude", std::env::var_os("PATH").as_ref()).is_none() {
+        return Ok(vec!["plugins: sem Claude Code, ficaram de fora".into()]);
+    }
     let doc = settings::read(&dirs.claude.join("settings.json"))?;
     let want: Vec<&str> = [
         ("fancy", profile.plugins.fancy),

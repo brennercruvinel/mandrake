@@ -4,12 +4,14 @@
 #   ./install.sh --cli                 setup as plain questions, one per line
 #   ./install.sh --profile <file>      apply a saved profile without asking
 #   ./install.sh --cli --from <file>   plain questions, prefilled from a saved profile
-# Needs: cargo (rustup.rs), Claude Code, jq for the soul aliases; Go only for fancy's tab tint.
+# Needs: cargo (rustup.rs), at least one of Claude Code, OpenCode or Codex, jq for the soul aliases and
+# the skills in OpenCode and Codex; Go only for fancy's tab tint.
 set -euo pipefail
 src="$(cd "$(dirname "$0")" && pwd)"
 need() { command -v "$1" >/dev/null || { echo "install.sh: $1 não encontrado. $2" >&2; exit 1; }; }
 need cargo "Instale o Rust: https://rustup.rs"
-need claude "Instale antes o Claude Code: https://docs.claude.com/claude-code"
+command -v claude >/dev/null || command -v opencode >/dev/null || command -v codex >/dev/null \
+  || { echo "install.sh: nenhuma CLI de agente encontrada. Instale o Claude Code, o OpenCode ou o Codex" >&2; exit 1; }
 command -v jq >/dev/null || echo "install.sh: jq não encontrado; os apelidos das souls em agents.json serão ignorados" >&2
 case "$(uname -s)" in Darwin|Linux) ;; *) echo "install.sh: só macOS e Linux" >&2; exit 1 ;; esac
 
