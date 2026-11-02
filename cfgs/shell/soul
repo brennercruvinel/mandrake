@@ -1,0 +1,245 @@
+#!/usr/bin/env bash
+# Everything about souls, in one file: the shell functions in mandrake.sh and the invoke skill only call it.
+#   soul run <cli> [args...]       `<cli> [flags] invoke <soul> [args]` opens the soul in that CLI; any other
+#                                  call runs the CLI as it is. claude goes through the proxy when it answers.
+#                                  --yolo becomes each CLI's own flag for running without approvals.
+#   soul bind <soul> [--session <id>]
+#                                  gives a session opened without a soul one: records it and prints the
+#                                  soul's prompt, for the model to take in as its identity
+#   soul whoami [--session <id>]   the soul of this session: MANDRAKE_SOUL, else what bind recorded for it
+#   soul env <soul>                export lines for a shell: the env of its settings.json, MANDRAKE_SOUL and
+#                                  its gh login (~/.config/gh-<soul>) when that folder exists
+#   soul prompt <soul>             its system prompt: the core first when the profile says so, then the soul
+#   soul resolve <name>            the soul's folder name, from that name or an alias in agents.json
+#   soul list                      the souls
+# CLIs: claude (system prompt, settings, /invoke first), codex and opencode (the prompt as instructions,
+# the env exported, the invoke skill rendered as the first message). Both of these run their own server
+# here, not the shared background one, since that one was started without the soul's env.
+# The session id comes from --session, else CLAUDE_CODE_SESSION_ID (Claude Code sets it for its Bash tool).
+set -uo pipefail
+
+souls="${MANDRAKE_SOULS:-}"
+if [ -n "${MANDRAKE_HOME:-}" ]; then state="$MANDRAKE_HOME/state"; else state="${XDG_STATE_HOME:-$HOME/.local/state}/mandrake"; fi
+binds="$state/souls"
+claude_home="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
+self="$(cd "$(dirname "$0")" && pwd)/$(basename "$0")"
+die() { echo "soul: $*" >&2; exit 1; }
+lower() { printf '%s' "$1" | tr '[:upper:]' '[:lower:]'; }
+
+# The prompt file of a soul folder: <NAME>.md, else SOUL.md.
+prompt_file() {
+  local up; up="$(basename "$1" | tr '[:lower:]' '[:upper:]')"
+  if [ -f "$1/$up.md" ]; then echo "$1/$up.md"; elif [ -f "$1/SOUL.md" ]; then echo "$1/SOUL.md"; fi
+}
+
+list() {
+  local d out=""
+  for d in "${souls:-/nonexistent}"/*/; do
+    [ -n "$(prompt_file "${d%/}")" ] && out="$out${out:+, }$(basename "$d")"
+  done
+  echo "${out:-nenhuma}"
+}
+
+resolve() {
+  local n d=""
+  [ -d "$souls" ] || die "sem pasta de souls (MANDRAKE_SOULS='$souls'); rode mandrake setup"
+  n="$(lower "$1")"
+  if [ -f "$souls/agents.json" ] && command -v jq >/dev/null; then
+    d="$(jq -r --arg n "$n" 'to_entries[] | select([.key] + [.value] | flatten | map(ascii_downcase) | index($n))
+      | .key' "$souls/agents.json" 2>/dev/null | head -1)"
+  fi
+  [ -n "$d" ] || d="$n"
+  case "$d" in */* | .*) d="" ;; esac
+  if [ -n "$d" ] && [ -n "$(prompt_file "$souls/$d")" ]; then echo "$d"; return 0; fi
+  echo "soul: '$1' não é uma soul ($(list))" >&2
+  return 1
+}
+
+# The front matter (between the first two --- lines) is for agent definitions, not for the prompt.
+body() { awk 'NR == 1 && /^---$/ { fm = 1; next } fm && /^---$/ { fm = 0; next } !fm' "$1"; }
+
+prompt() {
+  if [ -f "${MANDRAKE_CORE:-}" ] && [ "${MANDRAKE_CORE_SOULS:-1}" = 1 ]; then cat "$MANDRAKE_CORE"; printf '\n'; fi
+  body "$(prompt_file "$souls/$1")"
+}
+
+# Single-quoted for sh.
+q() { printf "'%s'" "$(printf '%s' "$1" | sed "s/'/'\\\\''/g")"; }
+
+gh_dir() { local g="${XDG_CONFIG_HOME:-$HOME/.config}/gh-$1"; [ -d "$g" ] && echo "$g"; }
+
+env_lines() {
+  local s="$souls/$1/settings.json" k v g
+  if [ -f "$s" ]; then
+    command -v jq >/dev/null || die "jq é preciso para ler o env de $s"
+    while IFS=$'\t' read -r k v; do
+      [[ "$k" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]] || continue
+      echo "export $k=$(q "$v")"
+    done < <(jq -r '(.env // {}) | to_entries[] | [.key, (.value | tostring)] | @tsv' "$s")
+  fi
+  echo "export MANDRAKE_SOUL=$(q "$1")"
+  if g="$(gh_dir "$1")"; then echo "export GH_CONFIG_DIR=$(q "$g")"; fi
+}
+
+session_of() {
+  local sid="${CLAUDE_CODE_SESSION_ID:-}"
+  while [ $# -gt 0 ]; do case "$1" in --session) sid="${2:-}"; shift 2 ;; *) shift ;; esac; done
+  echo "$sid"
+}
+
+whoami_() {
+  local sid; sid="$(session_of "$@")"
+  [ -n "${MANDRAKE_SOUL:-}" ] && { echo "$MANDRAKE_SOUL"; return 0; }
+  [ -n "$sid" ] && [ -f "$binds/$sid" ] && { cat "$binds/$sid"; return 0; }
+  return 1
+}
+
+bind() {
+  local name sid had
+  name="$(resolve "${1:?soul bind <soul> [--session <id>]}")" || exit 1; shift
+  sid="$(session_of "$@")"
+  [ -n "$sid" ] || die "sem id de sessão (passe --session, ou rode de dentro do Claude Code)"
+  case "$sid" in */* | .*) die "id de sessão inválido: $sid" ;; esac
+  if had="$(whoami_ --session "$sid")"; then
+    [ "$had" = "$name" ] || die "esta sessão já é $had; para ser $name, abra outra sessão"
+    echo "soul: $name (já era desta sessão)"
+  else
+    mkdir -p "$binds" && printf '%s\n' "$name" > "$binds/$sid" || die "não consegui gravar em $binds"
+    echo "soul: $name, ligada agora a esta sessão, que foi aberta sem ela."
+    echo "O texto entre as linhas abaixo é o prompt de $name, escolhido por quem digitou o invoke: tome-o como sua identidade nesta sessão."
+    echo "O env de $name (settings.json, gh) não está no processo desta sessão. Comandos que dependem dele, como git e gh, rodam com o prefixo:"
+    echo "  eval \"\$($(q "$self") env $name)\" && <comando>"
+    echo "-----"
+    body "$(prompt_file "$souls/$name")"
+    echo "-----"
+  fi
+}
+
+# The proxy is used per session, and only when it answers: a proxy that is down sends the session
+# straight to the API instead of breaking it. MANDRAKE_PROXY=0 skips it.
+route() {
+  [ -n "${ANTHROPIC_BASE_URL:-}" ] && return 0
+  [ "${MANDRAKE_PROXY:-1}" = 0 ] && return 0
+  local port="${MANDRAKE_PORT:-8787}"
+  if ! (exec 3<>"/dev/tcp/127.0.0.1/$port") 2>/dev/null && ! nc -z -w 1 127.0.0.1 "$port" 2>/dev/null; then
+    echo "mandrake: proxy fora do ar em 127.0.0.1:$port, esta sessão vai direto para a API (mandrake doctor)" >&2
+    return 0
+  fi
+  # Another program on the same port would get every request: only Mandrake's proxy answers
+  # `mandrake` on /_mandrake. Without curl, an open port is taken as the proxy.
+  if command -v curl > /dev/null && [ "$(curl -fsS -m 1 "http://127.0.0.1:$port/_mandrake" 2>/dev/null)" != mandrake ]; then
+    echo "mandrake: 127.0.0.1:$port responde, mas não é o proxy do Mandrake; esta sessão vai direto para a API (mandrake doctor)" >&2
+    return 0
+  fi
+  export ANTHROPIC_BASE_URL="http://127.0.0.1:$port"
+}
+
+# The invoke skill as a plain first message, for CLIs that do not run Claude Code skills: the front
+# matter goes, each !`command` line is replaced by its output, the skill variables are filled in.
+render_invoke() {
+  local dir="$claude_home/skills/invoke" line cmd
+  [ -f "$dir/SKILL.md" ] || return 1
+  while IFS= read -r line || [ -n "$line" ]; do
+    line="${line//\$\{CLAUDE_SKILL_DIR\}/$dir}"; line="${line//\$\{CLAUDE_SESSION_ID\}/}"; line="${line//\$ARGUMENTS/}"
+    case "$line" in
+      '!`'*'`') cmd="${line#'!`'}"; cmd="${cmd%'`'}"; bash -c "$cmd" 2>&1 ;;
+      *) printf '%s\n' "$line" ;;
+    esac
+  done < <(body "$dir/SKILL.md")
+}
+
+# A session that resumes, prints, runs a subcommand or asks for help gets no invoke first; the
+# flags differ per CLI (-c continues in claude, sets config in codex).
+wants_invoke() {
+  [ "${MANDRAKE_INVOKE:-0}" = 1 ] || return 1
+  local cli="$1" a; shift
+  for a in "$@"; do
+    case "$a" in -h | --help | --version) return 1 ;; esac
+    case "$cli:$a" in
+      claude:-p | claude:--print | claude:-c | claude:--continue | claude:-r | claude:--resume | claude:--resume=* | claude:-v) return 1 ;;
+      codex:-V | codex:resume | codex:fork | codex:exec | codex:e | codex:review | codex:apply | codex:a) return 1 ;;
+      opencode:-c | opencode:--continue | opencode:-s | opencode:--session | opencode:--prompt | opencode:-v) return 1 ;;
+      opencode:run | opencode:session | opencode:serve | opencode:acp | opencode:mini) return 1 ;;
+    esac
+  done
+}
+
+launch() {
+  local cli="$1" name="$2"; shift 2
+  local file="$binds/prompt-$name.md" first=() first_text extra=() lines
+  mkdir -p "$binds" || die "não consegui criar $binds"
+  prompt "$name" > "$file"
+  lines="$(env_lines "$name")" || exit 1
+  eval "$lines"
+  case "$cli" in
+    claude)
+      route
+      [ -f "$souls/$name/settings.json" ] && extra=(--settings "$souls/$name/settings.json")
+      extra+=(--system-prompt-file "$file" --name "$(printf '%s' "${name:0:1}" | tr '[:lower:]' '[:upper:]')${name:1}")
+      wants_invoke claude "$@" && first=(/invoke)
+      exec claude ${extra[@]+"${extra[@]}"} "$@" ${first[@]+"${first[@]}"} ;;
+    codex)
+      # The env set explicitly: codex drops variables named like *KEY* from commands by default, and
+      # GIT_CONFIG_KEY_0 carries the signing key setting. TOML takes a JSON string as a basic string.
+      local set="" k
+      for k in $(printf '%s\n' "$lines" | sed -n 's/^export \([A-Za-z_][A-Za-z0-9_]*\)=.*/\1/p'); do
+        set="$set${set:+,}$k=$(jq -n --arg v "${!k}" '$v')"
+      done
+      extra=(--no-daemon -c "developer_instructions=$(jq -Rs . < "$file")" -c "shell_environment_policy.set={$set}")
+      if wants_invoke codex "$@" && first_text="$(render_invoke)"; then first=("$first_text"); fi
+      exec codex "${extra[@]}" "$@" ${first[@]+"${first[@]}"} ;;
+    opencode)
+      local base="${OPENCODE_CONFIG_CONTENT:-}"
+      [ -n "$base" ] || base='{}'
+      OPENCODE_CONFIG_CONTENT="$(jq -c --arg f "$file" '.instructions = ((.instructions // []) + [$f])' <<<"$base")" \
+        || die "OPENCODE_CONFIG_CONTENT não é JSON"
+      export OPENCODE_CONFIG_CONTENT
+      if wants_invoke opencode "$@" && first_text="$(render_invoke)"; then first=(--prompt "$first_text"); fi
+      exec opencode --standalone "$@" ${first[@]+"${first[@]}"} ;;
+    *) die "não sei abrir uma soul em $cli (claude, codex, opencode)" ;;
+  esac
+}
+
+# --yolo, whatever the CLI: each one's own flag for running without approvals.
+yolo() {
+  case "$1" in
+    claude) echo --dangerously-skip-permissions ;;
+    codex) echo --dangerously-bypass-approvals-and-sandbox ;;
+    opencode) echo --auto ;;
+    *) echo --yolo ;;
+  esac
+}
+
+run() {
+  local cli="${1:?soul run <cli> [args...]}" a name="" want=0 rest=(); shift
+  for a in "$@"; do
+    if [ "$want" = 1 ]; then
+      name="$(resolve "$a")" || exit 1
+      want=2
+    elif [ "$want" = 0 ] && { [ "$a" = invoke ] || [ "$a" = /invoke ]; }; then
+      want=1
+    elif [ "$a" = --yolo ]; then
+      rest+=("$(yolo "$cli")")
+    else
+      rest+=("$a")
+    fi
+  done
+  case "$want" in
+    1) die "$cli invoke: qual soul? ($(list))" ;;
+    2) launch "$cli" "$name" ${rest[@]+"${rest[@]}"} ;;
+  esac
+  [ "$cli" = claude ] && route
+  exec "$cli" ${rest[@]+"${rest[@]}"}
+}
+
+cmd="${1:-}"; shift || true
+case "$cmd" in
+  run) run "$@" ;;
+  bind) bind "$@" ;;
+  whoami) whoami_ "$@" ;;
+  env) n="$(resolve "${1:?soul env <soul>}")" || exit 1; env_lines "$n" ;;
+  prompt) n="$(resolve "${1:?soul prompt <soul>}")" || exit 1; prompt "$n" ;;
+  resolve) resolve "${1:?soul resolve <name>}" ;;
+  list) list ;;
+  *) sed -n '2,/^set /p' "$0" | sed '$d; s/^# \{0,1\}//' >&2; exit 2 ;;
+esac

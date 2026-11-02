@@ -169,6 +169,8 @@ pub fn shell(dirs: &Dirs, profile: &Profile, root: &Path) -> Result<Vec<String>>
     std::fs::write(sh.join("env.sh"), shell::env_file(&vars))?;
     let script = sh.join("mandrake.sh");
     std::fs::copy(root.join("cfgs/shell/mandrake.sh"), &script)?;
+    // The functions in mandrake.sh call it; fs::copy keeps its executable bit.
+    std::fs::copy(root.join("cfgs/shell/soul"), sh.join("soul"))?;
     let rc = shell::rc_file(&dirs.home, std::env::var("SHELL").ok().as_deref());
     let mut out = vec![];
     if shell::install(&rc, &script)? {

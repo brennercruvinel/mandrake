@@ -117,7 +117,7 @@ shell_checks() {
   need shellcheck "shellcheck" "brew install shellcheck, or apt install shellcheck" || return
   local f files=()
   # A loop, not mapfile: macOS ships bash 3.2. The bench repos hold broken code on purpose.
-  while IFS= read -r f; do files+=("$f"); done < <(git ls-files 'install.sh' 'tool/*.sh' 'cfgs/shell/*.sh' ':!tool/bench/tasks/*/repo/*')
+  while IFS= read -r f; do files+=("$f"); done < <(git ls-files 'install.sh' 'tool/*.sh' 'cfgs/shell/*' 'data/skills/*.sh' ':!tool/bench/tasks/*/repo/*')
   check "shellcheck" shellcheck -S warning "${files[@]}"
 }
 
