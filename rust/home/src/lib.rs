@@ -229,6 +229,10 @@ pub struct Profile {
     pub plugins: Plugins,
     pub souls: Souls,
     pub skills: Skills,
+    /// The catalog of MCP servers `setup` registers in each CLI found: a JSON file, relative to
+    /// `dev_root`. Without one, setup leaves each CLI's servers alone.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub mcps: Option<String>,
 }
 
 impl Profile {

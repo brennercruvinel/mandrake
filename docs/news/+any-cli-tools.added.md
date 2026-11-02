@@ -1,0 +1,1 @@
+OpenCode and Codex get what Claude Code has: `CLAUDE.md` as their `AGENTS.md`, the other skills, an agent's tool limits, and the servers of a catalog named by `mcps` in the profile (`soul mcp`). A soul opened in OpenCode goes through the proxy.

@@ -65,6 +65,7 @@ point. Add what a link cannot tell by hand: the souls folder, the core, the skil
 
 ```toml
 dev_root = "~/dev/harness"
+mcps = "mcps/servers.json"   # registered in every CLI found; relative to dev_root, absolute, or ~/...
 
 [links.skills]
 action = "link"          # keep | link | copy
@@ -144,6 +145,25 @@ binds it, in any of them: setup gives each CLI it finds `/invoke` (`$invoke` in 
 installed later gets it on the next `mandrake setup`. `soul` (next to `mandrake.sh` in
 `~/.local/share/mandrake/shell/`) does all of it, and `soul whoami`, `soul session`, `soul env <soul>`,
 `soul prompt <soul>` and `soul skill <name>` answer from a script.
+
+Setup also gives those CLIs your `CLAUDE.md` as `AGENTS.md`, your skills and agents, and the MCP servers of
+the catalog `mcps` names. A catalog is one JSON file, and `${VAR}` in it resolves from the environment, then
+its `vars`, then `HOME`:
+
+```json
+{
+  "vars": { "TOOLS": "/srv/tools" },
+  "servers": {
+    "docs": {
+      "enabled": true,
+      "config": { "type": "stdio", "command": "${TOOLS}/docs.sh", "args": [], "env": {} }
+    }
+  }
+}
+```
+
+`soul mcp <catalog>` applies one by hand; add `--dry-run` to see it resolved. An `opencode.jsonc` stays as it
+is, since its comments would be lost: use `opencode.json` to let setup write the servers.
 
 ## Claude Code versions
 
