@@ -93,6 +93,7 @@ check "codex: runs as the soul" "$(grep -c '^soul=nova$' <<<"$cx")" 1
 oc="$(sh_ 'opencode invoke nova')"
 check "opencode: its own server" "$(grep -c '^--standalone$' <<<"$oc")" 1
 check "opencode: the soul's prompt in its instructions" "$(grep -c "^occ={\"instructions\":\[\"$t/mh/state/souls/prompt-nova.md\"\]}" <<<"$oc")" 1
+check "opencode: --yolo goes after its subcommand" "$(sh_ 'opencode --yolo invoke nova run hi' | head -4 | tr '\n' ' ')" "--standalone run --auto hi "
 check "a plain codex call passes through" "$(sh_ 'codex resume --last' | head -2 | tr '\n' ' ')" "resume --last "
 # Claude Code's Bash keeps the functions of the shell and the exported env, but drops the functions
 # named _*: claude must work with only its own.

@@ -211,7 +211,7 @@ yolo() {
 }
 
 run() {
-  local cli="${1:?soul run <cli> [args...]}" a name="" want=0 rest=(); shift
+  local cli="${1:?soul run <cli> [args...]}" a name="" want=0 rest=() y=""; shift
   for a in "$@"; do
     if [ "$want" = 1 ]; then
       name="$(resolve "$a")" || exit 1
@@ -219,11 +219,18 @@ run() {
     elif [ "$want" = 0 ] && { [ "$a" = invoke ] || [ "$a" = /invoke ]; }; then
       want=1
     elif [ "$a" = --yolo ]; then
-      rest+=("$(yolo "$cli")")
+      y="$(yolo "$cli")"
     else
       rest+=("$a")
     fi
   done
+  # opencode reads a subcommand's flags only after it (`opencode run --auto`); the others take it first.
+  if [ -n "$y" ]; then
+    case "$cli:${rest[0]:-}" in
+      opencode:run) rest=("${rest[0]}" "$y" "${rest[@]:1}") ;;
+      *) rest=("$y" ${rest[@]+"${rest[@]}"}) ;;
+    esac
+  fi
   case "$want" in
     1) die "$cli invoke: qual soul? ($(list))" ;;
     2) launch "$cli" "$name" ${rest[@]+"${rest[@]}"} ;;
