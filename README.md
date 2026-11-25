@@ -94,9 +94,13 @@ tool/    E2E tests, anina tapes, fixtures, demo recordings
 ----
 
 <details>
+    
+----
 
 Copyright [Hoff Research](https://hoffresearch.com)
+
 Made it simple, but significant (∂μFμν = Jν)
-Brenner Cruvinel
+
+Author: Brenner Cruvinel
 
 </details>
