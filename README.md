@@ -1,8 +1,15 @@
-# Mandrake - AI slop killer
+Mandrake ~ The AI safety killer
 
-A middle guy to cut the bullshit. Mandrake makes a Claude Code setup reproducible on any Mac or
-Linux machine: it trims what the CLI wraps around your prompt, measures what that saves, and
-rebuilds your `~/.claude` arrangement from one profile. 
+A middleman to cut the bullshit that gets in the way of model performance: pointless guardrails, useless instructions, and all that jazz.
+
+First, it sits between Claude Code and the API, trimming the redundant instructions and guardrails the CLI injects into your prompt, saving tokens and giving you more control.
+
+Second, it lets you see what changed and what you saved: diffs, live inspection, byte-by-byte views.
+
+Third, it reorganizes your ~/.claude folder, centralizing configs, plugins, and prompts, making your setup portable across Mac and Linux machines and your agent trajectories easier to reuse for research, ML training, and custom harnesses.
+
+And then there are souls: a way to invoke agents with their own identity, context, and settings across different CLIs.
+
 
 ## Install
 
