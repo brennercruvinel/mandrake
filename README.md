@@ -90,3 +90,13 @@ tool/    E2E tests, anina tapes, fixtures, demo recordings
 
 - [How it works](docs/guide/how-it-works.md)
 - [Contributing](CONTRIBUTING.md)
+
+----
+
+<details>
+
+Copyright [Hoff Research](https://hoffresearch.com)
+Made it simple, but significant (∂μFμν = Jν)
+Brenner Cruvinel
+
+</details>
