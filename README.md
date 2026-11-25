@@ -2,7 +2,7 @@
 
 A middleman to cut the bullshit that gets in the way of model performance: stupid guardrails, useless instructions, and all that jazz.
 
-Mandrake trims the context Claude Code injects into your prompt and intercepts API requests through a local proxy, including OpenCode sessions backed by Claude Code. Request diffs, live inspection, and token usage show what changed and how much you saved.
+Mandrake trims the context Claude Code injects into your system prompt and intercepts API requests through a local proxy, including OpenCode sessions backed by Claude Code. Request diffs, live inspection, and token usage show what changed and how much you saved.
 
 It also reorganizes your ~/.claude folder, centralizing configs, plugins, and prompts, making your setup portable across Mac and Linux machines and your agent trajectories easier to reuse for research, ML training, and custom harnesses.
 
