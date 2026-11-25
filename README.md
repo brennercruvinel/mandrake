@@ -1,9 +1,8 @@
-# Mandrake
+# Mandrake - AI slop killer
 
 A middle guy to cut the bullshit. Mandrake makes a Claude Code setup reproducible on any Mac or
 Linux machine: it trims what the CLI wraps around your prompt, measures what that saves, and
-rebuilds your `~/.claude` arrangement from one profile. Every demo below was recorded with
-anina in a throwaway HOME, and none of them spent a request.
+rebuilds your `~/.claude` arrangement from one profile. 
 
 ## Install
 
