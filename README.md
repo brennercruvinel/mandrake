@@ -1,4 +1,4 @@
-Mandrake ~ The AI safety killer
+# Mandrake ~ The AI safety killer
 
 A middleman to cut the bullshit that gets in the way of model performance: pointless guardrails, useless instructions, and all that jazz.
 
